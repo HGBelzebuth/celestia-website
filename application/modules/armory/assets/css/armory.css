@@ -409,13 +409,120 @@
     transition: background 0.2s, border-color 0.2s;
 }
 .pv-rep-item:hover { background: rgba(0,225,255,0.03); border-color: rgba(0,225,255,0.15); }
-.pv-rep-item--celestia {
-    background: rgba(200,168,75,0.06);
-    border-color: rgba(200,168,75,0.4);
-    box-shadow: 0 0 10px rgba(200,168,75,0.12);
+/* ── Séparateur "Autres factions" ── */
+.pv-rep-other-label {
+    font-size: 0.72rem; letter-spacing: 2.5px; text-transform: uppercase;
+    color: rgba(200,168,75,0.4); margin-bottom: 10px; padding-left: 4px;
 }
-.pv-rep-item--celestia:hover { background: rgba(200,168,75,0.1); border-color: rgba(200,168,75,0.6); }
-.pv-rep-item--celestia .pv-rep-name { color: #c8a84b; }
+
+/* ════════════════════════════════════════════════
+   SHOWCASE CARD — Faction Celestia
+════════════════════════════════════════════════ */
+.pv-celestia-card {
+    position: relative; overflow: hidden; border-radius: 12px;
+    background: linear-gradient(135deg, rgba(10,7,2,0.99) 0%, rgba(22,15,4,0.97) 50%, rgba(10,7,2,0.99) 100%);
+    padding: 32px 40px; margin-bottom: 24px;
+    border: 1px solid rgba(200,168,75,0.5);
+    box-shadow:
+        0 0 0 1px rgba(200,168,75,0.08),
+        0 0 28px rgba(200,168,75,0.2),
+        0 0 70px rgba(200,168,75,0.07),
+        inset 0 1px 0 rgba(255,230,120,0.08);
+    animation: cel-glow-pulse 3s ease-in-out infinite;
+}
+.pv-celestia-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 65% 100% at 50% 50%, rgba(200,168,75,0.055) 0%, transparent 70%);
+    pointer-events: none;
+}
+.pv-celestia-shimmer {
+    position: absolute; top: 0; left: -150%; width: 75%; height: 100%;
+    background: linear-gradient(108deg,
+        transparent 25%,
+        rgba(255,225,120,0.05) 43%,
+        rgba(255,255,255,0.11) 50%,
+        rgba(255,225,120,0.05) 57%,
+        transparent 75%);
+    animation: cel-shimmer 5s ease-in-out infinite;
+    pointer-events: none;
+}
+.pv-celestia-content {
+    position: relative; display: flex;
+    align-items: center; justify-content: space-between;
+    gap: 32px; z-index: 1;
+}
+.pv-celestia-left { display: flex; align-items: center; gap: 22px; }
+.pv-celestia-icon {
+    font-size: 3rem; flex-shrink: 0;
+    background: linear-gradient(145deg, #e8d080 0%, #c8a84b 40%, #c8c8e0 70%, #c8a84b 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: cel-gradient 5s ease-in-out infinite;
+    filter: drop-shadow(0 0 10px rgba(200,168,75,0.55));
+}
+.pv-celestia-name {
+    font-family: var(--font-title); font-size: 2.2rem; font-weight: 700;
+    letter-spacing: 6px; text-transform: uppercase; line-height: 1.1;
+    background: linear-gradient(90deg, #c8a84b, #e8d080, #d0d0e8, #e8d080, #c8a84b);
+    background-size: 250% 100%;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: cel-gradient 5s ease-in-out infinite;
+}
+.pv-celestia-subtitle {
+    font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase;
+    color: rgba(200,168,75,0.5); margin-top: 6px;
+}
+.pv-celestia-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.pv-celestia-standing {
+    font-family: var(--font-title); font-size: 2.4rem; font-weight: 700;
+    font-variant-numeric: tabular-nums; line-height: 1;
+    background: linear-gradient(135deg, #e8d080, #c0c0d0);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.pv-celestia-rank {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+    padding: 6px 16px; border-radius: 30px;
+    border: 1px solid currentColor;
+    box-shadow: 0 0 10px currentColor;
+    animation: cel-badge-pulse 2.5s ease-in-out infinite;
+}
+
+/* ── Animations ── */
+@keyframes cel-glow-pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 1px rgba(200,168,75,0.08), 0 0 28px rgba(200,168,75,0.2),
+                    0 0 70px rgba(200,168,75,0.07), inset 0 1px 0 rgba(255,230,120,0.08);
+        border-color: rgba(200,168,75,0.5);
+    }
+    50% {
+        box-shadow: 0 0 0 1px rgba(200,168,75,0.18), 0 0 40px rgba(200,168,75,0.32),
+                    0 0 90px rgba(200,168,75,0.12), inset 0 1px 0 rgba(255,230,120,0.12);
+        border-color: rgba(200,168,75,0.8);
+    }
+}
+@keyframes cel-shimmer {
+    0%   { left: -150%; opacity: 0; }
+    10%  { opacity: 1; }
+    60%  { opacity: 1; left: 150%; }
+    70%, 100% { left: 200%; opacity: 0; }
+}
+@keyframes cel-gradient {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+@keyframes cel-badge-pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 10px currentColor; }
+    50%       { opacity: 0.75; box-shadow: 0 0 18px currentColor; }
+}
+
+/* ── Rang neutre/hostile ── */
+.rep-neutral { color: #a8a8a8; }
+.rep-hostile { color: #ff4040; }
 .pv-rep-name { font-size: 1rem; font-weight: 600; color: #e2e8f0; line-height: 1.3; }
 .pv-rep-rank { font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
 .pv-rep-standing { font-family: var(--font-title); font-size: 0.85rem; font-weight: 700; white-space: nowrap; }

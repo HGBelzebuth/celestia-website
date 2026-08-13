@@ -284,19 +284,54 @@ window._realmEnchants[<?= (int)$charsMultiRealm->id; ?>] = <?= json_encode($ench
 <?php
     // Réputation : on réutilise la dernière valeur de $reputation (dernier realm)
     if (!empty($reputation)):
+    $celestiaRep = null;
+    $otherReps   = [];
+    foreach ($reputation as $r) {
+        if (!empty($r['celestia'])) $celestiaRep = $r;
+        else $otherReps[] = $r;
+    }
+    if ($celestiaRep) {
+        $cs = (int)$celestiaRep['standing'];
+        if      ($cs >= 42000) $cRankClass = 'rep-exalted';
+        elseif  ($cs >= 21000) $cRankClass = 'rep-revered';
+        elseif  ($cs >= 9000)  $cRankClass = 'rep-honored';
+        elseif  ($cs >= 3000)  $cRankClass = 'rep-friendly';
+        else                   $cRankClass = 'rep-neutral';
+    }
 ?>
 <div class="pv-reputation-wrap">
     <div class="pv-reputation">
         <h2 class="pv-reputation-title"><i class="fas fa-handshake"></i> Réputations</h2>
+
+        <?php if ($celestiaRep): ?>
+        <div class="pv-celestia-card">
+            <div class="pv-celestia-shimmer"></div>
+            <div class="pv-celestia-content">
+                <div class="pv-celestia-left">
+                    <i class="fas fa-crown pv-celestia-icon"></i>
+                    <div>
+                        <div class="pv-celestia-name">Celestia</div>
+                        <div class="pv-celestia-subtitle">Faction du serveur</div>
+                    </div>
+                </div>
+                <div class="pv-celestia-right">
+                    <div class="pv-celestia-standing"><?= number_format($celestiaRep['standing'], 0, ',', ' '); ?></div>
+                    <div class="pv-celestia-rank <?= $cRankClass; ?>"><?= $celestiaRep['rank']; ?></div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if (!empty($otherReps)): ?>
+        <?php if ($celestiaRep): ?><div class="pv-rep-other-label">Autres factions</div><?php endif; ?>
         <div class="pv-rep-grid">
-            <?php foreach ($reputation as $rep):
+            <?php foreach ($otherReps as $rep):
                 if     ($rep['rank'] === 'Exalté') $rankClass = 'rep-exalted';
                 elseif ($rep['rank'] === 'Révéré') $rankClass = 'rep-revered';
                 elseif ($rep['rank'] === 'Honoré') $rankClass = 'rep-honored';
                 else                               $rankClass = 'rep-friendly';
-                $celestiaClass = !empty($rep['celestia']) ? ' pv-rep-item--celestia' : '';
             ?>
-            <div class="pv-rep-item<?= $celestiaClass; ?>">
+            <div class="pv-rep-item">
                 <div class="pv-rep-bar">
                     <div class="pv-rep-name"><?= htmlspecialchars($rep['name']); ?></div>
                     <div class="pv-rep-rank <?= $rankClass; ?>"><?= $rep['rank']; ?></div>
@@ -305,6 +340,7 @@ window._realmEnchants[<?= (int)$charsMultiRealm->id; ?>] = <?= json_encode($ench
             </div>
             <?php endforeach; ?>
         </div>
+        <?php endif; ?>
     </div>
 </div>
 <?php endif; ?>
