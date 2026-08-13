@@ -294,8 +294,9 @@ window._realmEnchants[<?= (int)$charsMultiRealm->id; ?>] = <?= json_encode($ench
                 elseif ($rep['rank'] === 'Révéré') $rankClass = 'rep-revered';
                 elseif ($rep['rank'] === 'Honoré') $rankClass = 'rep-honored';
                 else                               $rankClass = 'rep-friendly';
+                $celestiaClass = !empty($rep['celestia']) ? ' pv-rep-item--celestia' : '';
             ?>
-            <div class="pv-rep-item">
+            <div class="pv-rep-item<?= $celestiaClass; ?>">
                 <div class="pv-rep-bar">
                     <div class="pv-rep-name"><?= htmlspecialchars($rep['name']); ?></div>
                     <div class="pv-rep-rank <?= $rankClass; ?>"><?= $rep['rank']; ?></div>

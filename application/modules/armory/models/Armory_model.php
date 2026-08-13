@@ -590,27 +590,56 @@ class armory_model extends CI_Model
 
     public function getReputation($MultiRealm, $id): array
     {
+        $CELESTIA_ID = 6000;
+
+        // Faction Celestia : toujours affichée, quel que soit le standing
+        $celestiaRow = $MultiRealm
+            ->select('faction, standing')
+            ->from('character_reputation')
+            ->where('guid', (int)$id)
+            ->where('faction', $CELESTIA_ID)
+            ->limit(1)
+            ->get()
+            ->row_array();
+
+        // Autres réputations (standing >= 3000, hors Celestia)
         $rows = $MultiRealm
             ->select('faction, standing')
             ->from('character_reputation')
-            ->where('guid', $id)
+            ->where('guid', (int)$id)
             ->where('standing >=', 3000)
+            ->where('faction !=', $CELESTIA_ID)
             ->order_by('standing', 'DESC')
             ->get()
             ->result_array();
 
-        if (empty($rows)) return [];
+        if (empty($rows) && empty($celestiaRow)) return [];
 
-        $ids     = implode(',', array_map('intval', array_column($rows, 'faction')));
         $nameMap = [];
-        foreach ($this->db->query(
-            "SELECT ID, COALESCE(NULLIF(Name_Lang_koKR,''), NULLIF(Name_Lang_enUS,'')) AS fname
-             FROM R1_World.faction_dbc WHERE ID IN ($ids)"
-        )->result_array() as $r) {
-            $nameMap[(int)$r['ID']] = $r['fname'];
+        if (!empty($rows)) {
+            $ids = implode(',', array_map('intval', array_column($rows, 'faction')));
+            foreach ($this->db->query(
+                "SELECT ID, COALESCE(NULLIF(Name_Lang_koKR,''), NULLIF(Name_Lang_enUS,'')) AS fname
+                 FROM R1_World.faction_dbc WHERE ID IN ($ids)"
+            )->result_array() as $r) {
+                $nameMap[(int)$r['ID']] = $r['fname'];
+            }
         }
 
         $result = [];
+
+        // Celestia toujours en première position
+        if (!empty($celestiaRow)) {
+            $s = (int)$celestiaRow['standing'];
+            if      ($s >= 42000) $rank = 'Exalté';
+            elseif  ($s >= 21000) $rank = 'Révéré';
+            elseif  ($s >= 9000)  $rank = 'Honoré';
+            elseif  ($s >= 3000)  $rank = 'Amical';
+            elseif  ($s >= 0)     $rank = 'Neutre';
+            else                  $rank = 'Hostile';
+            $result[] = ['name' => 'Celestia', 'standing' => $s, 'rank' => $rank, 'celestia' => true];
+        }
+
         foreach ($rows as $row) {
             $name = $nameMap[(int)$row['faction']] ?? null;
             if (!$name) continue;

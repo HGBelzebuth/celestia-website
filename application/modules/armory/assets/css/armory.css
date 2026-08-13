@@ -409,6 +409,13 @@
     transition: background 0.2s, border-color 0.2s;
 }
 .pv-rep-item:hover { background: rgba(0,225,255,0.03); border-color: rgba(0,225,255,0.15); }
+.pv-rep-item--celestia {
+    background: rgba(200,168,75,0.06);
+    border-color: rgba(200,168,75,0.4);
+    box-shadow: 0 0 10px rgba(200,168,75,0.12);
+}
+.pv-rep-item--celestia:hover { background: rgba(200,168,75,0.1); border-color: rgba(200,168,75,0.6); }
+.pv-rep-item--celestia .pv-rep-name { color: #c8a84b; }
 .pv-rep-name { font-size: 1rem; font-weight: 600; color: #e2e8f0; line-height: 1.3; }
 .pv-rep-rank { font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
 .pv-rep-standing { font-family: var(--font-title); font-size: 0.85rem; font-weight: 700; white-space: nowrap; }
