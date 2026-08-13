@@ -124,7 +124,7 @@
 }
 .pv-equip-container { position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; }
 .pv-panel { display: flex; justify-content: space-between; align-items: stretch; flex-wrap: nowrap; position: relative; z-index: 1; }
-.pv-col { display: flex; flex-direction: column; gap: 4px; width: 280px; position: relative; z-index: 1; }
+.pv-col { display: flex; flex-direction: column; gap: 10px; width: 280px; position: relative; z-index: 1; }
 
 /* ═══════════════════════════════════════
    OBJETS ET ICÔNES
@@ -213,7 +213,7 @@
 }
 .pv-portrait-name {
     font-family: var(--font-title); font-weight: 700;
-    font-size: clamp(1.6rem, 3.2vw, 3rem);
+    /* font-size piloté par PHP selon mb_strlen(name) */
     text-transform: uppercase; letter-spacing: 3px;
     color: var(--class-color, #fff);
     text-shadow:
@@ -221,7 +221,7 @@
         0 0 30px var(--class-color, rgba(255,255,255,0.15));
     animation: portrait-name-glow 3s ease-in-out infinite;
     margin: 0; line-height: 1.1;
-    max-width: 100%; word-break: break-word;
+    white-space: nowrap;
 }
 @keyframes portrait-name-glow {
     0%, 100% {

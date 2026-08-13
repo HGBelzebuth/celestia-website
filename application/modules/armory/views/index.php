@@ -79,6 +79,10 @@
     $classColors = [1=>'#C79C6E',2=>'#F58CBA',3=>'#ABD473',4=>'#FFF569',5=>'#FFFFFF',
                     6=>'#C41F3B',7=>'#0070DE',8=>'#69CCF0',9=>'#9482C9',11=>'#FF7D0A'];
     $classColor  = $classColors[(int)$info->class] ?? '#e2e8f0';
+    $nameLen      = mb_strlen($info->name);
+    $nameFontSize = $nameLen <= 7  ? '3rem'
+                 : ($nameLen <= 10 ? '2.4rem'
+                 : ($nameLen <= 13 ? '1.9rem' : '1.5rem'));
 ?>
 
 <!-- HERO -->
@@ -189,7 +193,7 @@
                         <img src="<?= $raceIcon; ?>" alt="" class="pv-portrait-race">
                         <img src="<?= $classIcon; ?>" alt="" class="pv-portrait-class">
                     </div>
-                    <h2 class="pv-portrait-name" style="--class-color:<?= $classColor; ?>"><?= htmlspecialchars($info->name); ?></h2>
+                    <h2 class="pv-portrait-name" style="--class-color:<?= $classColor; ?>;font-size:<?= $nameFontSize; ?>"><?= htmlspecialchars($info->name); ?></h2>
                     <div class="pv-portrait-sub">
                         <span>Niveau <strong><?= $info->level; ?></strong></span>
                         <span class="pv-portrait-guild"><?= htmlspecialchars($guildName ?? 'Mercenaire'); ?></span>
@@ -288,6 +292,7 @@ window._realmEnchants[<?= (int)$charsMultiRealm->id; ?>] = <?= json_encode($ench
     // Réputation : on réutilise la dernière valeur de $reputation (dernier realm)
     if (!empty($reputation)):
     $celestiaRep = null;
+    $cRankClass  = '';
     $otherReps   = [];
     foreach ($reputation as $r) {
         if (!empty($r['celestia'])) $celestiaRep = $r;
