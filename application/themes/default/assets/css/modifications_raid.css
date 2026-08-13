@@ -1,0 +1,261 @@
+/* ══════════════════════════════════════════════════════════
+   modifications/assets/css/modifications_raid.css
+   Détail d'un raid — Celestia-WoW 2026 (Thème Hybride)
+   ══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Outfit:wght@300;400;600;700&display=swap');
+
+/* ── Variables 2026 ─────────────────────────────────────── */
+:root {
+    --store-ice: #00e1ff;
+    --store-ice-dim: #008ba3;
+    --store-glow: rgba(0, 225, 255, 0.25);
+    
+    --amber: #f5a623;
+    --amber-glow: rgba(245, 166, 35, 0.25);
+    
+    --bg-deep:   #02050a;
+    --bg-card:   rgba(10, 14, 24, 0.55);
+    --bg-card-hover: rgba(15, 22, 36, 0.85);
+    
+    --text-main: #e2e8f0;
+    --text-muted: #94a3b8;
+    --store-border: rgba(255, 255, 255, 0.08);
+    --store-border-highlight: rgba(255, 255, 255, 0.15);
+    
+    --font-title: 'Cinzel', serif;
+    --font-body: 'Outfit', sans-serif;
+    --transition: 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* ── Overrides layout page ──────────────────────────────── */
+.page  { overflow-x: clip !important; overflow-y: visible !important; }
+body   { overflow: visible !important; font-family: var(--font-body); }
+
+/* ── Fond global (Auras hybrides) ───────────────────────── */
+.pn-page-bg { position: fixed; inset: 0; z-index: -1; background-color: var(--bg-deep); pointer-events: none; }
+.pn-page-bg::before {
+    content: ''; position: fixed; inset: 0;
+    background: 
+      radial-gradient(circle at 15% 20%, rgba(0, 225, 255, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 85% 80%, rgba(245, 166, 35, 0.08) 0%, transparent 50%);
+    mix-blend-mode: screen; pointer-events: none; z-index: 0; transform: translateZ(0); 
+}
+
+/* ── Hero (En-tête) ─────────────────────────────────────── */
+.pn-raid-hero { position: relative; min-height: 380px; display: flex; align-items: center; justify-content: center; overflow: hidden; padding-top: 86px; padding-bottom: 4rem; }
+.pn-raid-hero-bg { 
+    position: absolute; inset: 0; background-size: cover; background-position: center top; 
+    -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+.pn-raid-hero-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(2,5,10,0.6) 0%, rgba(2,5,10,0.85) 60%, var(--bg-deep) 100%); z-index: 1; }
+.pn-raid-hero-content { position: relative; z-index: 2; width: 100%; text-align: center; }
+
+/* Médaillon Hybride */
+.pn-raid-hero-medallion {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: rgba(4, 7, 13, 0.6);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--store-border-highlight);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2rem;
+    transform: translateZ(0);
+}
+.pn-raid-hero-medallion i {
+    background: linear-gradient(135deg, var(--store-ice), var(--amber));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 10px rgba(255,255,255,0.1));
+}
+
+.pn-raid-breadcrumb { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 12px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; }
+.pn-raid-breadcrumb a { color: var(--store-ice); text-decoration: none; opacity: 0.8; transition: opacity 0.2s; }
+.pn-raid-breadcrumb a:hover { opacity: 1; text-shadow: 0 0 10px var(--store-glow); }
+
+.pn-raid-title { font-family: var(--font-title); font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 700; color: #fff; margin: 0 0 10px; text-transform: uppercase; text-shadow: 0 0 1px #000, 0 0 2px #000, 0 0 4px #000, 0 0 8px #000, 0 10px 40px rgba(0,0,0,0.9); }
+.pn-raid-title span { color: var(--store-ice); text-shadow: 0 0 1px #000, 0 0 2px #000, 0 0 4px #000, 0 0 25px rgba(0,225,255,0.8), 0 10px 40px rgba(0,0,0,0.9); }
+.pn-raid-subtitle { font-family: var(--font-body); font-size: 1.15rem; color: #f8fafc; font-weight: 500; letter-spacing: 1px; margin: 0 auto; max-width: 650px; text-shadow: 0 0 1px #000, 0 0 3px #000, 0 0 6px #000, 0 5px 20px rgba(0,0,0,0.8); }
+
+/* Bouton Retour (Epic) */
+.btn-epic {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.75rem;
+    padding: 8px 20px; font-family: var(--font-title); font-size: 0.95rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; color: #01050a !important;
+    background: linear-gradient(135deg, var(--store-ice), var(--store-ice-dim));
+    border: none; border-radius: 4px; transition: var(--transition); position: relative; overflow: hidden;
+    cursor: pointer; box-shadow: 0 0 15px rgba(0, 225, 255, 0.2); text-decoration: none;
+    transform: translateZ(0); backface-visibility: hidden; -webkit-backface-visibility: hidden;
+}
+.btn-epic::before {
+    content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+    transform: skewX(-20deg); transition: 0.5s;
+}
+.btn-epic:hover { background: linear-gradient(135deg, #fff, var(--store-ice)); box-shadow: 0 0 25px rgba(0, 225, 255, 0.5); transform: translateY(-2px) translateZ(0); color: #000 !important; text-decoration: none;}
+.btn-epic:hover::before { left: 200%; transition: 0.7s; }
+
+/* ── Layout (FLEXBOX VERROUILLÉ ANTI-BUG) ───────────────────────── */
+.pn-raid-layout { 
+    display: flex; 
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: flex-start; /* Crucial pour que le sticky fonctionne */
+    gap: 28px; 
+    margin: 40px auto 100px; 
+}
+
+/* ── Sidebar (Style Bento) ──────────────────────────────── */
+.pn-sidebar {
+    flex: 0 0 280px; /* Verrouillage absolu : ne rétrécit pas, ne grandit pas */
+    width: 280px;
+    background: var(--bg-card); 
+    border: 1px solid var(--store-border); 
+    border-top: 1px solid var(--store-border-highlight);
+    border-radius: 16px; 
+    overflow: hidden; 
+    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4); 
+    position: -webkit-sticky;
+    position: sticky; 
+    top: 100px; 
+    /* AUCUN TRANSFORM ICI POUR NE PAS CASSER LE STICKY */
+}
+
+.pn-sidebar-header { padding: 20px 20px 16px; border-bottom: 1px solid var(--store-border); position: relative; overflow: hidden; }
+.pn-sidebar-header-bg { position: absolute; inset: 0; background-size: cover; background-position: center; filter: brightness(0.3) saturate(0.8); }
+.pn-sidebar-header::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,225,255,0.05) 0%, rgba(2,5,10,0.8) 100%); pointer-events: none; }
+.pn-sidebar-title {
+    position: relative; z-index: 2; font-family: var(--font-title); font-size: 1.2rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px; color: #fff; display: flex; align-items: center; gap: 10px; text-shadow: 0 0 10px rgba(0,0,0,0.8);
+}
+.pn-sidebar-title i { color: var(--store-ice); font-size: 1.1rem;}
+.pn-sidebar-count {
+    margin-left: auto; background: rgba(0, 225, 255, 0.1); color: var(--store-ice);
+    font-size: 1rem; padding: 2px 8px; border-radius: 4px; border: 1px solid var(--store-ice-dim); font-weight: 700; font-family: var(--font-body);
+}
+
+.pn-sidebar-nav { padding: 8px 0; max-height: 70vh; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+.pn-sidebar-nav::-webkit-scrollbar { display: none; }
+.pn-sidebar-nav-wrap { position: relative; overflow: hidden; }
+
+/* Custom Scrollbar */
+.pn-scrollbar-track { position: absolute; right: 4px; top: 6px; bottom: 6px; width: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; pointer-events: none; }
+.pn-scrollbar-thumb {
+    position: absolute; width: 100%; border-radius: 2px; transition: opacity 0.2s; min-height: 30px;
+    background: linear-gradient(180deg, transparent 0%, rgba(0, 225, 255, 0.4) 20%, rgba(0, 225, 255, 0.8) 50%, rgba(0, 225, 255, 0.4) 80%, transparent 100%);
+}
+
+.pn-sidebar-portrait {
+    width: 36px; height: 36px; border-radius: 6px; flex-shrink: 0; border: 1px solid var(--store-border);
+    background-size: cover; background-position: center 15%; filter: saturate(0.8) brightness(0.9); transition: border-color 0.2s, filter 0.2s, box-shadow 0.2s;
+}
+.pn-sidebar a:hover .pn-sidebar-portrait, .pn-sidebar a.active .pn-sidebar-portrait {
+    border-color: var(--store-ice); filter: saturate(1) brightness(1.1); box-shadow: 0 0 10px var(--store-glow);
+}
+
+.pn-sidebar a {
+    display: flex; align-items: center; gap: 12px; padding: 10px 20px; color: var(--text-muted); font-weight: 600;
+    text-decoration: none; font-size: 1.05rem; transition: background 0.2s, color 0.2s, border-left-color 0.2s;
+    border-left: 3px solid transparent; position: relative; overflow: hidden;
+}
+.pn-sidebar a:hover { background: rgba(0, 225, 255, 0.03); color: #fff; border-left-color: var(--store-ice-dim); }
+.pn-sidebar a.active { color: var(--store-ice); border-left-color: var(--store-ice); background: rgba(0, 225, 255, 0.05); }
+.pn-sidebar a.active::before {
+    content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0, 225, 255, 0.08) 0%, transparent 100%); pointer-events: none; z-index: 0;
+}
+.pn-sidebar a.active > * { position: relative; z-index: 1; }
+.pn-sidebar a.active + a { border-top: 1px solid var(--store-border); }
+
+.pn-sidebar-num { margin-left: auto; font-size: 1rem; color: rgba(255,255,255,0.2); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.pn-no-changes-sidebar { color: var(--text-muted); font-size: 1rem; padding: 20px; font-style: italic; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.pn-no-changes-sidebar i { font-size: 1.2rem; color: rgba(255,255,255,0.1); }
+
+/* ── Contenu principal ──────────────────────────────────── */
+.pn-content { 
+    flex: 1 1 0%; /* Prend tout l'espace restant sans jamais déborder */
+    min-width: 0; /* Empêche le flex-item de s'élargir anormalement */
+    position: relative; 
+    z-index: 2; 
+}
+
+.pn-vanilla-notice {
+    background: var(--bg-card); border: 1px solid var(--store-border); border-radius: 16px;
+    padding: 60px 40px; text-align: center; color: var(--text-muted); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+}
+.pn-vanilla-notice i { font-size: 4rem; margin-bottom: 20px; display: block; color: var(--store-ice-dim); opacity: 0.5; }
+.pn-vanilla-notice p { margin: 0; font-size: 1.15rem; line-height: 1.7; }
+
+/* ── Carte Boss (Bento Glassmorphism & Bordure Magique) ── */
+.pn-boss-card {
+    background: var(--bg-card); border: 1px solid var(--store-border); border-top: 1px solid var(--store-border-highlight);
+    border-radius: 16px; margin-bottom: 20px; overflow: hidden; scroll-margin-top: 100px;
+    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+    transition: var(--transition); position: relative;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); transform: translateZ(0);
+}
+
+/* Le Masque Magique (Givre / Sable) */
+.pn-boss-card::before {
+    content: ''; position: absolute; inset: 0; border-radius: 16px; padding: 2px; 
+    background: linear-gradient(135deg, var(--store-ice), transparent 40%, transparent 60%, var(--amber));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    opacity: 0; transition: opacity 0.5s ease; pointer-events: none; z-index: 2;
+}
+
+.pn-boss-card.is-open::before, .pn-boss-card:hover::before { opacity: 1; }
+.pn-boss-card.is-open, .pn-boss-card:hover {
+    background: var(--bg-card-hover); border-color: var(--store-border-highlight);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 -10px 40px -10px rgba(0, 225, 255, 0.08);
+}
+
+.pn-boss-header {
+    position: relative; display: flex; align-items: center; gap: 14px; padding: 20px 24px; min-height: 70px;
+    cursor: pointer; user-select: none; border-bottom: 1px solid transparent; overflow: hidden; transition: border-bottom-color 0.2s;
+    z-index: 3;
+}
+.pn-boss-header-bg {
+    position: absolute; inset: 0; background-size: cover; background-position: center 20%; filter: brightness(0.3) saturate(0.8); transition: filter 0.3s; z-index: 0;
+}
+.pn-boss-card.is-open .pn-boss-header-bg, .pn-boss-header:hover .pn-boss-header-bg { filter: brightness(0.5) saturate(1); }
+.pn-boss-header::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0,225,255,0.05) 0%, rgba(2,5,10,0.8) 100%); pointer-events: none; z-index: 1;}
+.pn-boss-card.is-open .pn-boss-header { border-bottom-color: var(--store-border); background: rgba(0, 225, 255, 0.05); }
+
+.pn-boss-name {
+    position: relative; z-index: 2; flex: 1; font-family: var(--font-title); font-size: 1.6rem; font-weight: 700;
+    color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.9); letter-spacing: 1px; text-transform: uppercase;
+}
+.pn-boss-card.is-open .pn-boss-name { color: var(--store-ice); text-shadow: 0 0 15px var(--store-glow); }
+.pn-boss-toggle { position: relative; z-index: 2; color: var(--text-muted); font-size: 1.2rem; transition: transform 0.25s, color 0.2s; }
+.pn-boss-card.is-open .pn-boss-toggle { transform: rotate(180deg); color: var(--store-ice); }
+
+.pn-boss-body { display: none; padding: 30px; position: relative; z-index: 3; }
+.pn-boss-card.is-open .pn-boss-body { display: block; }
+
+/* ── Sections de changements ────────────────────────────── */
+.pn-change-section { margin-bottom: 24px; }
+.pn-change-section:last-child { margin-bottom: 0; }
+.pn-change-label {
+    font-family: var(--font-title); font-size: 1.1rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 2px; color: var(--store-ice); margin-bottom: 12px; display: flex; align-items: center; gap: 10px;
+}
+.pn-change-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--store-ice-dim), transparent); opacity: 0.5; }
+.pn-change-row {
+    display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; border-radius: 6px;
+    font-size: 1.05rem; color: var(--text-main); line-height: 1.6; transition: background 0.15s; border: 1px solid transparent;
+}
+.pn-change-row:hover { background: rgba(0, 225, 255, 0.03); border-color: rgba(255,255,255,0.05); }
+.pn-change-row::before {
+    content: '◆'; color: var(--store-ice-dim); flex-shrink: 0; font-size: 0.6rem; margin-top: 2px; text-shadow: 0 0 5px var(--store-glow);
+}
+
+/* ── Responsive ─────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .pn-raid-layout { flex-direction: column; padding: 0 16px; margin: 20px auto 40px; }
+    .pn-sidebar { width: 100%; flex: 1 1 auto; position: static !important; margin-bottom: 20px;}
+    .pn-raid-title { font-size: 2rem; }
+    .pn-raid-hero { padding-top: 100px; min-height: 250px; }
+    .pn-sidebar-nav { max-height: 200px; }
+    .pn-boss-name { font-size: 1.3rem; }
+}

@@ -1,0 +1,172 @@
+/* ══════════════════════════════════════════════════════════
+   modifications/assets/css/modifications_raids.css
+   Liste des raids — Celestia-WoW 2026 (Thème Hybride)
+   ══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Outfit:wght@300;400;600;700&display=swap');
+
+/* ── Variables 2026 ─────────────────────────────────────── */
+:root {
+    --store-ice: #00e1ff;
+    --store-ice-dim: #008ba3;
+    --store-glow: rgba(0, 225, 255, 0.25);
+    
+    --amber: #f5a623;
+    --amber-glow: rgba(245, 166, 35, 0.25);
+    
+    --bg-deep:   #02050a;
+    --bg-card:   rgba(10, 14, 24, 0.55);
+    --bg-card-hover: rgba(15, 22, 36, 0.85);
+    
+    --text-main: #e2e8f0;
+    --text-muted: #94a3b8;
+    --store-border: rgba(255, 255, 255, 0.08);
+    --store-border-highlight: rgba(255, 255, 255, 0.15);
+    
+    --font-title: 'Cinzel', serif;
+    --font-body: 'Outfit', sans-serif;
+    --transition: 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* ── Fond global (Auras hybrides) ───────────────────────── */
+.pn-page-bg { position: fixed; inset: 0; z-index: -1; background-color: var(--bg-deep); pointer-events: none; }
+.pn-page-bg::before {
+    content: ''; position: fixed; inset: 0;
+    background: 
+      radial-gradient(circle at 15% 20%, rgba(0, 225, 255, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 85% 80%, rgba(245, 166, 35, 0.08) 0%, transparent 50%);
+    mix-blend-mode: screen; pointer-events: none; z-index: 0; transform: translateZ(0); 
+}
+
+/* ── Hero (En-tête) ─────────────────────────────────────── */
+.pn-raids-hero { position: relative; min-height: 380px; display: flex; align-items: center; justify-content: center; overflow: hidden; padding-top: 86px; padding-bottom: 4rem; }
+.pn-raids-hero-bg { 
+    position: absolute; inset: 0; background-size: cover; background-position: center top; 
+    -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+.pn-raids-hero-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(2,5,10,0.6) 0%, rgba(2,5,10,0.85) 60%, var(--bg-deep) 100%); z-index: 1; }
+.pn-raids-hero-content { position: relative; z-index: 2; width: 100%; text-align: center; }
+
+/* Médaillon Hybride */
+.pn-raids-hero-medallion {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: rgba(4, 7, 13, 0.6);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--store-border-highlight);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2rem;
+    transform: translateZ(0);
+}
+.pn-raids-hero-medallion i {
+    background: linear-gradient(135deg, var(--store-ice), var(--amber));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 10px rgba(255,255,255,0.1));
+}
+
+.pn-raids-breadcrumb { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 12px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; }
+.pn-raids-breadcrumb a { color: var(--store-ice); text-decoration: none; opacity: 0.8; transition: opacity 0.2s; }
+.pn-raids-breadcrumb a:hover { opacity: 1; text-shadow: 0 0 10px var(--store-glow); }
+
+.pn-raids-title { font-family: var(--font-title); font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 700; color: #fff; margin: 0 0 10px; text-transform: uppercase; text-shadow: 0 0 1px #000, 0 0 2px #000, 0 0 4px #000, 0 0 8px #000, 0 10px 40px rgba(0,0,0,0.9); }
+.pn-raids-title span { color: var(--store-ice); text-shadow: 0 0 1px #000, 0 0 2px #000, 0 0 4px #000, 0 0 25px rgba(0,225,255,0.8), 0 10px 40px rgba(0,0,0,0.9); }
+.pn-raids-subtitle { font-family: var(--font-body); font-size: 1.15rem; color: #f8fafc; font-weight: 500; letter-spacing: 1px; margin: 0 auto; max-width: 650px; text-shadow: 0 0 1px #000, 0 0 3px #000, 0 0 6px #000, 0 5px 20px rgba(0,0,0,0.8); }
+
+/* Bouton Epic */
+.btn-epic {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.75rem;
+    padding: 8px 20px; font-family: var(--font-title); font-size: 0.95rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; color: #01050a !important;
+    background: linear-gradient(135deg, var(--store-ice), var(--store-ice-dim));
+    border: none; border-radius: 4px; transition: var(--transition); position: relative; overflow: hidden;
+    cursor: pointer; box-shadow: 0 0 15px rgba(0, 225, 255, 0.2); text-decoration: none;
+    transform: translateZ(0); backface-visibility: hidden; -webkit-backface-visibility: hidden;
+}
+.btn-epic::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent); transform: skewX(-20deg); transition: 0.5s; }
+.btn-epic:hover { background: linear-gradient(135deg, #fff, var(--store-ice)); box-shadow: 0 0 25px rgba(0, 225, 255, 0.5); transform: translateY(-2px) translateZ(0); color: #000 !important; text-decoration: none;}
+.btn-epic:hover::before { left: 200%; transition: 0.7s; }
+
+/* ── Layout & Grille ────────────────────────────────────── */
+.pn-raids-layout { padding: 40px 0 100px; position: relative; z-index: 2; }
+.pn-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 28px;
+    max-width: 1300px; margin: 0 auto; font-family: var(--font-body);
+}
+
+/* ── Carte Bento (Glassmorphism & Bordures Magiques) ────── */
+.pn-card {
+    background: var(--bg-card); border: 1px solid var(--store-border); border-top: 1px solid var(--store-border-highlight);
+    border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; text-decoration: none;
+    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4); transform: translateZ(0); transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    min-height: 280px;
+}
+
+/* Masque Magique (Givre / Sable) */
+.pn-card::before {
+    content: ''; position: absolute; inset: 0; border-radius: 16px; padding: 2px; 
+    background: linear-gradient(135deg, var(--store-ice), transparent 40%, transparent 60%, var(--amber));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    opacity: 0; transition: opacity 0.5s ease; pointer-events: none; z-index: 5;
+}
+
+/* Lueur interne au survol */
+.pn-card::after {
+    content: ''; position: absolute; inset: 0; border-radius: 16px;
+    background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.03) 0%, transparent 70%);
+    opacity: 0.5; transition: opacity 0.4s ease; pointer-events: none; z-index: 4;
+}
+
+.pn-card:hover {
+    background: var(--bg-card-hover); border-color: var(--store-border-highlight); transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 -10px 40px -10px rgba(0, 225, 255, 0.08); text-decoration: none;
+}
+.pn-card:hover::before { opacity: 1; }
+.pn-card:hover::after { opacity: 1; background: radial-gradient(circle at 50% 0%, rgba(0, 225, 255, 0.08) 0%, transparent 70%); }
+
+/* Éléments internes de la carte */
+.pn-card > * { position: relative; z-index: 3; }
+
+/* Image */
+.pn-card-img-wrap { width: 100%; height: 160px; overflow: hidden; position: relative; border-bottom: 1px solid var(--store-border); }
+.pn-card-img-wrap::after { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(5,10,18,0.9) 0%, transparent 100%); pointer-events: none;}
+.pn-card-img { width: 100%; height: 100%; background-size: cover; background-position: center; transition: transform 0.5s ease, filter 0.4s ease; filter: brightness(0.8) saturate(0.8); }
+.pn-card:hover .pn-card-img { transform: scale(1.08); filter: brightness(1) saturate(1.1); }
+
+/* Sigle Court */
+.pn-short {
+    position: absolute; top: 16px; right: 16px; z-index: 10;
+    background: rgba(4, 10, 20, 0.7); color: var(--store-ice); font-family: var(--font-title);
+    font-size: 0.95rem; font-weight: 800; letter-spacing: 2px; padding: 6px 14px;
+    border-radius: 8px; border: 1px solid var(--store-ice-dim); text-transform: uppercase;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+
+/* Corps du texte */
+.pn-card-body { padding: 24px; display: flex; flex-direction: column; flex: 1; }
+.pn-card-title {
+    font-family: var(--font-title); color: #fff; font-size: 1.35rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px; margin: 0 0 8px; transition: color 0.2s;
+}
+.pn-card:hover .pn-card-title { color: var(--store-ice); text-shadow: 0 0 15px var(--store-glow); }
+
+.pn-card-desc { color: var(--text-muted); font-size: 0.95rem; margin: 0; line-height: 1.5; flex: 1; transition: color 0.2s;}
+.pn-card:hover .pn-card-desc { color: var(--text-main); }
+
+/* Footer / Badges */
+.pn-card-footer { margin-top: 20px; display: flex; align-items: center; justify-content: flex-start; }
+.pn-badge {
+    display: inline-flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px; padding: 6px 14px; border-radius: 6px;
+}
+.pn-badge-modified { background: rgba(0, 225, 255, 0.05); color: var(--store-ice); border: 1px solid var(--store-ice-dim); box-shadow: 0 0 10px var(--store-glow); }
+.pn-badge-vanilla { background: rgba(255, 255, 255, 0.05); color: var(--text-muted); border: 1px solid rgba(255, 255, 255, 0.1); }
+
+/* ── Responsive ─────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .pn-raids-hero { padding-top: 100px; min-height: 280px; }
+    .pn-raids-title { font-size: 2rem; }
+    .pn-grid { grid-template-columns: 1fr; gap: 20px; }
+    .pn-card-img-wrap { height: 140px; }
+}

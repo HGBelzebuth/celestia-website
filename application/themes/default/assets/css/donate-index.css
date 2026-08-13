@@ -1,0 +1,806 @@
+/* ══════════════════════════════════════════════════════════
+   DONATE-INDEX.CSS — Celestia-WoW — Page donations
+   ══════════════════════════════════════════════════════════ */
+
+@font-face {
+  font-family: 'Morpheus';
+  src: url('https://wow.zamimg.com/fonts/morpheus.woff') format('woff');
+  font-display: swap;
+}
+
+/* ── Tokens ── */
+:root {
+  --gold:   #c8a95a;
+  --silver: #a8b8c8;
+  --sl:     #d0dde8;
+  --bs:     rgba(168,184,200,.2);
+  --bsh:    rgba(168,184,200,.5);
+  --bg:     #020508;
+}
+
+/* ── Reset minimal ── */
+*,*::before,*::after { box-sizing: border-box; }
+
+/* ── Fond ──
+   position:absolute au lieu de fixed → évite un repaint complet à chaque scroll sur mobile */
+.dn-page-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--bg);
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════
+   HERO
+═══════════════════════════════════════ */
+.dn-hero {
+  /* L'image de fond est injectée via style="" inline dans le PHP (comme store/index.php)
+     → ce CSS ne contient plus de PHP, il est 100% statique et cacheable */
+  background-color: var(--bg);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 155px 40px 40px;
+  text-align: center;
+  position: relative;
+  isolation: isolate;
+}
+/* Overlay sombre par-dessus l'image (pseudo-element = pas de double background) */
+.dn-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,.82) 0%, rgba(4,10,20,.95) 100%);
+  z-index: 0;
+  pointer-events: none;
+}
+.dn-hero h1,
+.dn-hero p {
+  position: relative;
+  z-index: 1;
+}
+.dn-hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(168,184,200,.3),
+    rgba(200,169,90,.6),
+    rgba(255,240,180,.9),
+    rgba(200,169,90,.6),
+    rgba(168,184,200,.3),
+    transparent
+  );
+}
+.dn-hero h1 {
+  font-family: 'Morpheus','Palatino Linotype',serif;
+  font-size: 2.4rem;
+  font-weight: normal;
+  color: var(--sl);
+  text-shadow: 0 0 40px rgba(168,184,200,.45), 0 2px 4px rgba(0,0,0,.8);
+  margin: 0 0 10px;
+  letter-spacing: 2px;
+}
+.dn-hero h1 i {
+  margin-right: 12px;
+  font-size: 2rem;
+  vertical-align: middle;
+}
+.dn-hero p {
+  color: #8aa0b8;
+  font-size: .95rem;
+  letter-spacing: 1px;
+  margin: 0 0 20px;
+  text-transform: uppercase;
+  text-shadow: 0 0 18px rgba(255,255,255,.25), 0 1px 3px rgba(0,0,0,.6);
+}
+
+/* ═══════════════════════════════════════
+   ALERTES
+═══════════════════════════════════════ */
+.dn-alerts {
+  max-width: 900px;
+  margin: 24px auto 0;
+  padding: 0 24px;
+}
+.dn-alert {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-radius: 4px;
+  font-size: .88rem;
+  margin-bottom: 12px;
+  position: relative;
+}
+.dn-alert-success  { background: rgba(50,150,80,.12);  border: 1px solid rgba(50,150,80,.35);  color: #7de0a0; }
+.dn-alert-warning  { background: rgba(200,169,90,.1);  border: 1px solid rgba(200,169,90,.3);  color: var(--gold); }
+.dn-alert-danger   { background: rgba(180,50,50,.12);  border: 1px solid rgba(180,50,50,.35);  color: #e08080; }
+.dn-alert-close {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1rem;
+  opacity: .6;
+  transition: opacity .15s;
+}
+.dn-alert-close:hover { opacity: 1; }
+
+/* ═══════════════════════════════════════
+   GRILLE
+═══════════════════════════════════════ */
+.dn-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  max-width: 1200px;
+  margin: 40px auto 80px;
+  padding: 0 24px;
+}
+
+/* ═══════════════════════════════════════
+   CARTE
+   • will-change activé seulement via .is-hovered (JS mouseenter/mouseleave)
+   • contain:layout style → limite la portée des repaints
+═══════════════════════════════════════ */
+.dn-card {
+  position: relative;
+  background: linear-gradient(160deg, rgba(8,16,32,.98) 0%, rgba(3,8,18,1) 100%);
+  border: 1px solid var(--bs);
+  border-radius: 6px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.5), inset 0 1px 0 rgba(168,184,200,.1);
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+  display: flex;
+  flex-direction: column;
+  contain: layout paint style;
+  overflow: visible;
+}
+/* will-change uniquement pendant le survol pour éviter une sur-promotion GPU permanente */
+.dn-card.is-hovered { will-change: transform; }
+.dn-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 14px 40px rgba(0,0,0,.65), 0 0 16px rgba(168,184,200,.07), inset 0 1px 0 rgba(168,184,200,.15);
+  border-color: var(--bsh);
+}
+
+/* Ligne or/argent en haut */
+.dn-card::before {
+  content: '';
+  display: block;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(168,184,200,.4),
+    rgba(200,169,90,.6),
+    rgba(255,240,180,.85),
+    rgba(200,169,90,.6),
+    rgba(168,184,200,.4),
+    transparent
+  );
+  border-radius: 6px 6px 0 0;
+}
+
+/* Barre latérale gauche — opacity 0→1 évite un repaint de background */
+.dn-card::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, transparent, var(--silver), transparent);
+  opacity: 0;
+  transition: opacity .22s;
+}
+.dn-card:hover::after { opacity: 1; }
+
+/* ── Header ── */
+.dn-card-header {
+  padding: 20px 24px;
+  text-align: center;
+  position: relative;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+/* Ligne décorative argent/or en bas du bandeau */
+.dn-card-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(168,184,200,.3),
+    rgba(200,169,90,.5),
+    rgba(255,240,180,.75),
+    rgba(200,169,90,.5),
+    rgba(168,184,200,.3),
+    transparent
+  );
+  z-index: 2;
+}
+.dn-card-header-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(.72) saturate(.85);
+  transition: filter .5s ease, transform .5s ease;
+  transform-origin: center center;
+}
+.dn-card:hover .dn-card-header-bg {
+  filter: brightness(.85) saturate(.95);
+  transform: scale(1.06);
+}
+.dn-card-header-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(5,10,20,.3) 0%, rgba(5,10,20,.65) 55%, rgba(5,10,20,.95) 100%);
+}
+.dn-card-name {
+  font-family: 'Morpheus','Palatino Linotype',serif;
+  font-size: 1.7rem;
+  font-weight: bold;
+  color: var(--sl);
+  letter-spacing: 2px;
+  margin: 0;
+  text-shadow: 0 0 24px rgba(168,184,200,.4);
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Corps ── */
+.dn-card-body {
+  padding: 20px 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.dn-feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(168,184,200,.06);
+  font-size: 1.35rem;
+  color: #a09080;
+  line-height: 1.4;
+  transition: color .15s;
+}
+.dn-feature:last-child { border-bottom: none; }
+.dn-card:hover .dn-feature { color: #c0b0a0; }
+.dn-feature i:not(.dp-icon):not(.vp-icon) { display: none; }
+
+/* Puce SVG inline encodée en base64 — évite une requête réseau */
+.dn-feature::before {
+  content: '';
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  margin-top: 3px;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjYThiOGM4IiBkPSJNMTEuNDQ1IDIxLjgzMmExIDEgMCAwIDAgMS4xMSAwbDktNkExIDEgMCAwIDAgMjEuOCAxNC40bC05LTEyYy0uMzc3LS41MDQtMS4yMjMtLjUwNC0xLjYgMGwtOSAxMmExIDEgMCAwIDAgLjI0NSAxLjQzMnptOC4xMi03LjA3OEwxMiAxOS43OThWNC42Njd6Ii8+PC9zdmc+");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: .5;
+  transition: opacity .15s;
+}
+.dn-card:hover .dn-feature::before { opacity: .85; }
+
+/* Puce or (gold / vip) */
+.dn-feature--gold::before,
+.dn-feature--vip::before {
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjYzhhOTVhIiBkPSJNMTEuNDQ1IDIxLjgzMmExIDEgMCAwIDAgMS4xMSAwbDktNkExIDEgMCAwIDAgMjEuOCAxNC40bC05LTEyYy0uMzc3LS41MDQtMS4yMjMtLjUwNC0xLjYgMGwtOSAxMmExIDEgMCAwIDAgLjI0NSAxLjQzMnptOC4xMi03LjA3OEwxMiAxOS43OThWNC42Njd6Ii8+PC9zdmc+") !important;
+  opacity: 1 !important;
+}
+
+/* Puce legendary */
+.dn-feature--legendary::before {
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjZTA4MDYwIiBkPSJNMTEuNDQ1IDIxLjgzMmExIDEgMCAwIDAgMS4xMSAwbDktNkExIDEgMCAwIDAgMjEuOCAxNC40bC05LTEyYy0uMzc3LS41MDQtMS4yMjMtLjUwNC0xLjYgMGwtOSAxMmExIDEgMCAwIDAgLjI0NSAxLjQzMnptOC4xMi03LjA3OEwxMiAxOS43OThWNC42Njd6Ii8+PC9zdmc+") !important;
+  opacity: 1 !important;
+}
+
+.dn-feature-hl {
+  color: var(--sl);
+  text-shadow: 0 0 8px rgba(168,184,200,.6);
+}
+/* Redimensionne l'icône DP globale (36px dans main.css) pour ce contexte
+   + chemin absolu pour éviter tout problème de résolution relative */
+.dn-feature .dp-icon {
+  width: 20px;
+  height: 20px;
+  margin: 0 3px 0 0;
+  top: -1px;
+  background-image: url('/assets/images/DP.png');
+}
+
+/* ── Animations — paused par défaut, activées par IntersectionObserver ── */
+.dn-feature--gold {
+  color: var(--gold) !important;
+  font-weight: 600;
+  animation: gold-pulse 3s ease-in-out infinite paused;
+}
+.dn-feature--gold i { color: var(--gold) !important; }
+
+.dn-feature--vip {
+  color: var(--gold) !important;
+  font-weight: 700;
+  animation: gold-pulse 3s ease-in-out infinite paused;
+}
+
+.dn-feature--legendary {
+  background: rgba(180,50,20,.15);
+  border: 1px solid rgba(180,50,20,.4) !important;
+  border-radius: 3px;
+  color: #e08060 !important;
+  font-weight: 700;
+  margin-top: 4px;
+  margin-left: -24px;
+  margin-right: -24px;
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+  animation: legendary-pulse 2.5s ease-in-out infinite paused;
+}
+
+/* Démarrage via JS (.is-visible ajouté par IntersectionObserver) */
+.dn-card.is-visible .dn-feature--gold,
+.dn-card.is-visible .dn-feature--vip,
+.dn-card.is-visible .dn-feature--legendary { animation-play-state: running; }
+.dn-card.is-visible .dn-card-price-footer   { animation-play-state: running; }
+
+@keyframes gold-pulse {
+  /* opacity (GPU-composited) plutôt que text-shadow — zéro repaint */
+  0%,100% { opacity: .82; }
+  50%     { opacity: 1; }
+}
+@keyframes legendary-pulse {
+  /* opacity (GPU-composited) plutôt que box-shadow */
+  0%,100% { opacity: .85; }
+  50%     { opacity: 1; }
+}
+@keyframes price-pulse {
+  0%,100% { opacity: .85; }
+  50%     { opacity: 1; }
+}
+
+/* ── Footer carte ── */
+.dn-card-footer {
+  padding: 16px 24px 20px;
+  border-top: 1px solid rgba(168,184,200,.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.dn-card-price-footer {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+  text-shadow: 0 0 18px rgba(255,255,255,.55), 0 0 40px rgba(168,184,200,.35);
+  animation: price-pulse 2.5s ease-in-out infinite paused;
+}
+.dn-card-price-footer sup {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--sl);
+  position: relative;
+  top: -.6rem;
+  text-shadow: 0 0 12px rgba(168,184,200,.6);
+}
+
+/* ── Bouton Contribuer ── */
+.dn-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 26px;
+  background: linear-gradient(135deg, rgba(168,184,200,.14), rgba(168,184,200,.06));
+  border: 1px solid rgba(168,184,200,.3);
+  border-radius: 3px;
+  color: var(--sl);
+  font-size: .95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  cursor: pointer;
+  /* Supprime le délai 300ms tactile */
+  touch-action: manipulation;
+  transition: background .15s, border-color .15s, box-shadow .15s, color .15s;
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.dn-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
+}
+.dn-btn .fa-paypal {
+  font-size: 1.5rem;
+  color: #009cde;
+  filter: drop-shadow(0 0 5px rgba(0,156,222,.65));
+  transition: filter .15s;
+}
+.dn-btn:hover,
+.dn-btn:focus {
+  background: linear-gradient(135deg, rgba(168,184,200,.26), rgba(168,184,200,.12));
+  border-color: var(--sl);
+  box-shadow: 0 0 18px rgba(168,184,200,.14);
+  color: #fff;
+  outline: none;
+}
+.dn-btn:hover .fa-paypal { filter: drop-shadow(0 0 9px rgba(0,156,222,.88)); }
+
+/* ═══════════════════════════════════════
+   TOOLTIP DP
+═══════════════════════════════════════ */
+#dn-tip {
+  position: fixed;
+  z-index: 99999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s;
+  background: rgba(6,12,26,.97);
+  border: 1px solid rgba(168,184,200,.25);
+  border-radius: 5px;
+  padding: 10px 16px;
+  white-space: nowrap;
+  min-width: 160px;
+  font-size: .82rem;
+}
+.dn-tip-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+.dn-tip-row--sep {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(168,184,200,.1);
+}
+.dn-tip-label {
+  color: rgba(168,184,200,.75);
+  text-transform: uppercase;
+  font-size: .7rem;
+  letter-spacing: 1px;
+  text-shadow: 0 0 8px rgba(168,184,200,.4);
+}
+.dn-tip-val           { color: #d0dde8;  font-weight: 700; }
+.dn-tip-val--blue     { color: #009cde; }
+.dn-tip-val--gold     { color: #c8a95a; }
+
+/* ═══════════════════════════════════════
+   TABLETTE (≤900px)
+═══════════════════════════════════════ */
+@media (max-width: 900px) {
+  .dn-grid { grid-template-columns: repeat(2, 1fr); gap: 18px; padding: 0 18px; }
+}
+
+/* ═══════════════════════════════════════
+   MOBILE (≤768px) — zéro effet coûteux
+═══════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Hero */
+  .dn-hero { padding: 100px 20px 28px; }
+  .dn-hero h1 { font-size: 1.55rem; text-shadow: none; letter-spacing: 1px; }
+  .dn-hero p  { font-size: .82rem; }
+
+  /* Grille 2 colonnes sur mobile */
+  .dn-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding: 0 12px;
+    margin: 20px auto 40px;
+  }
+
+  /* Alertes */
+  .dn-alerts { padding: 0 12px; }
+  .dn-alert  { font-size: .82rem; padding: 11px 14px; gap: 8px; }
+
+  /* Filtres GPU supprimés sur mobile */
+  .dn-card-header-bg { filter: none; transition: none; transform: none; }
+  .dn-card:hover .dn-card-header-bg { filter: none; transform: none; }
+
+  /* Box-shadow → bordure simple, contain relâché (pas de débordement ici) */
+  .dn-card { box-shadow: none; transition: none; overflow: hidden; contain: layout style; }
+  .dn-card:hover { transform: none; box-shadow: none; border-color: var(--bsh); }
+  .dn-card::after, .dn-card:hover::after { display: none; }
+
+  /* GPU promotion des cartes au scroll */
+  .dn-card { transform: translateZ(0); -webkit-transform: translateZ(0); }
+
+  /* Header carte : hauteur réduite */
+  .dn-card-header { padding: 14px 12px; min-height: 80px; }
+  .dn-card-name { font-size: 1.2rem; letter-spacing: 1px; }
+
+  /* Corps carte */
+  .dn-card-body { padding: 12px 14px; }
+  .dn-feature {
+    font-size: 1.1rem;
+    padding: 7px 0;
+    gap: 8px;
+    line-height: 1.35;
+  }
+  .dn-feature-hl { text-shadow: none; }
+
+  /* Feature legendary : marges adaptées */
+  .dn-feature--legendary {
+    margin-left: -14px;
+    margin-right: -14px;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  /* Footer : prix + bouton empilés verticalement si nécessaire */
+  .dn-card-footer {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px 16px;
+  }
+  .dn-card-price-footer {
+    font-size: 1.7rem;
+    text-shadow: none;
+    animation: none;
+  }
+  .dn-card-price-footer sup { font-size: .85rem; text-shadow: none; }
+
+  /* Bouton pleine largeur */
+  .dn-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 11px 16px;
+    font-size: .88rem;
+    letter-spacing: 1px;
+    transition: none;
+  }
+  .dn-btn .fa-paypal { filter: none; font-size: 1.2rem; }
+  .dn-btn:hover .fa-paypal { filter: none; }
+
+  /* Tooltip désactivé sur mobile (pas de hover) */
+  #dn-tip { display: none !important; }
+
+  /* Text-shadows supprimés */
+  .dn-card-name { text-shadow: none; }
+
+  /* Toutes les animations coupées */
+  .dn-feature--gold,
+  .dn-feature--vip,
+  .dn-feature--legendary,
+  .dn-card.is-visible .dn-feature--gold,
+  .dn-card.is-visible .dn-feature--vip,
+  .dn-card.is-visible .dn-feature--legendary,
+  .dn-card.is-visible .dn-card-price-footer { animation: none; }
+
+  /* Transitions supprimées */
+  .dn-feature, .dn-btn, .dn-feature::before { transition: none; }
+
+  /* Retour tactile léger via opacity */
+  .dn-card:active { opacity: .82; transition: opacity .08s; }
+}
+
+/* ═══════════════════════════════════════
+   PETIT MOBILE (≤480px)
+═══════════════════════════════════════ */
+@media (max-width: 480px) {
+  .dn-hero { padding: 86px 14px 22px; }
+  .dn-hero h1 { font-size: 1.3rem; }
+  .dn-hero h1 i { font-size: 1.1rem; margin-right: 7px; }
+  .dn-hero p { font-size: .75rem; }
+
+  .dn-grid { gap: 8px; padding: 0 8px; }
+
+  .dn-card-header { padding: 12px 10px; min-height: 68px; }
+  .dn-card-name { font-size: 1.05rem; }
+
+  .dn-card-body { padding: 10px 12px; }
+  .dn-feature { font-size: 1rem; padding: 5px 0; gap: 6px; }
+
+  .dn-card-footer { padding: 10px 12px 14px; gap: 8px; }
+  .dn-card-price-footer { font-size: 1.45rem; }
+  .dn-btn { padding: 9px 12px; font-size: .82rem; }
+}
+
+/* ── Respect de la préférence système ── */
+@media (prefers-reduced-motion: reduce) {
+  .dn-card,
+  .dn-card-header-bg,
+  .dn-btn,
+  .dn-feature,
+  .dn-card::after { transition: none; }
+
+  .dn-feature--gold,
+  .dn-feature--vip,
+  .dn-feature--legendary,
+  .dn-card-price-footer { animation: none; }
+}
+
+/* ═══════════════════════════════════════
+   OFFRE DU MOMENT — Bannière + carte vedette
+═══════════════════════════════════════ */
+.dn-offer {
+  max-width: 1200px;
+  margin: 24px auto 0;
+  padding: 0 24px;
+}
+.dn-offer-banner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 18px 28px;
+  background: linear-gradient(135deg, rgba(200,169,90,.07) 0%, rgba(8,16,32,.98) 100%);
+  border: 1px solid rgba(200,169,90,.35);
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+.dn-offer-banner::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(200,169,90,.55), rgba(255,240,180,.85), rgba(200,169,90,.55), transparent);
+}
+.dn-offer-star {
+  font-size: 1.9rem;
+  color: var(--gold);
+  text-shadow: 0 0 18px rgba(200,169,90,.6);
+  flex-shrink: 0;
+}
+.dn-offer-info { flex: 1; min-width: 0; }
+.dn-offer-label {
+  font-size: .65rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--gold);
+  opacity: .8;
+  margin-bottom: 4px;
+}
+.dn-offer-name {
+  font-family: 'Morpheus','Palatino Linotype',serif;
+  font-size: 1.35rem;
+  color: var(--sl);
+  letter-spacing: 1px;
+  text-shadow: 0 0 18px rgba(168,184,200,.3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dn-offer-details {
+  font-size: .88rem;
+  color: var(--gold);
+  margin-top: 4px;
+}
+.dn-offer-details .dp-icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  top: -1px;
+  background-image: url('/assets/images/DP.png');
+}
+.dn-offer-bonus {
+  margin-left: 8px;
+  background: rgba(50,200,100,.12);
+  border: 1px solid rgba(50,200,100,.3);
+  border-radius: 2px;
+  color: #7de0a0;
+  font-size: .72rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  letter-spacing: .5px;
+  vertical-align: middle;
+}
+.dn-offer-msg {
+  font-size: .78rem;
+  color: #6878a0;
+  margin-top: 5px;
+  font-style: italic;
+}
+.dn-offer-btn {
+  flex-shrink: 0;
+  text-decoration: none;
+  padding: 11px 22px;
+  font-size: .82rem;
+  background: linear-gradient(135deg, rgba(200,169,90,.16), rgba(200,169,90,.07));
+  border-color: rgba(200,169,90,.45);
+  color: var(--gold);
+}
+.dn-offer-btn:hover {
+  background: linear-gradient(135deg, rgba(200,169,90,.28), rgba(200,169,90,.14));
+  border-color: var(--gold);
+  color: #ffe0a0;
+  box-shadow: 0 0 18px rgba(200,169,90,.18);
+}
+
+/* ── Carte vedette ── */
+.dn-card--featured {
+  border-color: rgba(200,169,90,.4);
+  box-shadow: 0 4px 20px rgba(0,0,0,.5), 0 0 28px rgba(200,169,90,.1), inset 0 1px 0 rgba(200,169,90,.2);
+}
+.dn-card--featured::before {
+  background: linear-gradient(90deg, transparent, rgba(200,169,90,.55), rgba(255,240,180,.88), rgba(200,169,90,.55), transparent);
+}
+.dn-card--featured:hover {
+  box-shadow: 0 14px 40px rgba(0,0,0,.65), 0 0 36px rgba(200,169,90,.18), inset 0 1px 0 rgba(200,169,90,.3);
+  border-color: rgba(200,169,90,.65);
+}
+.dn-card--featured:hover::after {
+  background: linear-gradient(180deg, transparent, var(--gold), transparent);
+}
+
+.dn-badge-featured {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  background: rgba(200,169,90,.15);
+  border: 1px solid rgba(200,169,90,.45);
+  border-radius: 2px;
+  color: var(--gold);
+  font-size: .6rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 3px 9px;
+}
+.dn-badge-featured i { margin-right: 4px; font-size: .55rem; }
+
+/* Prix barré si réduction sur la carte vedette */
+.dn-price-original {
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: #5a6a80;
+  text-decoration: line-through;
+  margin-right: 6px;
+  text-shadow: none;
+  animation: none;
+}
+
+/* Bouton contribuer doré sur la carte vedette */
+.dn-btn--featured {
+  background: linear-gradient(135deg, rgba(200,169,90,.18), rgba(200,169,90,.08));
+  border-color: rgba(200,169,90,.4);
+  color: var(--gold);
+}
+.dn-btn--featured:hover,
+.dn-btn--featured:focus {
+  background: linear-gradient(135deg, rgba(200,169,90,.3), rgba(200,169,90,.14));
+  border-color: var(--gold);
+  color: #ffe0a0;
+  box-shadow: 0 0 18px rgba(200,169,90,.18);
+}
+
+@media (max-width: 768px) {
+  .dn-offer { padding: 0 12px; margin: 16px auto 0; }
+  .dn-offer-banner { flex-wrap: wrap; padding: 14px 16px; gap: 12px; }
+  .dn-offer-star { font-size: 1.4rem; }
+  .dn-offer-name { font-size: 1.1rem; }
+  .dn-offer-btn { width: 100%; justify-content: center; }
+  .dn-badge-featured { font-size: .55rem; top: 8px; right: 8px; }
+}

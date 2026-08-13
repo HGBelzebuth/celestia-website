@@ -1,0 +1,868 @@
+<!-- ============================================================
+     Celestia-WoW — Page d'accueil v2
+     Sans images de fond · Cards aérées · Responsive
+============================================================ -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+
+<style>
+  /* ═══════════════════════════════════════════════════════════
+   VARIABLES
+═══════════════════════════════════════════════════════════ */
+  :root {
+    --gold: #d4aa60;
+    --gold-soft: #e8cc8a;
+    --gold-dim: #a07840;
+    --gold-glow: rgba(212, 170, 96, .15);
+
+    --bg-page: #06111c;
+    --bg-card: #0c1e2e;
+    --bg-card-deep: #091724;
+    --bg-card-alt: #0f2236;
+
+    --text-primary: #ddd0bb;
+    --text-secondary: #a8b8c8;
+    --text-muted: #6e8499;
+    --text-gold: #d4aa60;
+
+    --border: rgba(212, 170, 96, .18);
+    --border-light: rgba(212, 170, 96, .08);
+
+    --online: #5dbf6e;
+    --offline: #d95f5f;
+
+    --radius-sm: 8px;
+    --radius: 14px;
+    --radius-lg: 20px;
+
+    --shadow: 0 4px 32px rgba(0, 0, 0, .45);
+    --shadow-lg: 0 8px 60px rgba(0, 0, 0, .6);
+
+    --font-title: 'Cinzel', 'Palatino Linotype', Georgia, serif;
+    --font-body: 'Crimson Pro', Georgia, serif;
+
+    --transition: .3s ease;
+
+    --container-max: 1280px;
+    --container-pad: clamp(1.5rem, 5vw, 5rem);
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+   RESET
+═══════════════════════════════════════════════════════════ */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  img {
+    max-width: 100%;
+    display: block;
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--bg-page);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--gold-dim);
+    border-radius: 3px;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+   CONTENEUR
+═══════════════════════════════════════════════════════════ */
+  .cw-wrap {
+    width: 100%;
+    max-width: var(--container-max);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--container-pad);
+    padding-right: var(--container-pad);
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+   PAGE
+═══════════════════════════════════════════════════════════ */
+  .cw-page {
+    background: var(--bg-page);
+    font-family: var(--font-body);
+    font-size: 1.05rem;
+    color: var(--text-primary);
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+   HERO
+═══════════════════════════════════════════════════════════ */
+  .cw-hero {
+    width: auto;
+
+    background: fixed;
+    background-repeat: no-repeat;
+    background-image: url("<?= $template['location'] . 'assets/images/lk_no_background.png'; ?>");
+    background-size: cover;
+  }
+
+  .cw-hero-bg-gradient {
+    width: auto;
+    padding: calc(var(--nav-h, 86px) + clamp(5rem, 12vh, 9rem)) 0 clamp(3rem, 8vh, 6rem);
+    margin-top: calc(-1 * var(--nav-h, 86px));
+    text-align: center;
+    position: relative;
+    background: #000000;
+    background: linear-gradient(45deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.8) 50%, rgba(0, 0, 0, 0.2) 100%);
+  }
+
+  .cw-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(212, 170, 96, .10) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 15% 90%, rgba(30, 80, 140, .14) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .cw-hero__inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  .cw-hero__logo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2.5rem;
+  }
+
+  .cw-hero__logo img {
+    height: clamp(200px, 10vw, 700px);
+    width: auto;
+    filter: drop-shadow(0 0 24px rgba(212, 170, 96, .35));
+  }
+
+  .cw-hero__eyebrow {
+    display: inline-block;
+    font-family: var(--font-title);
+    font-size: 1rem;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+    color: var(--text-gold);
+    border: 1px solid var(--border);
+    background: rgba(212, 170, 96, .06);
+    padding: .35rem 1rem;
+    border-radius: 2px;
+    margin-bottom: 1.5rem;
+  }
+
+  .cw-hero__title {
+    font-family: var(--font-title);
+    font-size: clamp(2.2rem, 5.5vw, 4.2rem);
+    font-weight: 700;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    line-height: 1.1;
+  }
+
+  .cw-hero__title strong {
+    color: var(--gold);
+  }
+
+  .cw-hero__subtitle {
+    margin-top: 1.25rem;
+    font-size: clamp(1.5rem, 2vw, 1.3rem);
+    color: var(--text-secondary);
+    line-height: 1.75;
+    max-width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .cw-hero__subtitle em {
+    font-style: normal;
+    color: #e89840;
+  }
+
+  .cw-hero__cta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: .9rem;
+    margin-top: 2.5rem;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+   BOUTONS
+═══════════════════════════════════════════════════════════ */
+  .discord-btn {
+    border-radius: 10px;
+
+    padding-left: 60px;
+    padding-right: 60px;
+    background-color: var(--bg-card-deep);
+    transition: all;
+
+    img {
+      max-width: 150px;
+    }
+  }
+
+  .discord-btn:hover {
+    transform: scale(1.03);
+    border: solid 1px var(--gold);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .55rem;
+    padding: .8rem 1.8rem;
+    font-family: var(--font-title);
+    font-size: 1.1rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    border: 1px solid var(--gold-dim);
+    color: var(--gold-soft);
+    background: transparent;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition), border-color var(--transition);
+  }
+
+  .btn:hover {
+    background: rgba(212, 170, 96, .12);
+    border-color: var(--gold);
+    color: var(--gold-soft);
+  }
+
+  .btn--primary {
+    background: var(--gold);
+    color: #09182a;
+    border-color: var(--gold);
+    font-weight: 600;
+  }
+
+  .btn--primary:hover {
+    background: var(--gold-glow);
+    border-color: var(--gold-glow);
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+   SÉPARATEUR
+═══════════════════════════════════════════════════════════ */
+  .cw-sep {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--border), transparent);
+    margin: 0;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+   SECTION
+═══════════════════════════════════════════════════════════ */
+  .cw-section {
+    padding: clamp(3rem, 7vh, 5.5rem) 0;
+  }
+
+  .cw-section__head {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+
+  .cw-section__label {
+    display: block;
+    font-family: var(--font-title);
+    font-size: 1rem;
+    letter-spacing: .28em;
+    text-transform: uppercase;
+    color: var(--text-gold);
+    margin-bottom: .6rem;
+  }
+
+  .cw-section__title {
+    font-family: var(--font-title);
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: .03em;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+   CARD DE BASE
+═══════════════════════════════════════════════════════════ */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    padding: 2rem 2.2rem;
+    box-shadow: var(--shadow);
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+
+  .card:hover {
+    border-color: var(--border);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .card--accent {
+    background: var(--bg-card-alt);
+    border-color: var(--border);
+  }
+
+  .card__label {
+    display: block;
+    font-family: var(--font-title);
+    font-size: 1rem;
+    letter-spacing: .25em;
+    text-transform: uppercase;
+    color: var(--text-gold);
+    margin-bottom: 1rem;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+   NEWS
+═══════════════════════════════════════════════════════════ */
+  .news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .news-card {
+    background: var(--bg-card-deep);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    padding: 1.5rem 1.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    position: relative;
+    transition: border-color var(--transition), transform var(--transition);
+  }
+
+  .news-card:hover {
+    border-color: var(--border);
+    transform: translateY(-3px);
+  }
+
+  .news-card__link {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius);
+  }
+
+  .news-card__tag {
+    font-family: var(--font-title);
+    font-size: 1rem;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--text-gold);
+  }
+
+  .news-card__title {
+    font-family: var(--font-title);
+    font-size: 1rem;
+    color: var(--text-primary);
+    line-height: 1.35;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+   STATUT SERVEUR
+═══════════════════════════════════════════════════════════ */
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .status-realm {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: var(--bg-card-deep);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.4rem;
+    margin-bottom: .75rem;
+    transition: border-color var(--transition);
+  }
+
+  .status-realm:last-child {
+    margin-bottom: 0;
+  }
+
+  .status-realm:hover {
+    border-color: var(--border);
+  }
+
+  .status-realm__name {
+    font-family: var(--font-title);
+    font-size: 1.2rem;
+    color: var(--text-primary);
+  }
+
+  .status-realm__name i {
+    color: var(--text-gold);
+    margin-right: .45rem;
+  }
+
+  .status-realm__name a {
+    color: inherit;
+  }
+
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .status-dot.online {
+    background: var(--online);
+    box-shadow: 0 0 8px var(--online);
+  }
+
+  .status-dot.offline {
+    background: var(--offline);
+    box-shadow: 0 0 8px var(--offline);
+  }
+
+  .players-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    margin-top: .8rem;
+    background: rgba(93, 191, 110, .1);
+    border: 1px solid rgba(93, 191, 110, .25);
+    border-radius: 20px;
+    padding: .28rem .9rem;
+    font-size: 1.2rem;
+    color: #8dd498;
+  }
+
+  .offline-msg {
+    margin-top: .6rem;
+    font-size: 1.2rem;
+    color: var(--offline);
+  }
+
+  .discord-wrap {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: .5rem;
+  }
+
+
+  .hero-multicard {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .hauteur-totale {
+    height: 100%;
+    width: auto;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+   GRILLE PROMO
+═══════════════════════════════════════════════════════════ */
+  .promo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .promo-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem 3rem;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+
+  .promo-card:hover {
+    border-color: var(--border);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .promo-card::before {
+    content: '';
+    position: absolute;
+    top: -60px;
+    left: -60px;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, var(--gold-glow) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .promo-card--alt {
+    background: var(--bg-card-alt);
+  }
+
+  .promo-card--alt::before {
+    top: auto;
+    bottom: -60px;
+    left: auto;
+    right: -60px;
+  }
+
+  .promo-card__label {
+    display: inline-block;
+    font-family: var(--font-title);
+    font-size: 1rem;
+    letter-spacing: .28em;
+    text-transform: uppercase;
+    color: var(--text-gold);
+    border: 1px solid var(--border);
+    background: rgba(212, 170, 96, .06);
+    padding: .28rem .8rem;
+    border-radius: 2px;
+    margin-bottom: 1.1rem;
+  }
+
+  .promo-card__title {
+    font-family: var(--font-title);
+    font-size: clamp(1.2rem, 2.5vw, 1.75rem);
+    color: var(--text-primary);
+    line-height: 1.2;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+  }
+
+  .promo-card__desc {
+    font-size: clamp(1.5rem, 1.5vw, 1.15rem);
+    color: var(--text-secondary);
+    line-height: 1.85;
+    margin-bottom: 1.8rem;
+    max-width: 560px;
+  }
+
+  .promo-card__btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .7rem;
+  }
+
+  .promo-card--sm {
+    padding: 1.9rem 2.2rem;
+  }
+
+  .promo-card--sm .promo-card__title {
+    font-size: clamp(1.05rem, 2vw, 1.4rem);
+  }
+
+  .promo-card--sm .promo-card__desc {
+    font-size: 1rem;
+    margin-bottom: 1.3rem;
+  }
+
+  /* Ligne décorative */
+  .gold-line {
+    display: block;
+    width: 44px;
+    height: 2px;
+    background: linear-gradient(to right, var(--gold), transparent);
+    margin-bottom: 1.2rem;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════════ */
+  @media (max-width: 768px) {
+    .promo-card {
+      padding: 1.75rem 1.5rem;
+    }
+
+    .promo-card--sm {
+      padding: 1.4rem 1.25rem;
+    }
+
+    .cw-hero__cta {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .discord-wrap iframe {
+      width: 100%;
+      height: 300px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .card {
+      padding: 1.4rem 1.25rem;
+    }
+
+    .btn {
+      font-size: .72rem;
+      padding: .7rem 1.3rem;
+    }
+  }
+</style>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE
+═══════════════════════════════════════════════════════ -->
+<div class="cw-page">
+
+  <!-- ── HERO ──────────────────────────────────────────── -->
+  <section class="cw-hero">
+    <div class="cw-hero-bg-gradient">
+      <div class="cw-wrap">
+        <div class="cw-hero__inner">
+
+          <div class="cw-hero__logo">
+            <img src="<?= $template['location'] . 'assets/images/logo.png'; ?>" alt="Celestia-WoW">
+          </div>
+          <span class="cw-hero__eyebrow">Serveur Custom World of Warcraft</span>
+
+          <p class="cw-hero__subtitle">
+            Crée ta propre histoire. Deviens une légende dans un contenu custom exclusif.<br>
+            <em>Seul on va plus vite, Nombreux on va plus loin!</em>
+          </p>
+          <section class="cw-section">
+            <div class="hero-multicard">
+              <div class="hero-multicard">
+                <?php if ($this->wowmodule->getRealmStatus()): ?>
+                  <div class="card card--accent hauteur-totale">
+                    <span class="card__label">
+                      <i class="fas fa-server"></i> <?= $this->lang->line('home_server_status'); ?>
+                    </span>
+                    <?php foreach ($realmsList as $charsMultiRealm):
+                      $multiRealm = $this->wowrealm->getRealmConnectionData($charsMultiRealm->id);
+                      $isOnline   = $this->wowrealm->RealmStatus(
+                        $charsMultiRealm->realmID,
+                        $this->wowrealm->realmGetHostname($charsMultiRealm->realmID)
+                      );
+                    ?>
+                      <div class="status-realm">
+                        <span class="status-realm__name">
+                          <i class="fas fa-server"></i>
+                          <a href="<?= base_url('online'); ?>">
+                            <?= $this->lang->line('table_header_realm'); ?>
+                            <?= $this->wowrealm->getRealmName($charsMultiRealm->realmID); ?>
+                          </a>
+                        </span>
+                        <div class="status-dot <?= $isOnline ? 'online' : 'offline' ?>"
+                          title="<?= $isOnline ? $this->lang->line('online') : $this->lang->line('offline') ?>"></div>
+                      </div>
+                      <?php if ($isOnline): ?>
+                        <div class="players-pill">
+                          <i class="fas fa-users"></i>
+                          <?= $this->wowrealm->getCharactersOnlineAlliance($multiRealm)
+                            + $this->wowrealm->getCharactersOnlineHorde($multiRealm); ?> joueurs en ligne
+                        </div>
+                      <?php else: ?>
+                        <p class="offline-msg">
+                          <i class="fas fa-exclamation-circle"></i>
+                          <?= $this->lang->line('home_realm_info'); ?> —
+                          <strong><?= $this->lang->line('offline'); ?></strong>
+                        </p>
+                      <?php endif ?>
+                    <?php endforeach ?>
+                  </div>
+                <?php endif ?>
+
+                <?php if ($this->wowmodule->getDiscordStatus() == '1'): ?>
+                  <div class="card card--accent">
+                    <span class="card__label">
+                      <i class="fab fa-discord"></i> <?= $this->lang->line('home_discord'); ?>
+                    </span>
+                    <div class="discord-wrap">
+
+
+                      <h2 class="promo-card__title">Rejoins la communauté</h2>
+                      <p class="promo-card__desc">PARTAGE PLUS QUE LE JEU ! <br>Retrouve toutes les infos et suis l'actualité du serveur sur notre discord communautaire.</p>
+
+                      <a class="discord-btn" target="_blank" href="https://discord.gg/<?= $this->config->item('discord_invitation'); ?>">
+                        <img style="width: 200px;" src="<?= $template['location'] . 'assets/images/discord.png'; ?>" alt="discord">
+                      </a>
+
+                    </div>
+                  </div>
+                <?php endif ?>
+              </div>
+            </div>
+          </section>
+
+
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="cw-sep">
+
+
+  <!-- ── AVENTURE + LAUNCHER ───────────────────────────── -->
+  <section class="cw-section">
+    <div class="cw-wrap">
+      <div class="promo-grid">
+
+        <div class="promo-card">
+          <span class="gold-line"></span>
+          <span class="promo-card__label">Bienvenue sur Celestia</span>
+          <h2 class="promo-card__title">Commence ton aventure dès maintenant</h2>
+          <p class="promo-card__desc">Commence ton voyage sur le meilleur serveur custom privé de World of Warcraft et forge ta propre légende dans un monde unique.</p>
+          <div class="promo-card__btns">
+            <a class="btn btn--primary" href="https://celestia-wow.com/en/register">Créer mon compte</a>
+          </div>
+        </div>
+
+        <div class="promo-card promo-card--alt">
+          <span class="gold-line"></span>
+          <span class="promo-card__label">Toujours à jour</span>
+          <h2 class="promo-card__title">Launcher <?= $this->config->item('website_name'); ?></h2>
+          <p class="promo-card__desc">Installe le jeu en 1 clic et profitez de toutes les mises à jour en direct, sans effort et sans configuration.</p>
+          <div class="promo-card__btns">
+            <a class="btn btn--primary" href="https://celestia-wow.com/download">Télécharger</a>
+            <!-- <a class="btn" href="https://celestia-wow.com/fr/changelogs">Changelogs</a> -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <hr class="cw-sep">
+
+
+  <!-- ── CONTENU CUSTOM ────────────────────────────────── -->
+  <section class="cw-section">
+    <div class="cw-wrap">
+      <div class="promo-card">
+        <span class="gold-line"></span>
+        <span class="promo-card__label">L'univers Celestia</span>
+        <h2 class="promo-card__title">Découvre nos ajouts et modifications custom</h2>
+        <p class="promo-card__desc">Explore des quêtes, classes et zones entièrement inédites, conçues par l'équipe Celestia exclusivement pour toi. Un monde qui ne ressemble à aucun autre.</p>
+        <div class="promo-card__btns">
+          <a class="btn btn--primary" href="https://celestia-wow.com/en/modifications">En savoir plus</a>
+          <!-- <a class="btn" href="https://celestia-wow.com/fr/forum/topic/2">Guide de démarrage</a> -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="cw-sep">
+
+  <!-- ── BOUTIQUE + SÉSAMES ────────────────────────────── -->
+  <section class="cw-section">
+    <div class="cw-wrap">
+      <div class="cw-section__head">
+        <span class="cw-section__label">Boutique</span>
+        <h2 class="cw-section__title">Améliore ton aventure</h2>
+      </div>
+      <div class="promo-grid">
+
+        <div class="promo-card promo-card--sm">
+          <span class="gold-line"></span>
+          <span class="promo-card__label">Visite la boutique</span>
+          <h2 class="promo-card__title">Une promo tous les jours !</h2>
+          <p class="promo-card__desc">Découvre la boutique et améliore ton confort de jeu grâce à des exclusivités Celestia surpuissantes. Customise toi-même ton aventure! </p>
+          <div class="promo-card__btns">
+            <a class="btn btn--primary" href="<?= base_url('store'); ?>">Boutique</a>
+            <!-- <a class="btn" href="<?= base_url('store'); ?>">En savoir plus</a> -->
+          </div>
+        </div>
+
+        <div class="promo-card promo-card--sm">
+          <span class="gold-line"></span>
+          <span class="promo-card__label">Passe au niveau max</span>
+          <h2 class="promo-card__title">Sésames & starters disponibles</h2>
+          <p class="promo-card__desc">Offre-toi un boost! Accède dès maintenant au contenu HL et obtiens un équipement adapté à ta spécialisation. Fini le leveling, place au fun !</p>
+          <div class="promo-card__btns">
+            <a class="btn btn--primary" href="https://celestia-wow.com/en/store/5">Voir les offres</a>
+          </div>
+        </div>
+
+        <div class="promo-card promo-card--sm">
+          <span class="gold-line"></span>
+          <span class="promo-card__label">Nouveauté boutique</span>
+          <h2 class="promo-card__title">Token Monture</h2>
+          <p class="promo-card__desc">Achète la monture de tes rêves directement en jeu. <br>
+            De WOTLK à Dragonflight, des dizaines de montures vous attendent à Tol'Vir.</p>
+          <div class="promo-card__btns">
+            <a class="btn btn--primary" href="https://celestia-wow.com/en/store/15">Découvrir</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <hr class="cw-sep">
+
+  <!-- ── CONTRIBUER + RECRUTEMENT ──────────────────────── -->
+  <section class="cw-section">
+    <div class="cw-wrap">
+      <div class="promo-grid">
+
+        <div class="promo-card promo-card--alt">
+          <span class="gold-line"></span>
+          <span class="promo-card__label">Es-tu prêt à soutenir le projet ?</span>
+          <h2 class="promo-card__title">Contributeur Celestia</h2>
+          <p class="promo-card__desc">Accède dès maintenant à des avantages en jeu exclusifs grâce au Pack Donateur. Chaque contribution aide le serveur à vivre et à grandir.</p>
+          <div class="promo-card__btns">
+            <a class="btn btn--primary" href="<?= base_url('donate'); ?>">Contribuer</a>
+          </div>
+        </div>
+
+        <div class="promo-card">
+          <span class="gold-line"></span>
+          <span class="promo-card__label">Promouvoir Celestia</span>
+          <h2 class="promo-card__title">Vote et gagne des Points Boutique !</h2>
+          <p class="promo-card__desc">Grâce à vos votes, Celestia évolue dans le classement. Chaque clic chez nos partenaires de référencement contribuent à faire grandir la communauté.</p>
+          <div class="promo-card__btns">
+            <a class="btn btn--primary" href="https://celestia-wow.com/en/vote">Voter maintenant</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <hr class="cw-sep">
+
+  <!-- ── BUGTRACKER ────────────────────────────────────── -->
+  <section class="cw-section">
+    <div class="cw-wrap">
+      <div class="promo-card">
+        <span class="gold-line"></span>
+        <span class="promo-card__label">BugTracker</span>
+        <h2 class="promo-card__title">Tu rencontres un bug ?</h2>
+        <p class="promo-card__desc">Signale un bug directement via notre outil de tickets ou contacte un Maître du Jeu sur Discord. Votre expérience de jeu est notre priorité absolue.</p>
+        <div class="promo-card__btns">
+          <a class="btn btn--primary" href="https://discord.com/channels/1084947995335872563/1084956206872928359"> Discord</a>
+          <!-- <a class="btn" href="https://celestia-wow.com/fr/bugtracker">BugTracker</a> -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /cw-page -->

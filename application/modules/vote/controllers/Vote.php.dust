@@ -1,0 +1,213 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+/**
+ * BlizzCMS
+ *
+ * An Open Source CMS for "World of Warcraft"
+ *
+ * This content is released under the MIT License (MIT)
+ *
+ * Copyright (c) 2017 - 2019, WoW-CMS
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * @author  WoW-CMS
+ * @copyright  Copyright (c) 2017 - 2019, WoW-CMS.
+ * @license https://opensource.org/licenses/MIT MIT License
+ * @link    https://wow-cms.com
+ * @since   Version 1.0.1
+ * @filesource
+ */
+
+class Vote extends MX_Controller {
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->model('vote_model');
+
+        if (!ini_get('date.timezone'))
+           date_default_timezone_set($this->config->item('timezone') ?: 'Europe/Paris');
+
+        if (!$this->wowgeneral->getMaintenance())
+            redirect(base_url('maintenance'),'refresh');
+
+        if (!$this->wowmodule->getVoteStatus())
+            redirect(base_url(),'refresh');
+
+        if (!$this->wowauth->isLogged()
+            && $this->router->fetch_method() !== 'callbackTop100Arena'
+            && $this->router->fetch_method() !== 'processrewards')
+            redirect(base_url('login'),'refresh');
+    }
+
+    public function index()
+    {
+        $data = array(
+            'pagetitle' => $this->lang->line('tab_vote'),
+            'voteList' => $this->vote_model->getVotes(),
+        );
+
+        $this->template->build('index', $data);
+    }
+
+    public function voteNow($id)
+    {
+        $this->vote_model->voteNow($id);
+    }
+
+    public function voteNowCount()
+    {
+        $id = $this->input->post('value', TRUE);
+        $seconds = $this->vote_model->getVoteTime($id);
+        echo $this->vote_model->getCountDownHTML($id, $seconds);
+    }
+
+    public function voteCallURL()
+    {
+        $id = $this->input->post('value', TRUE);
+        echo $this->vote_model->getVoteUrl($id);
+    }
+
+    public function verifyvote($id)
+    {
+        header('Content-Type: application/json');
+        echo json_encode($this->vote_model->verifyVote($id));
+    }
+
+    public function leaderboard($period = 'weekly')
+    {
+        $period  = in_array($period, ['daily', 'weekly', 'monthly']) ? $period : 'weekly';
+        $rewards = $this->db->where('period', $period)->order_by('rank_from', 'ASC')->get('vote_rewards')->result();
+
+        // FIX : réassigner pour que les labels générés soient bien présents
+        $rewards = $this->vote_model->buildRewardLabels($rewards);
+
+        $data = [
+            'pagetitle' => 'Top Votes',
+            'period'    => $period,
+            'rows'      => $this->vote_model->getLeaderboard($period, 20),
+            'rewards'   => $rewards,
+            'nextReset' => $this->vote_model->getNextReset($period),
+        ];
+        $this->template->build('leaderboard', $data);
+    }
+
+    public function leaderboard_data($period = 'weekly')
+    {
+        header('Content-Type: application/json');
+        $period  = in_array($period, ['daily', 'weekly', 'monthly']) ? $period : 'weekly';
+        $rewards = $this->db->where('period', $period)->order_by('rank_from', 'ASC')->get('vote_rewards')->result();
+
+        // FIX : réassigner pour que les labels générés soient bien présents dans le JSON
+        $rewards = $this->vote_model->buildRewardLabels($rewards);
+
+        echo json_encode([
+            'rows'       => $this->vote_model->getLeaderboard($period, 20),
+            'rewards'    => $rewards,
+            'next_reset' => $this->vote_model->getNextReset($period),
+        ]);
+    }
+
+    public function processrewards($period = 'weekly', $secret = '')
+    {
+        if ($secret !== 'Cx7mK9vR2pQw') {
+            http_response_code(403);
+            echo 'Forbidden';
+            return;
+        }
+        $period = in_array($period, ['daily', 'weekly', 'monthly']) ? $period : 'weekly';
+        header('Content-Type: application/json');
+        echo json_encode($this->vote_model->processRewards($period));
+    }
+
+    public function callbackTop100Arena()
+    {
+        $postback = $this->input->get('postback', TRUE);
+        if (!$postback) {
+            http_response_code(400);
+            echo 'MISSING_USER';
+            return;
+        }
+
+        $result = $this->vote_model->processTop100ArenaCallback($postback);
+        http_response_code($result === 'ok' ? 200 : 400);
+        echo $result;
+    }
+
+    /**
+     * GET vote/characters/(:num)
+     * Retourne la liste des personnages du joueur connecté sur le realm donné.
+     * Utilisé pour peupler le <select> de sélection du perso de récompense.
+     */
+    public function characters($realmid = 1)
+    {
+        header('Content-Type: application/json');
+        $userid  = (int) $this->session->userdata('wow_sess_id');
+        $realmid = (int) $realmid;
+
+        if (!$userid) {
+            echo json_encode(['status' => 'error', 'message' => 'Session expirée.']);
+            return;
+        }
+
+        $chars   = $this->vote_model->getCharacterList($userid, $realmid);
+        $current = $this->vote_model->getRewardChar($userid);
+
+        echo json_encode([
+            'status'       => 'ok',
+            'characters'   => $chars,
+            'current_char' => $current ? $current->charname  : null,
+            'current_realm'=> $current ? (int)$current->realm_id : $realmid,
+        ]);
+    }
+
+    /**
+     * POST vote/saverewardchar
+     * Sauvegarde le personnage choisi pour recevoir les récompenses de classement.
+     */
+    public function saverewardchar()
+    {
+        header('Content-Type: application/json');
+        $userid   = (int) $this->session->userdata('wow_sess_id');
+        $realmid  = (int) $this->input->post('realm_id', TRUE);
+        $charname = $this->input->post('charname', TRUE);
+
+        if (!$userid) {
+            echo json_encode(['status' => 'error', 'message' => 'Session expirée.']);
+            return;
+        }
+
+        if (!$realmid || !$charname) {
+            echo json_encode(['status' => 'error', 'message' => 'Données manquantes.']);
+            return;
+        }
+
+        $result = $this->vote_model->saveRewardChar($userid, $realmid, $charname);
+
+        if ($result === 'ok') {
+            echo json_encode(['status' => 'ok', 'message' => 'Personnage enregistré avec succès.']);
+        } elseif ($result === 'invalid_char') {
+            echo json_encode(['status' => 'error', 'message' => 'Ce personnage n\'appartient pas à ton compte.']);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Erreur serveur, réessaie.']);
+        }
+    }
+
+}

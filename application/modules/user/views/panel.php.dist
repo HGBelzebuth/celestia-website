@@ -1,0 +1,1789 @@
+<?php
+/* ═══════════════════════════════════════════════════════════════════════
+   PANEL — TRAITEMENTS PHP (avant tout rendu HTML)
+   ► Action POST "unstuck"  : débloquage de personnage
+   ► Action POST "transfer" : transfert de personnage (coût 50 DP)
+   ► Action POST "referral" : génération de token de parrainage
+═══════════════════════════════════════════════════════════════════════ */
+
+$sess_id       = $this->session->userdata('wow_sess_id');
+$sess_username = $this->session->userdata('blizz_sess_username');
+
+/* ── Helpers de connexion ── */
+$realm = $this->wowrealm->getRealms()->row();
+
+$charDB = $this->wowrealm->realmConnection(
+    $realm->username, $realm->password,
+    $realm->hostname, $realm->char_database
+);
+$authDB = $this->wowrealm->realmConnection(
+    $realm->username, $realm->password,
+    $realm->hostname, $realm->auth_database ?? 'R0_Auth'
+);
+$webDB = $this->wowrealm->realmConnection(
+    $realm->username, $realm->password,
+    $realm->hostname, $realm->web_database ?? 'R0_Website'
+);
+
+/* ── Résultats des actions ── */
+$unstuck_msg   = ''; $unstuck_type  = '';
+$transfer_msg  = ''; $transfer_type = '';
+$referral_msg  = ''; $referral_type = '';
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MODULE PARRAINAGE — AUTO-INSTALL DES TABLES
+═══════════════════════════════════════════════════════════════════════ */
+
+/* referral_config */
+$webDB->query("CREATE TABLE IF NOT EXISTS `referral_config` (
+  `id`                    TINYINT UNSIGNED NOT NULL DEFAULT 1,
+  `active`                TINYINT(1)       NOT NULL DEFAULT 1,
+  `max_tokens_per_day`    SMALLINT         NOT NULL DEFAULT 5,
+  `token_validity_days`   TINYINT          NOT NULL DEFAULT 30,
+  `referee_discount_days` SMALLINT         NOT NULL DEFAULT 30,
+  `sponsor_discount_days` SMALLINT         NOT NULL DEFAULT 90,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+$webDB->query("INSERT IGNORE INTO `referral_config` (`id`) VALUES (1);");
+
+/* referral_tokens — avec token_status ET referral_status séparés */
+$webDB->query("CREATE TABLE IF NOT EXISTS `referral_tokens` (
+  `id`               INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  `sponsor_username` VARCHAR(64)   NOT NULL,
+  `sponsor_email`    VARCHAR(255)  NOT NULL DEFAULT '',
+  `sponsor_ip`       VARCHAR(45)   NOT NULL DEFAULT '',
+  `token`            CHAR(8)       NOT NULL,
+  `referee_username` VARCHAR(64)   DEFAULT NULL,
+  `referee_email`    VARCHAR(255)  DEFAULT NULL,
+  `referee_ip`       VARCHAR(45)   DEFAULT NULL,
+  `created_at`       DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `used_at`          DATETIME      DEFAULT NULL,
+  `expires_at`       DATETIME      NOT NULL,
+  `validated_at`     DATETIME      DEFAULT NULL,
+  `token_status`     ENUM('generated','used','expired') NOT NULL DEFAULT 'generated',
+  `referral_status`  ENUM('pending','eligible','rewarded','expired') NOT NULL DEFAULT 'pending',
+  `reward_given`     TINYINT(1)    NOT NULL DEFAULT 0,
+  `reward_given_at`  DATETIME      DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_token`            (`token`),
+  UNIQUE KEY `uq_referee_username` (`referee_username`),
+  KEY `idx_sponsor`                (`sponsor_username`),
+  KEY `idx_referral_status`        (`referral_status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+/* referral_rewards */
+$webDB->query("CREATE TABLE IF NOT EXISTS `referral_rewards` (
+  `id`            SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `target`        ENUM('sponsor','referee') NOT NULL DEFAULT 'sponsor',
+  `nom`           VARCHAR(120)      NOT NULL,
+  `description`   TEXT              DEFAULT NULL,
+  `quantite`      SMALLINT          NOT NULL DEFAULT 1,
+  `duree_en_jour` SMALLINT          NOT NULL DEFAULT 0,
+  `code_boutique` VARCHAR(64)       DEFAULT NULL,
+  `code_en_jeu`   VARCHAR(64)       DEFAULT NULL,
+  `active`        TINYINT(1)        NOT NULL DEFAULT 1,
+  `sort_order`    TINYINT UNSIGNED  NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `idx_target` (`target`,`active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+/* referral_discounts */
+$webDB->query("CREATE TABLE IF NOT EXISTS `referral_discounts` (
+  `id`              INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  `username`        VARCHAR(64)   NOT NULL,
+  `type`            ENUM('sponsor','referee') NOT NULL,
+  `store_coupon_id` TINYINT UNSIGNED DEFAULT NULL
+                    COMMENT '2=coupon parrain, 7=coupon filleul (ref referral_rewards.id)',
+  `token_ref`       CHAR(8)       DEFAULT NULL,
+  `starts_at`       DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `expires_at`      DATETIME      NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_user_type` (`username`,`type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+/* referral_reward_logs */
+$webDB->query("CREATE TABLE IF NOT EXISTS `referral_reward_logs` (
+  `id`          INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  `username`    VARCHAR(64)   NOT NULL,
+  `reward_type` VARCHAR(64)   NOT NULL,
+  `reward_id`   SMALLINT UNSIGNED NOT NULL,
+  `token`       CHAR(8)       NOT NULL,
+  `created_at`  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_username` (`username`),
+  KEY `idx_token`    (`token`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+/* referral_ip_log */
+$webDB->query("CREATE TABLE IF NOT EXISTS `referral_ip_log` (
+  `id`         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `ip`         VARCHAR(45)  NOT NULL,
+  `username`   VARCHAR(64)  NOT NULL,
+  `token_used` CHAR(8)      NOT NULL,
+  `logged_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_ip`    (`ip`),
+  KEY `idx_token` (`token_used`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+/* ── Lecture config ── */
+$ref_cfg_row = $webDB->get('referral_config')->row();
+$ref_active  = (int)($ref_cfg_row->active ?? 1);
+
+/* ── Lecture récompenses (pour la popup info) ── */
+$ref_rewards_sponsor = $webDB->where('target', 'sponsor')->where('active', 1)
+                              ->order_by('sort_order', 'ASC')->get('referral_rewards')->result();
+$ref_rewards_referee = $webDB->where('target', 'referee')->where('active', 1)
+                              ->order_by('sort_order', 'ASC')->get('referral_rewards')->result();
+
+/* ── Lecture reward id=2 et id=7 (coupons boutique pré-stockés) ── */
+$reward_sponsor_coupon  = $webDB->where('id', 2)->get('referral_rewards')->row();
+$reward_referee_coupon  = $webDB->where('id', 7)->get('referral_rewards')->row();
+
+/* ── Expirer les tokens non utilisés ── */
+$webDB->query("UPDATE `referral_tokens`
+  SET `token_status` = 'expired', `referral_status` = 'expired'
+  WHERE `token_status` = 'generated' AND `expires_at` < NOW();");
+
+/* ── Tokens du parrain courant ── */
+$my_tokens = $webDB->where('sponsor_username', $sess_username)
+                    ->order_by('created_at', 'DESC')
+                    ->get('referral_tokens')->result();
+$ref_show_hist = !empty($my_tokens);
+
+/* ── Vue filleul : mon parrainage ── */
+$my_sponsor_token = $webDB->where('referee_username', $sess_username)
+                           ->where_in('token_status', ['used'])
+                           ->order_by('used_at', 'DESC')
+                           ->get('referral_tokens')->row();
+
+$my_referee_disc = null;
+if ($my_sponsor_token) {
+    $my_referee_disc = $webDB->where('username', $sess_username)
+                              ->where('token_ref', $my_sponsor_token->token)
+                              ->where('type', 'referee')
+                              ->get('referral_discounts')->row();
+}
+
+/* ── Tokens générés aujourd'hui ── */
+$tokens_today = (int)$webDB->where('sponsor_username', $sess_username)
+                             ->where('DATE(created_at)', date('Y-m-d'))
+                             ->count_all_results('referral_tokens');
+
+/* ── Email du compte courant ── */
+$user_email_row = $webDB->select('email')->where('username', $sess_username)->get('users')->row();
+$user_email     = $user_email_row->email ?? '';
+
+/* ═══════════════════════════════
+   ACTION POST : GÉNÉRATION TOKEN
+═══════════════════════════════ */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['referral_action']) && $_POST['referral_action'] === 'generate') {
+
+    $nonce_key = 'referral_nonce_' . $sess_id;
+
+    if (empty($_POST['referral_nonce']) || $_POST['referral_nonce'] !== $this->session->userdata($nonce_key)) {
+        $referral_msg = 'Requête invalide.'; $referral_type = 'error';
+    } elseif (!$ref_active) {
+        $referral_msg = 'Le module parrainage est désactivé.'; $referral_type = 'error';
+    } elseif (empty($user_email) || !filter_var($user_email, FILTER_VALIDATE_EMAIL)) {
+        $referral_msg = 'Votre adresse e-mail est invalide. Mettez-la à jour dans vos paramètres.'; $referral_type = 'error';
+    } elseif ($tokens_today >= (int)($ref_cfg_row->max_tokens_per_day ?? 5)) {
+        $referral_msg = 'Limite journalière atteinte (' . $ref_cfg_row->max_tokens_per_day . ' tokens/jour). Revenez demain.'; $referral_type = 'error';
+    } else {
+        /* Génération token unique 8 chars */
+        $chars     = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        $new_token = '';
+        $attempts  = 0;
+        do {
+            $new_token = '';
+            for ($i = 0; $i < 8; $i++) $new_token .= $chars[random_int(0, strlen($chars) - 1)];
+            $exists = $webDB->where('token', $new_token)->count_all_results('referral_tokens');
+            $attempts++;
+        } while ($exists > 0 && $attempts < 20);
+
+        if ($exists > 0) {
+            $referral_msg = 'Erreur de génération du token. Réessayez.'; $referral_type = 'error';
+        } else {
+            $expires    = date('Y-m-d H:i:s', strtotime('+' . ($ref_cfg_row->token_validity_days ?? 30) . ' days'));
+            $sponsor_ip = $_SERVER['REMOTE_ADDR'] ?? '';
+
+            $webDB->insert('referral_tokens', [
+                'sponsor_username' => $sess_username,
+                'sponsor_email'    => $user_email,
+                'sponsor_ip'       => $sponsor_ip,
+                'token'            => $new_token,
+                'expires_at'       => $expires,
+                'token_status'     => 'generated',
+                'referral_status'  => 'pending',
+            ]);
+
+            $referral_msg  = 'Token <strong>' . $new_token . '</strong> généré ! Partagez-le à votre filleul. Valable jusqu\'au ' . date('d/m/Y', strtotime($expires)) . '.';
+            $referral_type = 'success';
+
+            /* ── Email de confirmation au parrain ── */
+            if (!empty($user_email)) {
+                $site_name = 'Celestia-WoW';
+                $site_url  = base_url();
+                $exp_label = date('d/m/Y', strtotime($expires));
+
+                // Collecter les récompenses parrain pour l'email
+                $rewards_list_html = '';
+                foreach ($ref_rewards_sponsor as $rw) {
+                    $rewards_list_html .= '<li>— ' . htmlspecialchars($rw->nom) . '</li>';
+                }
+
+                $mail_html = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>'
+                    . 'body{margin:0;padding:0;background:#06111c;font-family:Georgia,serif;color:#8da5bb;}'
+                    . '.wrap{max-width:560px;margin:40px auto;background:#0a1a2c;border:1px solid rgba(200,168,75,.2);border-radius:10px;overflow:hidden;}'
+                    . '.hd{background:linear-gradient(135deg,#0d1f36,#111e30);padding:28px 32px;border-bottom:1px solid rgba(200,168,75,.25);}'
+                    . '.hd h1{margin:0;font-size:1.3rem;color:#c8a84b;letter-spacing:.1em;}'
+                    . '.bd{padding:28px 32px;}'
+                    . '.token-box{text-align:center;background:rgba(200,168,75,.07);border:1px solid rgba(200,168,75,.3);border-radius:8px;padding:20px;margin:20px 0;}'
+                    . '.token{font-family:Courier,monospace;font-size:2rem;letter-spacing:.35em;color:#e0c060;font-weight:bold;}'
+                    . '.token-exp{font-size:.9rem;color:#6a8aaa;margin-top:8px;}'
+                    . '.note{margin-top:14px;padding:10px 14px;background:rgba(93,190,122,.07);border:1px solid rgba(93,190,122,.2);border-radius:6px;font-size:.9rem;color:#7dd89a;}'
+                    . '.rewards{list-style:none;margin:12px 0;padding:0;}'
+                    . '.rewards li{margin:5px 0;font-size:.95rem;color:#8da5bb;}'
+                    . '.ft{padding:14px 32px;background:rgba(0,0,0,.3);font-size:.82rem;color:#4a6278;text-align:center;border-top:1px solid rgba(255,255,255,.06);}'
+                    . '.ft a{color:#6a8aaa;text-decoration:none;}'
+                    . '</style></head><body><div class="wrap">'
+                    . '<div class="hd"><h1>&#127381; Votre token de parrainage</h1></div>'
+                    . '<div class="bd">'
+                    . '<p>Bonjour <strong style="color:#c8d4e0">' . htmlspecialchars($sess_username) . '</strong>,</p>'
+                    . '<p>Votre token de parrainage a &eacute;t&eacute; g&eacute;n&eacute;r&eacute;. Partagez-le lors de l\'inscription d\'un ami.</p>'
+                    . '<div class="token-box">'
+                    . '<div class="token">' . htmlspecialchars($new_token) . '</div>'
+                    . '<div class="token-exp">Valable jusqu\'au <strong style="color:#c8a84b">' . $exp_label . '</strong></div>'
+                    . '</div>'
+                    . '<p style="color:#6a8aaa;font-size:.9rem">R&eacute;compenses parrain d&egrave;s que votre filleul atteint <strong style="color:#c8d4e0">3h de jeu</strong> et <strong style="color:#c8d4e0">2 personnages niveau&nbsp;&ge;&nbsp;20</strong>&nbsp;:</p>'
+                    . '<ul class="rewards">' . $rewards_list_html . '</ul>'
+                    . '<div class="note">&#9432; Les r&eacute;compenses sont attribu&eacute;es automatiquement apr&egrave;s validation des conditions.</div>'
+                    . '</div>'
+                    . '<div class="ft"><a href="' . htmlspecialchars($site_url) . '">' . htmlspecialchars($site_name) . '</a>'
+                    . ' &mdash; Email automatique.</div></div></body></html>';
+
+                $this->load->library('email');
+                $this->email->initialize(['mailtype' => 'html', 'charset' => 'utf-8']);
+                $this->email->clear();
+                $this->email->from('noreply@celestia-wow.com', $site_name);
+                $this->email->to($user_email);
+                $this->email->subject('[' . $site_name . '] Votre token de parrainage : ' . $new_token);
+                $this->email->message($mail_html);
+                $this->email->send();
+                unset($mail_html);
+            }
+
+            /* Rafraîchir la liste */
+            $my_tokens = $webDB->where('sponsor_username', $sess_username)->order_by('created_at', 'DESC')->get('referral_tokens')->result();
+            $tokens_today++;
+        }
+    }
+    $this->session->unset_userdata('referral_nonce_' . $sess_id);
+}
+
+/* Nonce parrainage */
+$referral_nonce_val = bin2hex(random_bytes(16));
+$this->session->set_userdata('referral_nonce_' . $sess_id, $referral_nonce_val);
+
+/* ═══════════════════════════════
+   ACTION : DÉBLOQUAGE
+═══════════════════════════════ */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['unstuck_char_name'])) {
+
+    $nonce_key = 'unstuck_nonce_' . $sess_id;
+
+    if (empty($_POST['unstuck_nonce']) || $_POST['unstuck_nonce'] !== $this->session->userdata($nonce_key)) {
+        $unstuck_msg = 'Requête invalide. Veuillez réessayer.'; $unstuck_type = 'error';
+    } else {
+        $char_name = trim($this->db->escape_str($_POST['unstuck_char_name']));
+
+        if (empty($char_name)) {
+            $unstuck_msg = 'Aucun personnage sélectionné.'; $unstuck_type = 'error';
+        } else {
+            $q = $charDB->select('race')->from('characters')->where('name', $char_name)->get();
+
+            if ($q->num_rows() === 0) {
+                $unstuck_msg = 'Personnage introuvable.'; $unstuck_type = 'error';
+            } else {
+                $race     = (int)$q->row()->race;
+                $alliance = [1, 3, 4, 7, 11];
+                $horde    = [2, 5, 6, 8, 10];
+
+                if (in_array($race, $alliance)) {
+                    $px = -8949.95; $py = -132.493; $pz = 83.5312; $map = 0;
+                } elseif (in_array($race, $horde)) {
+                    $px = 1526.68; $py = -4420.85; $pz = 14.2085; $map = 1;
+                } else {
+                    $unstuck_msg = 'Race non reconnue.'; $unstuck_type = 'error';
+                    goto unstuck_done;
+                }
+
+                $charDB->where('name', $char_name)->update('characters', [
+                    'position_x' => $px, 'position_y' => $py,
+                    'position_z' => $pz, 'map'         => $map,
+                ]);
+
+                if ($charDB->affected_rows() > 0) {
+                    $unstuck_msg  = '<strong>' . htmlspecialchars($char_name) . '</strong> a été téléporté avec succès.';
+                    $unstuck_type = 'success';
+                } else {
+                    $unstuck_msg  = 'Mise à jour échouée — personnage peut-être déjà à cet emplacement.';
+                    $unstuck_type = 'error';
+                }
+            }
+        }
+        $this->session->unset_userdata($nonce_key);
+    }
+}
+unstuck_done:
+
+/* ═══════════════════════════════
+   ACTION : TRANSFERT
+═══════════════════════════════ */
+$TRANSFER_COST = 50;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['transfer_char_name'])) {
+
+    $nonce_key = 'transfer_nonce_' . $sess_id;
+
+    if (empty($_POST['transfer_nonce']) || $_POST['transfer_nonce'] !== $this->session->userdata($nonce_key)) {
+        $transfer_msg = 'Requête invalide. Veuillez réessayer.'; $transfer_type = 'error';
+    } else {
+        $char_name   = trim($this->db->escape_str($_POST['transfer_char_name']));
+        $target_acct = trim($this->db->escape_str($_POST['transfer_target_account']));
+
+        if (empty($char_name) || empty($target_acct)) {
+            $transfer_msg = 'Veuillez remplir tous les champs.'; $transfer_type = 'error';
+        } else {
+            $authQ = $authDB->select('id')->from('account')->where('username', strtoupper($target_acct))->get();
+            if ($authQ->num_rows() === 0) {
+                $transfer_msg = 'Compte destinataire introuvable.'; $transfer_type = 'error';
+                goto transfer_done;
+            }
+            $target_account_id = (int)$authQ->row()->id;
+
+            $myAuthQ = $authDB->select('id')->from('account')->where('username', strtoupper($sess_username))->get();
+            if ($myAuthQ->num_rows() === 0) {
+                $transfer_msg = 'Impossible de vérifier votre compte.'; $transfer_type = 'error';
+                goto transfer_done;
+            }
+            $my_account_id = (int)$myAuthQ->row()->id;
+
+            $charOwnerQ = $charDB->select('guid')->from('characters')
+                                  ->where('name', $char_name)->where('account', $my_account_id)->get();
+            if ($charOwnerQ->num_rows() === 0) {
+                $transfer_msg = 'Ce personnage ne vous appartient pas ou est introuvable.'; $transfer_type = 'error';
+                goto transfer_done;
+            }
+
+            $countQ = $charDB->from('characters')->where('account', $target_account_id)->count_all_results();
+            if ($countQ >= 10) {
+                $transfer_msg = 'Le compte destinataire a atteint la limite de 10 personnages.'; $transfer_type = 'error';
+                goto transfer_done;
+            }
+
+            $dpQ = $webDB->select('dp')->from('users')->where('username', $sess_username)->get();
+            if ($dpQ->num_rows() === 0) {
+                $transfer_msg = 'Impossible de vérifier votre solde DP.'; $transfer_type = 'error';
+                goto transfer_done;
+            }
+            $current_dp = (int)$dpQ->row()->dp;
+
+            if ($current_dp < $TRANSFER_COST) {
+                $transfer_msg = 'Solde insuffisant. Le transfert coûte ' . $TRANSFER_COST . ' DP (solde : ' . $current_dp . ' DP).';
+                $transfer_type = 'error';
+                goto transfer_done;
+            }
+
+            $webDB->where('username', $sess_username)->update('users', ['dp' => $current_dp - $TRANSFER_COST]);
+            $charDB->where('name', $char_name)->update('characters', ['account' => $target_account_id]);
+
+            $transfer_msg  = '<strong>' . htmlspecialchars($char_name) . '</strong> transféré vers <strong>' . htmlspecialchars($target_acct) . '</strong>. ' . $TRANSFER_COST . ' DP déduits.';
+            $transfer_type = 'success';
+        }
+        $this->session->unset_userdata($nonce_key);
+    }
+}
+transfer_done:
+
+/* ── Nonces formulaires ── */
+$nonce_key_u   = 'unstuck_nonce_' . $sess_id;
+$nonce_value_u = bin2hex(random_bytes(16));
+$this->session->set_userdata($nonce_key_u, $nonce_value_u);
+
+$nonce_key_t   = 'transfer_nonce_' . $sess_id;
+$nonce_value_t = bin2hex(random_bytes(16));
+$this->session->set_userdata($nonce_key_t, $nonce_value_t);
+
+/* ── Collecte personnages + stats ── */
+$all_chars     = [];
+$total_seconds = 0;
+$total_money   = 0;
+
+foreach ($this->wowrealm->getRealms()->result() as $r) {
+    $db  = $this->wowrealm->realmConnection($r->username, $r->password, $r->hostname, $r->char_database);
+    $res = $this->wowrealm->getGeneralCharactersSpecifyAcc($db, $sess_id)->result();
+    foreach ($res as $c) {
+        $all_chars[]    = ['name' => $c->name, 'race' => $c->race ?? 0];
+        $total_seconds += (int)($c->totaltime ?? 0);
+        $total_money   += (int)($c->money     ?? 0);
+    }
+}
+
+$tt_d = floor($total_seconds / 86400);
+$tt_h = floor(($total_seconds % 86400) / 3600);
+$tt_m = floor(($total_seconds % 3600)  / 60);
+$total_time_str = $tt_d . 'j ' . $tt_h . 'h ' . $tt_m . 'm';
+
+$tm_gold   = floor($total_money / 10000);
+$tm_silver = floor(($total_money % 10000) / 100);
+$tm_copper = $total_money % 100;
+
+$dp_balance = 0;
+$dpBal = $webDB->select('dp')->from('users')->where('username', $sess_username)->get();
+if ($dpBal->num_rows()) $dp_balance = (int)$dpBal->row()->dp;
+
+/* ══════════════════════════════════════════════════════════════════════
+   HELPER : statut affiché parrainage
+   Retourne ['label', 'badge_class', 'promo_code'|null, 'promo_exp'|null]
+   pour chaque ligne de l'historique parrain
+══════════════════════════════════════════════════════════════════════ */
+function cwp_referral_row_data($tk, $webDB, $reward_sponsor_coupon, $coupon_duration_sponsor) {
+
+    $referral_status = $tk->referral_status ?? 'pending';
+    $token_status    = $tk->token_status    ?? 'generated';
+
+    /* Statut badge */
+    $badge_map = [
+        'generated' => ['Actif',    'badge-pending'],
+        'expired'   => ['Expiré',   'badge-expired'],
+        'used'      => [
+            'pending'  => ['En attente', 'badge-pending'],
+            'eligible' => ['Éligible',   'badge-used'],
+            'rewarded' => ['Récompensé', 'badge-rewarded'],
+            'expired'  => ['Expiré',     'badge-expired'],
+        ],
+    ];
+
+    if ($token_status === 'used') {
+        [$label, $badge] = $badge_map['used'][$referral_status] ?? ['Utilisé', 'badge-used'];
+    } elseif ($token_status === 'expired') {
+        [$label, $badge] = $badge_map['expired'];
+    } else {
+        [$label, $badge] = $badge_map['generated'];
+    }
+
+    /* Code promo boutique parrain */
+    $promo_code    = null;
+    $promo_exp     = null;
+    $promo_active  = false;
+    $show_promo    = false;
+
+    if ($referral_status === 'rewarded' || $referral_status === 'eligible') {
+        /* Chercher dans referral_discounts */
+        $disc = $webDB->where('username', $tk->sponsor_username ?? '')
+                       ->where('token_ref', $tk->token)
+                       ->where('type', 'sponsor')
+                       ->get('referral_discounts')->row();
+
+        if ($disc && $reward_sponsor_coupon) {
+            $show_promo   = true;
+            $promo_code   = $reward_sponsor_coupon->code_boutique;
+            $promo_exp    = $disc->expires_at;
+            $promo_active = strtotime($disc->expires_at) > time();
+        }
+    }
+
+    return compact('label', 'badge', 'show_promo', 'promo_code', 'promo_exp', 'promo_active', 'referral_status');
+}
+?>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   PANEL — charte argentée / layout.php
+═══════════════════════════════════════════════════════════ */
+.cwp {
+  --silver:        #c8d4e0;
+  --silver-soft:   #e2eaf2;
+  --silver-dim:    #8a9fb5;
+  --silver-pale:   rgba(180,200,220,.07);
+  --bg-page:       #06111c;
+  --bg-deep:       #020910;
+  --bg-card:       rgba(8,20,34,.92);
+  --bg-input:      rgba(6,16,28,.92);
+  --text-hi:       #d8e4f0;
+  --text-mid:      #8da5bb;
+  --text-lo:       #4a6278;
+  --border:        rgba(180,200,220,.18);
+  --border-lo:     rgba(180,200,220,.09);
+  --gold:          #c8a84b;
+  --danger-c:      rgba(200,80,80,1);
+  --font-rune:     'Cinzel', Georgia, serif;
+  --font-prose:    'Crimson Pro', Georgia, serif;
+  --radius:        12px;
+  --radius-sm:     7px;
+  --t:             .28s;
+  --ease:          cubic-bezier(.22,1,.36,1);
+}
+.cwp,.cwp *{box-sizing:border-box;}
+.cwp a{text-decoration:none;color:inherit;}
+.cwp img{display:block;max-width:100%;}
+
+.cwp{
+  min-height:100vh;
+  background:radial-gradient(ellipse 90% 40% at 50% -5%,rgba(180,200,220,.04) 0%,transparent 70%),var(--bg-page);
+  padding:calc(var(--nav-h,86px) + 2.75rem) clamp(1.25rem,4vw,3rem) 5rem;
+  position:relative;
+}
+.cwp::after{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='.022'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;
+}
+
+.cwp__wrap{
+  position:relative;z-index:1;
+  max-width:1360px;margin:0 auto;
+  display:grid;grid-template-columns:240px 1fr;
+  gap:2rem;align-items:start;
+}
+
+/* ══ SIDEBAR ══ */
+.cwp__aside{position:sticky;top:calc(var(--nav-h,86px) + 1.25rem);}
+.cwp__nav{
+  background:var(--bg-card);border:1px solid var(--border-lo);
+  border-radius:var(--radius);overflow:hidden;position:relative;
+}
+.cwp__nav::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent 0%,var(--silver-dim) 25%,var(--silver) 50%,var(--silver-dim) 75%,transparent 100%);
+  pointer-events:none;
+}
+.cwp__nav-hd{
+  padding:1.35rem 1.4rem 1rem;border-bottom:1px solid var(--border-lo);
+  display:flex;align-items:center;gap:.65rem;
+}
+.cwp__nav-hd i{font-size:1rem;color:var(--silver-dim);}
+.cwp__nav-hd span{font-family:var(--font-rune);font-size:1rem;letter-spacing:.2em;text-transform:uppercase;color:var(--silver);}
+.cwp__nav-group{padding:.4rem 0;}
+.cwp__nav-group+.cwp__nav-group{border-top:1px solid var(--border-lo);}
+.cwp__nav-link{
+  display:flex;align-items:center;gap:.7rem;padding:.65rem 1.4rem;
+  font-family:var(--font-rune);font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text-mid);transition:color var(--t),background var(--t),padding-left var(--t);position:relative;
+}
+.cwp__nav-link i{width:17px;text-align:center;font-size:1rem;color:var(--silver-dim);flex-shrink:0;transition:color var(--t);}
+.cwp__nav-link:hover{color:var(--silver);background:var(--silver-pale);padding-left:1.85rem;}
+.cwp__nav-link:hover i{color:var(--silver);}
+.cwp__nav-link--active{color:var(--silver-soft);background:rgba(180,200,220,.1);}
+.cwp__nav-link--active i{color:var(--silver);}
+.cwp__nav-link--active::before{content:'';position:absolute;left:0;top:18%;bottom:18%;width:2px;background:var(--silver);border-radius:1px;}
+
+/* ══ MAIN ══ */
+.cwp__main{display:flex;flex-direction:column;gap:1.5rem;animation:cwp-in .5s var(--ease) both;}
+@keyframes cwp-in{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+
+.cwp__section-head{display:flex;align-items:center;gap:1rem;margin-bottom:.25rem;}
+.cwp__section-title{
+  font-family:var(--font-rune);font-size:1.35rem;letter-spacing:.28em;
+  text-transform:uppercase;color:var(--silver);display:flex;align-items:center;gap:.6rem;white-space:nowrap;
+}
+.cwp__section-title i{font-size:1.15rem;color:var(--silver-dim);}
+.cwp__section-rule{flex:1;height:1px;background:linear-gradient(to right,var(--border),transparent);}
+
+/* ── Card ── */
+.cwp__card{background:var(--bg-card);border:1px solid var(--border-lo);border-radius:var(--radius);overflow:hidden;position:relative;}
+.cwp__card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent 5%,var(--border) 35%,var(--silver-dim) 50%,var(--border) 65%,transparent 95%);
+}
+.cwp__card-hd{
+  padding:1.15rem 1.5rem;border-bottom:1px solid var(--border-lo);
+  display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;
+}
+.cwp__card-hd-l{display:flex;align-items:center;gap:.6rem;}
+.cwp__card-hd-l i{font-size:1rem;color:var(--silver-dim);}
+.cwp__card-hd-l h2{font-family:var(--font-rune);font-size:1rem;letter-spacing:.18em;text-transform:uppercase;color:var(--silver);}
+.cwp__card-hd-r{display:flex;align-items:center;gap:.65rem;flex-wrap:wrap;}
+.cwp__card-bd{padding:1.5rem;}
+
+/* ── Boutons ── */
+.cwp__btn{
+  display:inline-flex;align-items:center;gap:.45rem;padding:.5rem 1.15rem;
+  font-family:var(--font-rune);font-size:1rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--silver-soft);border:1px solid var(--silver-dim);border-radius:var(--radius-sm);
+  background:transparent;transition:background var(--t),border-color var(--t),box-shadow var(--t);
+  cursor:pointer;white-space:nowrap;position:relative;overflow:hidden;
+}
+.cwp__btn::before{
+  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.05),transparent);
+  transition:left .45s var(--ease);
+}
+.cwp__btn:hover::before{left:100%;}
+.cwp__btn:hover{background:var(--silver-pale);border-color:var(--silver);box-shadow:0 0 16px rgba(180,200,220,.1);}
+.cwp__btn i{font-size:1rem;color:var(--silver-dim);}
+.cwp__btn--danger{color:#f0a0a0;border-color:rgba(200,80,80,.4);}
+.cwp__btn--danger:hover{background:rgba(200,80,80,.1);border-color:rgba(200,80,80,.7);color:#f5c0c0;box-shadow:0 0 16px rgba(200,80,80,.12);}
+.cwp__btn--warning{color:#f0d08a;border-color:rgba(200,160,60,.4);}
+.cwp__btn--warning:hover{background:rgba(200,160,60,.1);border-color:rgba(200,160,60,.7);color:#f5e0a0;box-shadow:0 0 16px rgba(200,160,60,.12);}
+
+/* ── Notification inline ── */
+.cwp__notif{
+  display:flex;align-items:flex-start;gap:.7rem;padding:.9rem 1.1rem;
+  border-radius:8px;border:1px solid;font-family:var(--font-prose);
+  font-size:1.05rem;line-height:1.5;margin-top:.75rem;
+  animation:cwp-in .4s var(--ease) both;
+}
+.cwp__notif i{flex-shrink:0;font-size:1.05rem;margin-top:.1rem;}
+.cwp__notif--success{background:rgba(93,190,122,.08);border-color:rgba(93,190,122,.25);color:#7dd89a;}
+.cwp__notif--success i{color:#5dbf6e;}
+.cwp__notif--error{background:rgba(224,85,85,.08);border-color:rgba(224,85,85,.22);color:#e88;}
+.cwp__notif--error i{color:#e05555;}
+
+/* ── Table infos compte ── */
+.cwp__info{width:100%;border-collapse:collapse;}
+.cwp__info tr{border-bottom:1px solid var(--border-lo);transition:background var(--t);}
+.cwp__info tr:last-child{border-bottom:none;}
+.cwp__info tr:hover{background:var(--silver-pale);}
+.cwp__info td{padding:.9rem .75rem;font-size:1.05rem;line-height:1.4;vertical-align:middle;}
+.cwp__info .cwp__info-lbl{font-family:var(--font-rune);font-size:1rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-mid);width:200px;white-space:nowrap;}
+.cwp__info .cwp__info-lbl i{margin-right:.5rem;color:var(--silver-dim);}
+.cwp__info .cwp__info-val{font-family:var(--font-prose);color:var(--text-hi);}
+
+/* ── Realm + chars ── */
+.cwp__realm{margin-bottom:2.25rem;}
+.cwp__realm:last-child{margin-bottom:0;}
+.cwp__realm-hd{display:flex;align-items:center;gap:.65rem;padding-bottom:.8rem;margin-bottom:1.25rem;border-bottom:1px solid var(--border-lo);}
+.cwp__realm-hd i{color:var(--silver-dim);font-size:1rem;}
+.cwp__realm-hd span{font-family:var(--font-rune);font-size:1.05rem;letter-spacing:.18em;text-transform:uppercase;color:var(--silver);}
+
+.cwp__chars-wrap{overflow-x:auto;}
+.cwp__chars-table{width:100%;border-collapse:collapse;min-width:540px;}
+.cwp__chars-table thead tr{border-bottom:1px solid var(--border);}
+.cwp__chars-table thead th{
+  padding:.5rem 1rem 1rem;font-family:var(--font-rune);font-size:1rem;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--silver-dim);
+  text-align:left;font-weight:normal;display:table-cell;vertical-align:bottom;
+}
+.cwp__chars-table thead th .th-icon{display:block;font-size:1.15rem;margin-bottom:.35rem;color:var(--silver-dim);}
+.cwp__chars-table tbody tr{border-bottom:1px solid var(--border-lo);transition:background var(--t);}
+.cwp__chars-table tbody tr:last-child{border-bottom:none;}
+.cwp__chars-table tbody tr:hover{background:var(--silver-pale);}
+.cwp__chars-table tbody td{padding:.9rem 1rem;font-family:var(--font-prose);font-size:1.05rem;color:var(--text-hi);vertical-align:middle;}
+
+.cwp__char-name{font-family:var(--font-rune);font-size:1.05rem;letter-spacing:.08em;color:var(--silver-soft);}
+.cwp__char-icons{display:flex;align-items:center;gap:.6rem;}
+.cwp__char-icon-wrap{position:relative;display:inline-block;}
+.cwp__char-icon{
+  width:50px;height:50px;border-radius:8px;border:1px solid var(--border-lo);
+  object-fit:cover;background:rgba(0,0,0,.5);display:block;
+  transition:border-color var(--t),box-shadow var(--t),transform var(--t) var(--ease);
+}
+.cwp__char-icon-wrap:hover .cwp__char-icon{border-color:var(--silver-dim);box-shadow:0 0 12px rgba(180,200,220,.2);transform:scale(1.08);}
+.cwp__char-icon-wrap::after{
+  content:attr(data-tip);
+  position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);
+  background:rgba(3,10,20,.97);border:1px solid var(--border);border-radius:5px;
+  padding:.28rem .65rem;font-family:var(--font-rune);font-size:1rem;letter-spacing:.08em;
+  color:var(--silver);white-space:nowrap;pointer-events:none;opacity:0;
+  transition:opacity var(--t);z-index:10;
+}
+.cwp__char-icon-wrap:hover::after{opacity:1;}
+.cwp__char-level{font-family:var(--font-rune);font-size:1.05rem;letter-spacing:.08em;color:var(--silver);}
+.cwp__char-time{font-size:1.05rem;color:var(--text-mid);}
+.cwp__char-money{font-size:1.05rem;color:var(--text-mid);white-space:nowrap;}
+.cwp__char-money .gold-coin{color:var(--gold);}
+.cwp__char-money .silver-coin{color:#aaa;}
+.cwp__char-money .copper-coin{color:#c87540;}
+.cwp__chars-empty{padding:2.5rem;text-align:center;font-family:var(--font-prose);font-size:1.05rem;font-style:italic;color:var(--text-lo);}
+.cwp__chars-empty i{font-size:2rem;display:block;margin:0 auto .75rem;color:var(--border);}
+
+.cwp__chars-footer{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;
+  margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--border-lo);
+}
+.cwp__total-time{
+  display:inline-flex;align-items:center;gap:.65rem;padding:.6rem 1.2rem;
+  background:rgba(180,200,220,.05);border:1px solid var(--border-lo);border-radius:var(--radius-sm);
+}
+.cwp__total-time i{font-size:1rem;color:var(--silver-dim);}
+.cwp__total-time span{font-family:var(--font-rune);font-size:1rem;letter-spacing:.1em;color:var(--text-mid);}
+.cwp__total-time strong{font-family:var(--font-rune);font-size:1.05rem;color:var(--silver);letter-spacing:.08em;margin-left:.3rem;}
+.cwp__total-money strong{margin-left:.2rem;}
+.cwp__total-money{border-left:1px solid var(--border-lo);padding-left:1.25rem;}
+
+/* ══ MODALES ══ */
+.cwp-overlay{
+  position:fixed;inset:0;z-index:9100;
+  background:rgba(2,9,16,.82);backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:center;padding:1.5rem;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .3s,visibility .3s;
+}
+.cwp-overlay.is-open{opacity:1;visibility:visible;pointer-events:auto;}
+.cwp-modal{
+  background:rgba(6,17,30,.97);
+  border:1px solid rgba(180,200,220,.15);border-radius:14px;
+  width:100%;max-width:500px;position:relative;overflow:hidden;
+  transform:translateY(20px) scale(.97);transition:transform .35s var(--ease);
+  box-shadow:0 32px 80px rgba(0,0,0,.7);
+}
+.cwp-overlay.is-open .cwp-modal{transform:translateY(0) scale(1);}
+.cwp-modal--danger::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(200,100,60,.7) 30%,rgba(220,100,60,1) 50%,rgba(200,100,60,.7) 70%,transparent);}
+.cwp-modal--warning::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(200,160,60,.7) 30%,rgba(220,180,60,1) 50%,rgba(200,160,60,.7) 70%,transparent);}
+.cwp-modal--gold::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(200,168,75,.6) 25%,#d4a843 50%,rgba(200,168,75,.6) 75%,transparent);}
+.cwp-modal__hd{
+  padding:1.5rem 1.5rem 1.1rem;border-bottom:1px solid rgba(180,200,220,.09);
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+}
+.cwp-modal__hd-l{display:flex;align-items:center;gap:.65rem;}
+.cwp-modal__hd-l i{font-size:1.2rem;}
+.cwp-modal__hd-l h3{font-family:'Cinzel',Georgia,serif;font-size:1.1rem;letter-spacing:.18em;text-transform:uppercase;color:#e2eaf2;}
+.cwp-modal__close{
+  width:34px;height:34px;border:1px solid rgba(180,200,220,.15);border-radius:6px;
+  background:transparent;color:#8da5bb;font-size:1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:background .2s,color .2s,border-color .2s;
+}
+.cwp-modal__close:hover{background:rgba(180,200,220,.08);border-color:rgba(180,200,220,.3);color:#e2eaf2;}
+.cwp-modal__bd{padding:1.5rem;display:flex;flex-direction:column;gap:1.25rem;}
+.cwp-modal__alert{display:flex;align-items:flex-start;gap:.75rem;padding:1rem 1.1rem;border-radius:8px;border:1px solid;}
+.cwp-modal__alert i{font-size:1.1rem;flex-shrink:0;margin-top:.1rem;}
+.cwp-modal__alert p{font-family:'Crimson Pro',Georgia,serif;font-size:1.05rem;line-height:1.55;color:#d0c0a8;}
+.cwp-modal__alert strong{color:#f0d080;font-family:'Cinzel',Georgia,serif;font-size:1rem;letter-spacing:.08em;}
+.cwp-modal__alert--warn{background:rgba(220,130,60,.08);border-color:rgba(220,130,60,.25);}
+.cwp-modal__alert--warn i{color:rgba(230,150,80,1);}
+.cwp-modal__alert--info{background:rgba(80,160,220,.08);border-color:rgba(80,160,220,.22);}
+.cwp-modal__alert--info i{color:rgba(100,180,230,1);}
+.cwp-modal__field label{display:block;font-family:'Cinzel',Georgia,serif;font-size:1rem;letter-spacing:.12em;text-transform:uppercase;color:#8da5bb;margin-bottom:.6rem;}
+.cwp-modal__field label i{margin-right:.4rem;}
+.cwp-modal__select,.cwp-modal__input{
+  width:100%;padding:.8rem 1rem;
+  background:rgba(6,16,28,.92);border:1px solid rgba(180,200,220,.12);border-radius:8px;
+  font-family:'Crimson Pro',Georgia,serif;font-size:1.05rem;color:#d8e4f0;
+  outline:none;transition:border-color .25s,box-shadow .25s;
+}
+.cwp-modal__select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a9fb5' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 1rem center;cursor:pointer;}
+.cwp-modal__select:focus,.cwp-modal__input:focus{border-color:rgba(180,200,220,.35);box-shadow:0 0 0 3px rgba(180,200,220,.07);}
+.cwp-dp-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .75rem;border-radius:20px;background:rgba(200,168,75,.08);border:1px solid rgba(200,168,75,.25);font-family:'Cinzel',Georgia,serif;font-size:1rem;letter-spacing:.08em;color:#c8a84b;}
+.cwp-dp-badge i{font-size:.9rem;}
+.cwp-modal__ft{
+  padding:1rem 1.5rem 1.5rem;border-top:1px solid rgba(180,200,220,.09);
+  display:flex;align-items:center;justify-content:flex-end;gap:.85rem;flex-wrap:wrap;
+}
+.cwp-modal__cancel{display:inline-flex;align-items:center;gap:.45rem;padding:.55rem 1.2rem;font-family:'Cinzel',Georgia,serif;font-size:1rem;letter-spacing:.12em;text-transform:uppercase;color:#8da5bb;border:1px solid rgba(180,200,220,.15);border-radius:7px;background:transparent;cursor:pointer;transition:background .25s,color .25s,border-color .25s;}
+.cwp-modal__cancel:hover{background:rgba(180,200,220,.07);border-color:rgba(180,200,220,.28);color:#d8e4f0;}
+.cwp-modal__submit{display:inline-flex;align-items:center;gap:.45rem;padding:.55rem 1.4rem;font-family:'Cinzel',Georgia,serif;font-size:1rem;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;border-radius:7px;position:relative;overflow:hidden;transition:background .25s,border-color .25s,box-shadow .25s;}
+.cwp-modal__submit--danger{color:#fff3e0;border:1px solid rgba(220,100,60,.5);background:rgba(200,80,40,.15);}
+.cwp-modal__submit--danger:hover{background:rgba(200,80,40,.28);border-color:rgba(220,120,60,.8);box-shadow:0 0 18px rgba(200,80,40,.2);}
+.cwp-modal__submit--warning{color:#fff8e0;border:1px solid rgba(200,160,60,.5);background:rgba(180,130,30,.15);}
+.cwp-modal__submit--warning:hover{background:rgba(180,130,30,.28);border-color:rgba(220,180,60,.8);box-shadow:0 0 18px rgba(180,130,30,.2);}
+
+/* ── Table historique parrainage ── */
+.cwp-hist-table thead th{padding-bottom:.85rem;}
+.cwp-hist-token{font-family:var(--font-rune);font-size:1.05rem;letter-spacing:.2em;color:#c8a84b;cursor:pointer;transition:color var(--t);display:inline-flex;align-items:center;gap:.3rem;}
+.cwp-hist-token:hover{color:#e0c060;}
+.cwp-hist-referee{font-family:var(--font-rune);font-size:1rem;letter-spacing:.08em;color:var(--silver-soft);}
+.cwp-hist-promo{font-family:var(--font-prose);font-size:1.05rem;color:var(--text-mid);}
+.cwp-hist-promo--active{color:#7dd89a;}
+.cwp-hist-promo-badge{display:inline-block;margin-left:.4rem;padding:.1rem .5rem;background:rgba(93,190,122,.1);border:1px solid rgba(93,190,122,.25);border-radius:10px;font-family:var(--font-rune);font-size:.9rem;letter-spacing:.06em;color:#5dbf6e;vertical-align:middle;}
+.cwp__card--referral-hist{border-color:rgba(200,168,75,.15);}
+.cwp__card--referral-hist::before{background:linear-gradient(90deg,transparent 5%,rgba(200,168,75,.15) 35%,rgba(200,168,75,.5) 50%,rgba(200,168,75,.15) 65%,transparent 95%);}
+
+/* ── Badges statut parrainage ── */
+.cwp-ref-token-badge{font-size:.9rem;padding:.15rem .55rem;border-radius:10px;font-family:'Cinzel',Georgia,serif;letter-spacing:.06em;white-space:nowrap;}
+.badge-pending  {background:rgba(93,190,122,.1);border:1px solid rgba(93,190,122,.25);color:#5dbf6e;}
+.badge-used     {background:rgba(100,130,180,.1);border:1px solid rgba(100,130,180,.2);color:#6699cc;}
+.badge-rewarded {background:rgba(200,168,75,.12);border:1px solid rgba(200,168,75,.3);color:#c8a84b;}
+.badge-expired  {background:rgba(100,100,100,.1);border:1px solid rgba(100,100,100,.2);color:var(--text-lo);}
+
+/* ══ MODULE PARRAINAGE SIDEBAR ══ */
+.cwp-referral{
+  margin-top:1.25rem;
+  background:linear-gradient(160deg,rgba(12,24,38,.98) 0%,rgba(8,18,30,.98) 100%);
+  border:1px solid rgba(200,168,75,.2);border-radius:var(--radius);
+  overflow:hidden;position:relative;
+}
+.cwp-referral::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(200,168,75,.5) 25%,#c8a84b 50%,rgba(200,168,75,.5) 75%,transparent);}
+.cwp-referral::after{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:180px;height:120px;background:radial-gradient(ellipse,rgba(200,168,75,.08) 0%,transparent 70%);pointer-events:none;}
+.cwp-referral__inner{padding:1.25rem 1.2rem;position:relative;z-index:1;}
+.cwp-referral__title{display:flex;align-items:center;gap:.55rem;font-family:var(--font-rune);font-size:1rem;letter-spacing:.18em;text-transform:uppercase;color:#d4a843;margin-bottom:1rem;}
+.cwp-referral__title i{font-size:1rem;color:#c8a84b;}
+.cwp-referral__gifts{display:flex;justify-content:center;gap:1rem;margin-bottom:1.1rem;}
+.cwp-referral__gift{display:flex;flex-direction:column;align-items:center;gap:.3rem;font-family:var(--font-rune);font-size:.9rem;letter-spacing:.06em;color:rgba(200,168,75,.6);}
+.cwp-referral__gift i{font-size:1.4rem;color:#c8a84b;animation:cwp-gift-float 3s ease-in-out infinite;filter:drop-shadow(0 0 6px rgba(200,168,75,.4));}
+.cwp-referral__gift:nth-child(2) i{animation-delay:.8s;}
+.cwp-referral__gift:nth-child(3) i{animation-delay:1.6s;}
+@keyframes cwp-gift-float{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-5px) scale(1.08);}}
+.cwp-referral__stats{display:flex;align-items:center;justify-content:space-between;padding:.6rem .75rem;margin-bottom:1rem;background:rgba(200,168,75,.05);border:1px solid rgba(200,168,75,.1);border-radius:var(--radius-sm);}
+.cwp-referral__stat{text-align:center;}
+.cwp-referral__stat-val{font-family:var(--font-rune);font-size:1.2rem;letter-spacing:.05em;color:#c8a84b;display:block;}
+.cwp-referral__stat-lbl{font-family:var(--font-prose);font-size:.95rem;color:var(--text-lo);}
+.cwp-referral__stat-sep{width:1px;height:32px;background:rgba(200,168,75,.15);}
+.cwp-referral__btn{display:flex;align-items:center;justify-content:center;gap:.55rem;width:100%;padding:.7rem 1rem;font-family:var(--font-rune);font-size:1rem;letter-spacing:.14em;text-transform:uppercase;color:#1a1008;background:linear-gradient(135deg,#c8a84b 0%,#e0c060 45%,#c8a84b 100%);border:none;border-radius:var(--radius-sm);cursor:pointer;box-shadow:0 2px 14px rgba(200,168,75,.25);transition:box-shadow var(--t),transform var(--t),filter var(--t);position:relative;overflow:hidden;}
+.cwp-referral__btn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);transition:left .5s;}
+.cwp-referral__btn:hover::before{left:100%;}
+.cwp-referral__btn:hover{box-shadow:0 4px 22px rgba(200,168,75,.4);filter:brightness(1.08);transform:translateY(-1px);}
+.cwp-referral__btn--disabled{background:rgba(80,80,80,.3);color:var(--text-lo);box-shadow:none;cursor:not-allowed;filter:none;transform:none;border:1px solid rgba(180,200,220,.08);}
+.cwp-referral__btn--disabled:hover{box-shadow:none;filter:none;transform:none;}
+.cwp-referral__btn--disabled::before{display:none;}
+.cwp-referral__notif{margin-top:.85rem;padding:.75rem .9rem;border-radius:7px;border:1px solid;font-family:var(--font-prose);font-size:1rem;line-height:1.45;animation:cwp-in .4s var(--ease) both;}
+.cwp-referral__notif--success{background:rgba(93,190,122,.08);border-color:rgba(93,190,122,.22);color:#7dd89a;}
+.cwp-referral__notif--error{background:rgba(224,85,85,.07);border-color:rgba(224,85,85,.2);color:#e88;}
+
+/* Tabs parrainage */
+.cwp-ref-tabs{display:flex;border-bottom:1px solid rgba(180,200,220,.09);margin-bottom:0;}
+.cwp-ref-tab{flex:1;padding:.85rem 1rem;font-family:'Cinzel',Georgia,serif;font-size:1rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-lo);background:transparent;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color var(--t),border-color var(--t);display:flex;align-items:center;justify-content:center;gap:.5rem;}
+.cwp-ref-tab i{font-size:1rem;}
+.cwp-ref-tab.is-active{color:#c8a84b;border-bottom-color:#c8a84b;}
+.cwp-ref-tab:hover:not(.is-active){color:var(--text-mid);}
+.cwp-ref-panel{display:none;padding:1.25rem 1.5rem;}
+.cwp-ref-panel.is-active{display:block;}
+.cwp-ref-rewards{list-style:none;display:flex;flex-direction:column;gap:.7rem;margin-bottom:1.1rem;}
+.cwp-ref-reward{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem .9rem;background:rgba(200,168,75,.04);border:1px solid rgba(200,168,75,.1);border-radius:8px;transition:background var(--t),border-color var(--t);}
+.cwp-ref-reward:hover{background:rgba(200,168,75,.08);border-color:rgba(200,168,75,.2);}
+.cwp-ref-reward i{font-size:1rem;color:#c8a84b;flex-shrink:0;margin-top:.15rem;}
+.cwp-ref-reward-name{font-family:'Cinzel',Georgia,serif;font-size:1rem;letter-spacing:.08em;color:#d4a843;display:block;margin-bottom:.15rem;}
+.cwp-ref-reward-desc{font-family:'Crimson Pro',Georgia,serif;font-size:1rem;color:var(--text-mid);line-height:1.45;}
+.cwp-ref-warns{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.1rem;}
+.cwp-ref-warn{display:flex;align-items:flex-start;gap:.55rem;padding:.6rem .8rem;background:rgba(200,140,50,.06);border:1px solid rgba(200,140,50,.18);border-radius:6px;font-family:'Crimson Pro',Georgia,serif;font-size:1rem;color:rgba(210,185,120,.85);line-height:1.4;}
+.cwp-ref-warn i{color:rgba(200,160,70,.9);flex-shrink:0;font-size:1rem;margin-top:.1rem;}
+.cwp-ref-tokens-hd{font-family:'Cinzel',Georgia,serif;font-size:1rem;letter-spacing:.14em;text-transform:uppercase;color:var(--silver-dim);margin-bottom:.65rem;display:flex;align-items:center;gap:.5rem;}
+.cwp-ref-token-list{display:flex;flex-direction:column;gap:.45rem;max-height:180px;overflow-y:auto;}
+.cwp-ref-token-list::-webkit-scrollbar{width:4px;}
+.cwp-ref-token-list::-webkit-scrollbar-thumb{background:rgba(180,200,220,.15);border-radius:2px;}
+.cwp-ref-token-row{display:flex;align-items:center;gap:.65rem;padding:.5rem .75rem;background:rgba(6,16,28,.7);border:1px solid var(--border-lo);border-radius:6px;}
+.cwp-ref-token-code{font-family:'Cinzel',Georgia,serif;font-size:1.05rem;letter-spacing:.2em;color:#c8a84b;flex:1;cursor:pointer;transition:color var(--t);user-select:all;}
+.cwp-ref-token-code:hover{color:#e0c060;}
+.cwp-ref-token-copy{background:transparent;border:1px solid rgba(200,168,75,.2);border-radius:4px;color:rgba(200,168,75,.5);padding:.2rem .45rem;cursor:pointer;font-size:.9rem;transition:color var(--t),border-color var(--t);}
+.cwp-ref-token-copy:hover{color:#c8a84b;border-color:rgba(200,168,75,.5);}
+.cwp-ref-token-empty{font-family:'Crimson Pro',Georgia,serif;font-size:1rem;font-style:italic;color:var(--text-lo);padding:.5rem;text-align:center;}
+.cwp-ref-generate{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;padding:1rem;background:rgba(200,168,75,.04);border:1px solid rgba(200,168,75,.12);border-radius:8px;margin-top:.75rem;}
+.cwp-ref-generate-info{font-family:'Crimson Pro',Georgia,serif;font-size:1rem;color:var(--text-mid);line-height:1.4;}
+.cwp-ref-generate-info strong{font-family:'Cinzel',Georgia,serif;font-size:1rem;color:#c8a84b;}
+.cwp-ref-gen-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.55rem 1.1rem;font-family:'Cinzel',Georgia,serif;font-size:1rem;letter-spacing:.1em;text-transform:uppercase;color:#1a1008;background:linear-gradient(135deg,#c8a84b,#e0c060);border:none;border-radius:6px;cursor:pointer;box-shadow:0 2px 10px rgba(200,168,75,.2);transition:box-shadow var(--t),filter var(--t);white-space:nowrap;}
+.cwp-ref-gen-btn:hover{box-shadow:0 4px 18px rgba(200,168,75,.35);filter:brightness(1.08);}
+.cwp-copy-toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:rgba(10,26,44,.97);border:1px solid rgba(200,168,75,.3);border-radius:8px;padding:.6rem 1.2rem;font-family:'Cinzel',Georgia,serif;font-size:1rem;letter-spacing:.1em;color:#c8a84b;pointer-events:none;opacity:0;z-index:9999;transition:opacity .25s;}
+.cwp-copy-toast.show{opacity:1;}
+
+/* Condition progress bar */
+.cwp-cond-bar{margin-top:.5rem;}
+.cwp-cond-track{height:4px;background:rgba(180,200,220,.1);border-radius:2px;overflow:hidden;}
+.cwp-cond-fill{height:100%;background:linear-gradient(90deg,#5dbf6e,#7dd89a);border-radius:2px;transition:width .6s ease;}
+
+/* ══ RESPONSIVE ══ */
+@media (max-width:960px){
+  .cwp__wrap{grid-template-columns:1fr;}
+  .cwp__aside{position:static;}
+  .cwp__nav{display:flex;flex-wrap:wrap;overflow:visible;}
+  .cwp__nav::before{display:none;}
+  .cwp__nav-hd{display:none;}
+  .cwp__nav-group{display:flex;flex-wrap:wrap;padding:.35rem;border-top:none !important;}
+  .cwp__nav-link{padding:.5rem .85rem;border-radius:var(--radius-sm);}
+  .cwp__nav-link:hover{padding-left:.85rem;}
+  .cwp__nav-link--active::before{display:none;}
+  .cwp__chars-footer{flex-direction:column;align-items:flex-start;}
+  .cwp-referral{margin-top:0;}
+}
+@media (max-width:680px){
+  .cwp{padding-top:calc(var(--nav-h,86px) + 1.5rem);}
+  .cwp__card-hd{flex-direction:column;align-items:flex-start;}
+  .cwp__card-hd-r{width:100%;flex-direction:column;align-items:stretch;}
+  .cwp__card-hd-r .cwp__btn{justify-content:center;}
+  .cwp__chars-wrap{-webkit-overflow-scrolling:touch;}
+  .cwp__chars-table{min-width:480px;}
+  .cwp__char-icon{width:38px;height:38px;}
+  .cwp-overlay{padding:.75rem;}
+  .cwp-modal{max-width:100%;}
+  .cwp-modal__ft{flex-direction:column;}
+  .cwp-modal__ft .cwp-modal__cancel,.cwp-modal__ft .cwp-modal__submit{width:100%;justify-content:center;}
+  .cwp__info .cwp__info-lbl{width:130px;}
+  .cwp-ref-generate{flex-direction:column;align-items:stretch;}
+  .cwp-ref-gen-btn{justify-content:center;}
+}
+
+/* Sparks / ray animations sidebar */
+.cwp-referral{overflow:visible !important;}
+.cwp-referral__inner{overflow:visible !important;}
+.cwp-referral__ray{position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(105deg,transparent 30%,rgba(255,235,150,.07) 50%,transparent 70%);pointer-events:none;z-index:2;transform:skewX(-15deg);opacity:0;}
+.cwp-referral__ray.active{animation:cwp-ray-sweep .9s ease-in-out forwards;}
+@keyframes cwp-ray-sweep{0%{left:-60%;opacity:0;}15%{opacity:1;}85%{opacity:1;}100%{left:130%;opacity:0;}}
+</style>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PANEL HTML
+═══════════════════════════════════════════════════════════ -->
+<div class="cwp">
+<div class="cwp__wrap">
+
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="cwp__aside">
+    <nav class="cwp__nav">
+      <div class="cwp__nav-hd"><i class="fas fa-compass"></i><span>Navigation</span></div>
+      <div class="cwp__nav-group">
+        <?php if ($this->wowmodule->getUCPStatus() == '1'): ?>
+        <a href="<?= base_url('panel'); ?>" class="cwp__nav-link cwp__nav-link--active">
+          <i class="fas fa-user-circle"></i><?= $this->lang->line('tab_account'); ?>
+        </a>
+        <?php endif; ?>
+      </div>
+      <div class="cwp__nav-group">
+        <?php if ($this->wowmodule->getDonationStatus() == '1'): ?>
+        <a href="<?= base_url('donate'); ?>" class="cwp__nav-link"><i class="fas fa-hand-holding-heart"></i><?= $this->lang->line('navbar_donate_panel'); ?></a>
+        <?php endif; ?>
+        <?php if ($this->wowmodule->getVoteStatus() == '1'): ?>
+        <a href="<?= base_url('vote'); ?>" class="cwp__nav-link"><i class="fas fa-star"></i><?= $this->lang->line('navbar_vote_panel'); ?></a>
+        <?php endif; ?>
+        <?php if ($this->wowmodule->getStoreStatus() == '1'): ?>
+        <a href="<?= base_url('store'); ?>" class="cwp__nav-link"><i class="fas fa-gem"></i><?= $this->lang->line('tab_store'); ?></a>
+        <?php endif; ?>
+      </div>
+      <div class="cwp__nav-group">
+        <?php if ($this->wowmodule->getBugtrackerStatus() == '1'): ?>
+        <a href="<?= base_url('bugtracker'); ?>" class="cwp__nav-link"><i class="fas fa-bug"></i><?= $this->lang->line('tab_bugtracker'); ?></a>
+        <?php endif; ?>
+        <?php if ($this->wowmodule->getChangelogsStatus() == '1'): ?>
+        <a href="<?= base_url('changelogs'); ?>" class="cwp__nav-link"><i class="fas fa-scroll"></i><?= $this->lang->line('tab_changelogs'); ?></a>
+        <?php endif; ?>
+        <?php if ($this->wowmodule->getDownloadStatus() == '1'): ?>
+        <a href="<?= base_url('download'); ?>" class="cwp__nav-link"><i class="fas fa-download"></i><?= $this->lang->line('tab_download'); ?></a>
+        <?php endif; ?>
+      </div>
+    </nav>
+
+    <!-- ── Widget Parrainage Sidebar ── -->
+    <div class="cwp-referral">
+      <div class="cwp-referral__inner">
+        <div class="cwp-referral__title"><i class="fas fa-gift"></i>Parrainage</div>
+        <div class="cwp-referral__gifts">
+          <div class="cwp-referral__gift"><i class="fas fa-horse"></i><span>Monture</span></div>
+          <div class="cwp-referral__gift"><i class="fas fa-gem"></i><span>DP</span></div>
+          <div class="cwp-referral__gift"><i class="fas fa-tag"></i><span>Coupon</span></div>
+        </div>
+
+        <?php if ($ref_active): ?>
+        <div class="cwp-referral__stats">
+          <div class="cwp-referral__stat">
+            <span class="cwp-referral__stat-val"><?php
+              $cnt_active = 0;
+              foreach ((array)$my_tokens as $_t) { if ($_t->token_status === 'generated') $cnt_active++; }
+              echo $cnt_active;
+            ?></span>
+            <span class="cwp-referral__stat-lbl">Actifs</span>
+          </div>
+          <div class="cwp-referral__stat-sep"></div>
+          <div class="cwp-referral__stat">
+            <span class="cwp-referral__stat-val"><?php
+              $cnt_rewarded = 0;
+              foreach ((array)$my_tokens as $_t) { if ($_t->referral_status === 'rewarded') $cnt_rewarded++; }
+              echo $cnt_rewarded;
+            ?></span>
+            <span class="cwp-referral__stat-lbl">Validés</span>
+          </div>
+          <div class="cwp-referral__stat-sep"></div>
+          <div class="cwp-referral__stat">
+            <span class="cwp-referral__stat-val"><?= max(0, ($ref_cfg_row->max_tokens_per_day ?? 5) - $tokens_today); ?></span>
+            <span class="cwp-referral__stat-lbl">Restants/j</span>
+          </div>
+        </div>
+        <button class="cwp-referral__btn" onclick="cwpOpen('cwpReferralOverlay')">
+          <i class="fas fa-user-plus"></i>Parrainer un ami
+        </button>
+        <?php else: ?>
+        <button class="cwp-referral__btn cwp-referral__btn--disabled" disabled>
+          <i class="fas fa-clock"></i>Bientôt disponible
+        </button>
+        <?php endif; ?>
+
+        <?php if (!empty($referral_msg)): ?>
+        <div class="cwp-referral__notif cwp-referral__notif--<?= $referral_type; ?>">
+          <?= $referral_msg; ?>
+        </div>
+        <?php endif; ?>
+      </div>
+    </div><!-- /cwp-referral -->
+
+  </aside><!-- /aside -->
+
+  <!-- ─── CONTENU PRINCIPAL ─── -->
+  <div class="cwp__main">
+
+    <div class="cwp__section-head">
+      <h1 class="cwp__section-title"><i class="fas fa-user-circle"></i><?= $this->lang->line('tab_account'); ?></h1>
+      <div class="cwp__section-rule"></div>
+    </div>
+
+    <!-- Infos compte -->
+    <div class="cwp__card">
+      <div class="cwp__card-hd">
+        <div class="cwp__card-hd-l"><i class="fas fa-id-card"></i><h2><?= $this->lang->line('panel_account_details'); ?></h2></div>
+        <a href="<?= base_url('settings'); ?>" class="cwp__btn"><i class="fas fa-user-pen"></i><?= $this->lang->line('button_account_settings'); ?></a>
+      </div>
+      <div class="cwp__card-bd">
+        <table class="cwp__info">
+          <tbody>
+            <tr>
+              <td class="cwp__info-lbl"><i class="fas fa-user"></i><?= $this->lang->line('placeholder_username'); ?></td>
+              <td class="cwp__info-val"><?= $this->wowauth->getUsernameID($sess_id); ?></td>
+            </tr>
+            <tr>
+              <td class="cwp__info-lbl"><i class="fas fa-envelope"></i><?= $this->lang->line('placeholder_email'); ?></td>
+              <td class="cwp__info-val"><?= $this->wowauth->getEmailID($sess_id); ?></td>
+            </tr>
+            <tr>
+              <td class="cwp__info-lbl"><i class="fas fa-location-dot"></i><?= $this->lang->line('panel_last_ip'); ?></td>
+              <td class="cwp__info-val"><?= $this->user_model->getLastIp($sess_id); ?></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Personnages -->
+    <div class="cwp__card">
+      <div class="cwp__card-hd">
+        <div class="cwp__card-hd-l"><i class="fas fa-helmet-battle"></i><h2><?= $this->lang->line('panel_chars_list'); ?></h2></div>
+        <div class="cwp__card-hd-r">
+          <button class="cwp__btn cwp__btn--danger" onclick="cwpOpen('cwpUnstuckOverlay')">
+            <i class="fas fa-person-falling-burst"></i>Personnage bloqué
+          </button>
+          <button class="cwp__btn cwp__btn--warning" onclick="cwpOpen('cwpTransferOverlay')">
+            <i class="fas fa-right-left"></i>Transférer un personnage
+          </button>
+        </div>
+      </div>
+
+      <?php if (!empty($unstuck_msg)): ?>
+      <div style="padding:.75rem 1.5rem 0">
+        <div class="cwp__notif cwp__notif--<?= $unstuck_type; ?>">
+          <i class="fas fa-<?= $unstuck_type === 'success' ? 'circle-check' : 'circle-xmark'; ?>"></i>
+          <span><?= $unstuck_msg; ?></span>
+        </div>
+      </div>
+      <?php endif; ?>
+
+      <?php if (!empty($transfer_msg)): ?>
+      <div style="padding:.75rem 1.5rem 0">
+        <div class="cwp__notif cwp__notif--<?= $transfer_type; ?>">
+          <i class="fas fa-<?= $transfer_type === 'success' ? 'circle-check' : 'circle-xmark'; ?>"></i>
+          <span><?= $transfer_msg; ?></span>
+        </div>
+      </div>
+      <?php endif; ?>
+
+      <div class="cwp__card-bd">
+        <?php foreach ($this->wowrealm->getRealms()->result() as $charsMultiRealm):
+          $multiRealm = $this->wowrealm->realmConnection($charsMultiRealm->username, $charsMultiRealm->password, $charsMultiRealm->hostname, $charsMultiRealm->char_database);
+          $charsList  = $this->wowrealm->getGeneralCharactersSpecifyAcc($multiRealm, $sess_id)->result();
+        ?>
+        <div class="cwp__realm">
+          <div class="cwp__realm-hd">
+            <i class="fas fa-server"></i>
+            <span><?= $this->wowrealm->getRealmName($charsMultiRealm->realmID); ?></span>
+          </div>
+          <?php if (count($charsList) > 0): ?>
+          <div class="cwp__chars-wrap">
+            <table class="cwp__chars-table">
+              <thead>
+                <tr>
+                  <th><span class="th-icon"><i class="fas fa-user"></i></span>Nom</th>
+                  <th><span class="th-icon"><i class="fas fa-shield-halved"></i></span>Race / Classe</th>
+                  <th><span class="th-icon"><i class="fas fa-arrow-up"></i></span>Niveau</th>
+                  <th><span class="th-icon"><i class="fas fa-clock"></i></span>Temps de jeu</th>
+                  <th><span class="th-icon"><i class="fas fa-coins"></i></span>Monnaie</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php foreach ($charsList as $chars): ?>
+                <tr>
+                  <td><span class="cwp__char-name"><?= $chars->name; ?></span></td>
+                  <td>
+                    <div class="cwp__char-icons">
+                      <div class="cwp__char-icon-wrap" data-tip="<?= $this->wowgeneral->getRaceName($chars->race); ?>">
+                        <img class="cwp__char-icon" src="<?= base_url('assets/images/races/' . $this->wowgeneral->getRaceIcon($chars->race)); ?>" alt="<?= $this->wowgeneral->getRaceName($chars->race); ?>">
+                      </div>
+                      <div class="cwp__char-icon-wrap" data-tip="<?= $this->wowgeneral->getClassName($chars->class); ?>">
+                        <img class="cwp__char-icon" src="<?= base_url('assets/images/class/' . $this->wowgeneral->getClassIcon($chars->class)); ?>" alt="<?= $this->wowgeneral->getClassName($chars->class); ?>">
+                      </div>
+                    </div>
+                  </td>
+                  <td><span class="cwp__char-level"><?= $chars->level; ?></span></td>
+                  <td><span class="cwp__char-time"><?= $this->wowgeneral->timeConversor($chars->totaltime); ?></span></td>
+                  <td>
+                    <span class="cwp__char-money">
+                      <span class="gold-coin"><?= $this->wowgeneral->moneyConversor($chars->money)['gold']; ?>g</span>
+                      <span class="silver-coin"><?= $this->wowgeneral->moneyConversor($chars->money)['silver']; ?>s</span>
+                      <span class="copper-coin"><?= $this->wowgeneral->moneyConversor($chars->money)['copper']; ?>c</span>
+                    </span>
+                  </td>
+                </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+          <?php else: ?>
+          <div class="cwp__chars-empty"><i class="fas fa-ghost"></i>Aucun personnage sur ce royaume.</div>
+          <?php endif; ?>
+        </div>
+        <?php endforeach; ?>
+
+        <div class="cwp__chars-footer">
+          <div class="cwp__total-time">
+            <i class="fas fa-hourglass-half"></i>
+            <span>Temps de jeu total&nbsp;:<strong><?= $total_time_str; ?></strong></span>
+          </div>
+          <div class="cwp__total-time cwp__total-money">
+            <i class="fas fa-coins" style="color:var(--gold)"></i>
+            <span>Monnaie totale&nbsp;:
+              <strong style="color:var(--gold)"><?= number_format($tm_gold, 0, ',', ' '); ?>g</strong>
+              <strong style="color:#aaa"><?= str_pad($tm_silver, 2, '0', STR_PAD_LEFT); ?>s</strong>
+              <strong style="color:#c87540"><?= str_pad($tm_copper, 2, '0', STR_PAD_LEFT); ?>c</strong>
+            </span>
+          </div>
+        </div>
+      </div><!-- /card-bd -->
+    </div><!-- /card personnages -->
+
+
+    <!-- ═══════════════════════════════════════════════════
+         MODULE 3 — MON PARRAINAGE (vue filleul)
+    ═══════════════════════════════════════════════════ -->
+    <?php if (!empty($my_sponsor_token)): ?>
+    <div class="cwp__card cwp__card--referral-hist" id="cwpMyReferral">
+      <div class="cwp__card-hd">
+        <div class="cwp__card-hd-l">
+          <i class="fas fa-user-check" style="color:#c8a84b"></i>
+          <h2 style="color:#d4a843">Mon parrainage</h2>
+        </div>
+        <span class="cwp-dp-badge"><i class="fas fa-heart"></i>Filleul de <?= htmlspecialchars($my_sponsor_token->sponsor_username); ?></span>
+      </div>
+      <div class="cwp__card-bd" style="padding:0">
+        <div class="cwp__chars-wrap">
+          <table class="cwp__chars-table cwp-hist-table">
+            <thead>
+              <tr>
+                <th><span class="th-icon"><i class="fas fa-key"></i></span>Token utilis&eacute;</th>
+                <th><span class="th-icon"><i class="fas fa-user"></i></span>Parrain</th>
+                <th><span class="th-icon"><i class="fas fa-calendar-check"></i></span>Date</th>
+                <th><span class="th-icon"><i class="fas fa-tag"></i></span>Coupon boutique</th>
+                <th><span class="th-icon"><i class="fas fa-hourglass-end"></i></span>Expiration</th>
+                <th><span class="th-icon"><i class="fas fa-circle-dot"></i></span>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="cwp-hist-row cwp-hist-row--used">
+                <td>
+                  <span class="cwp-hist-token" onclick="cwpCopyToken('<?= htmlspecialchars($my_sponsor_token->token); ?>')" title="Copier">
+                    <?= htmlspecialchars($my_sponsor_token->token); ?>
+                    <i class="fas fa-copy" style="font-size:.9rem;margin-left:.4rem;color:rgba(200,168,75,.4)"></i>
+                  </span>
+                </td>
+                <td><span class="cwp-hist-referee"><?= htmlspecialchars($my_sponsor_token->sponsor_username); ?></span></td>
+                <td>
+                  <?php if ($my_sponsor_token->used_at): ?>
+                    <span style="color:var(--text-mid)"><?= date('d/m/Y', strtotime($my_sponsor_token->used_at)); ?></span>
+                  <?php else: ?>
+                    <span style="color:var(--text-lo);font-style:italic">—</span>
+                  <?php endif; ?>
+                </td>
+                <td>
+                  <?php
+                  $ref_rs = $my_sponsor_token->referral_status ?? 'pending';
+                  if ($ref_rs === 'rewarded' || $ref_rs === 'eligible'):
+                      // Coupon boutique filleul = referral_rewards id=7
+                      $coupon_fil = $reward_referee_coupon;
+                      $disc_fil   = $my_referee_disc;
+                      $active_fil = $disc_fil && strtotime($disc_fil->expires_at) > time();
+                  ?>
+                    <?php if ($coupon_fil && !empty($coupon_fil->code_boutique)): ?>
+                      <span class="cwp-hist-promo<?= $active_fil ? ' cwp-hist-promo--active' : ''; ?>">
+                        <strong style="font-family:Courier,monospace;letter-spacing:.1em;font-size:1rem;color:#f5e070"><?= htmlspecialchars($coupon_fil->code_boutique); ?></strong>
+                        <?php if ($active_fil): ?>
+                          <span class="cwp-hist-promo-badge">Actif</span>
+                        <?php else: ?>
+                          <span style="color:var(--text-lo);font-size:.8rem">expir&eacute;</span>
+                        <?php endif; ?>
+                      </span>
+                    <?php else: ?>
+                      <span style="color:var(--text-lo);font-style:italic">—</span>
+                    <?php endif; ?>
+                  <?php else: ?>
+                    <?php
+                    // Afficher la progression vers la validation
+                    $fil_acc_row = $authDB->where('username', strtoupper($sess_username))->select('id')->get('account')->row();
+                    $fil_time_sec = 0; $fil_lvl20 = 0;
+                    if ($fil_acc_row) {
+                        $fil_chars = $charDB->where('account', (int)$fil_acc_row->id)->select('level,totaltime')->get('characters')->result();
+                        foreach ($fil_chars as $_fc) { $fil_time_sec += (int)$_fc->totaltime; if ((int)$_fc->level >= 20) $fil_lvl20++; }
+                    }
+                    $fil_min_done = floor($fil_time_sec / 60);
+                    $fil_pct = min(100, round(($fil_time_sec / 10800) * 100));
+                    ?>
+                    <span style="color:var(--text-lo);font-style:italic;font-size:.9rem">
+                      <i class="fas fa-hourglass-half" style="margin-right:.3rem"></i>
+                      <?= $fil_min_done; ?>min / 180min de jeu<br>
+                      <i class="fas fa-user-shield" style="margin-right:.3rem"></i>
+                      <?= $fil_lvl20; ?> / 2 perso(s) niv.&nbsp;&ge;&nbsp;20
+                    </span>
+                    <div class="cwp-cond-bar">
+                      <div class="cwp-cond-track"><div class="cwp-cond-fill" style="width:<?= $fil_pct; ?>%"></div></div>
+                    </div>
+                  <?php endif; ?>
+                </td>
+                <td>
+                  <?php if ($my_referee_disc && $my_referee_disc->expires_at): ?>
+                    <?php $mpe = strtotime($my_referee_disc->expires_at) > time(); ?>
+                    <span style="color:<?= $mpe ? 'var(--text-mid)' : 'var(--text-lo)'; ?>">
+                      <?= date('d/m/Y', strtotime($my_referee_disc->expires_at)); ?>
+                    </span>
+                  <?php else: ?>
+                    <span style="color:var(--text-lo);font-style:italic">—</span>
+                  <?php endif; ?>
+                </td>
+                <td>
+                  <?php
+                  $ref_rs_fil = $my_sponsor_token->referral_status ?? 'pending';
+                  $badges = ['pending'=>['En attente','badge-pending'],'eligible'=>['Éligible','badge-used'],'rewarded'=>['Récompensé','badge-rewarded'],'expired'=>['Expiré','badge-expired']];
+                  [$slabel, $sbadge] = $badges[$ref_rs_fil] ?? ['Inconnu','badge-expired'];
+                  ?>
+                  <span class="cwp-ref-token-badge <?= $sbadge; ?>"><?= $slabel; ?></span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <?php endif; ?>
+
+
+    <!-- ═══════════════════════════════════════════════════
+         MODULE 2 — HISTORIQUE DE PARRAINAGE (vue parrain)
+    ═══════════════════════════════════════════════════ -->
+    <?php if ($ref_show_hist): ?>
+    <div class="cwp__card cwp__card--referral-hist" id="cwpReferralHistory">
+      <div class="cwp__card-hd">
+        <div class="cwp__card-hd-l">
+          <i class="fas fa-table-list" style="color:#c8a84b"></i>
+          <h2 style="color:#d4a843">Historique de parrainage</h2>
+        </div>
+        <span class="cwp-dp-badge"><i class="fas fa-key"></i><?= count($my_tokens); ?> token(s)</span>
+      </div>
+      <div class="cwp__card-bd" style="padding:0">
+        <div class="cwp__chars-wrap">
+          <table class="cwp__chars-table cwp-hist-table">
+            <thead>
+              <tr>
+                <th><span class="th-icon"><i class="fas fa-key"></i></span>Token</th>
+                <th><span class="th-icon"><i class="fas fa-user-plus"></i></span>Filleul</th>
+                <th><span class="th-icon"><i class="fas fa-calendar-check"></i></span>Utilisation</th>
+                <th><span class="th-icon"><i class="fas fa-hourglass-end"></i></span>Exp. token</th>
+                <th><span class="th-icon"><i class="fas fa-tag"></i></span>Coupon boutique</th>
+                <th><span class="th-icon"><i class="fas fa-calendar-xmark"></i></span>Exp. coupon</th>
+                <th><span class="th-icon"><i class="fas fa-circle-dot"></i></span>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php foreach ($my_tokens as $tk):
+                // Enrichir avec sponsor_username pour le helper
+                $tk->sponsor_username = $sess_username;
+                $row_data = cwp_referral_row_data($tk, $webDB, $reward_sponsor_coupon, $coupon_duration_sponsor ?? 90);
+
+                // Calculer progression filleul si pending
+                $fil_progress = null;
+                if ($tk->token_status === 'used' && in_array($tk->referral_status, ['pending','eligible']) && $tk->referee_username) {
+                    $fil_acc2 = $authDB->where('username', strtoupper($tk->referee_username))->select('id')->get('account')->row();
+                    if ($fil_acc2) {
+                        $fil_chars2 = $charDB->where('account', (int)$fil_acc2->id)->select('level,totaltime')->get('characters')->result();
+                        $f2_time = 0; $f2_lvl20 = 0;
+                        foreach ($fil_chars2 as $_fc2) { $f2_time += (int)$_fc2->totaltime; if ((int)$_fc2->level >= 20) $f2_lvl20++; }
+                        $fil_progress = ['min' => floor($f2_time/60), 'lvl20' => $f2_lvl20, 'pct' => min(100, round(($f2_time/10800)*100))];
+                    }
+                }
+
+                // Coupon parrain depuis referral_discounts
+                $disc_sp = $webDB->where('username', $sess_username)->where('token_ref', $tk->token)->where('type', 'sponsor')->get('referral_discounts')->row();
+              ?>
+              <tr class="cwp-hist-row cwp-hist-row--<?= $tk->token_status; ?>">
+                <td>
+                  <span class="cwp-hist-token" onclick="cwpCopyToken('<?= htmlspecialchars($tk->token); ?>')" title="Copier">
+                    <?= htmlspecialchars($tk->token); ?>
+                    <i class="fas fa-copy" style="font-size:.9rem;margin-left:.4rem;color:rgba(200,168,75,.4)"></i>
+                  </span>
+                </td>
+                <td>
+                  <?php if ($tk->referee_username): ?>
+                    <span class="cwp-hist-referee"><?= htmlspecialchars($tk->referee_username); ?></span>
+                  <?php else: ?>
+                    <span style="color:var(--text-lo);font-style:italic">—</span>
+                  <?php endif; ?>
+                </td>
+                <td>
+                  <?php if ($tk->used_at): ?>
+                    <span style="color:var(--text-mid)"><?= date('d/m/Y', strtotime($tk->used_at)); ?></span>
+                  <?php else: ?>
+                    <span style="color:var(--text-lo);font-style:italic">—</span>
+                  <?php endif; ?>
+                </td>
+                <td>
+                  <?php if ($tk->token_status === 'generated'): ?>
+                    <?php $tok_exp = strtotime($tk->expires_at) < time(); ?>
+                    <span style="color:<?= $tok_exp ? 'var(--text-lo)' : 'var(--text-mid)'; ?>">
+                      <?= date('d/m/Y', strtotime($tk->expires_at)); ?>
+                    </span>
+                  <?php else: ?>
+                    <span style="color:var(--text-lo);font-style:italic">—</span>
+                  <?php endif; ?>
+                </td>
+                <td>
+                  <?php if ($row_data['show_promo'] && $row_data['promo_code']): ?>
+                    <span class="cwp-hist-promo<?= $row_data['promo_active'] ? ' cwp-hist-promo--active' : ''; ?>">
+                      <strong style="font-family:Courier,monospace;letter-spacing:.1em;font-size:1rem;color:#f5e070"><?= htmlspecialchars($row_data['promo_code']); ?></strong>
+                      <?php if ($row_data['promo_active']): ?>
+                        <span class="cwp-hist-promo-badge">Actif</span>
+                      <?php else: ?>
+                        <span style="color:var(--text-lo);font-size:.8rem">expir&eacute;</span>
+                      <?php endif; ?>
+                    </span>
+                  <?php elseif ($tk->token_status === 'used' && in_array($tk->referral_status, ['pending','eligible'])): ?>
+                    <?php if ($fil_progress): ?>
+                      <span style="color:var(--text-lo);font-style:italic;font-size:.88rem">
+                        <i class="fas fa-hourglass-half" style="margin-right:.2rem"></i>
+                        <?= $fil_progress['min']; ?>min / 180min
+                        &nbsp;|&nbsp;
+                        <i class="fas fa-user-shield" style="margin-right:.2rem"></i>
+                        <?= $fil_progress['lvl20']; ?>/2 niv.20
+                      </span>
+                      <div class="cwp-cond-bar">
+                        <div class="cwp-cond-track"><div class="cwp-cond-fill" style="width:<?= $fil_progress['pct']; ?>%"></div></div>
+                      </div>
+                    <?php else: ?>
+                      <span style="color:var(--text-lo);font-style:italic;font-size:.88rem">En attente de validation</span>
+                    <?php endif; ?>
+                  <?php else: ?>
+                    <span style="color:var(--text-lo);font-style:italic">—</span>
+                  <?php endif; ?>
+                </td>
+                <td>
+                  <?php if ($disc_sp && $disc_sp->expires_at): ?>
+                    <?php $pe = strtotime($disc_sp->expires_at) > time(); ?>
+                    <span style="color:<?= $pe ? 'var(--text-mid)' : 'var(--text-lo)'; ?>">
+                      <?= date('d/m/Y', strtotime($disc_sp->expires_at)); ?>
+                    </span>
+                  <?php else: ?>
+                    <span style="color:var(--text-lo);font-style:italic">—</span>
+                  <?php endif; ?>
+                </td>
+                <td>
+                  <span class="cwp-ref-token-badge <?= $row_data['badge']; ?>"><?= $row_data['label']; ?></span>
+                </td>
+              </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <?php endif; ?>
+
+  </div><!-- /main -->
+</div><!-- /wrap -->
+</div><!-- /cwp -->
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODALE — PERSONNAGE BLOQUÉ
+═══════════════════════════════════════════════════════════ -->
+<div class="cwp-overlay" id="cwpUnstuckOverlay" role="dialog" aria-modal="true">
+  <div class="cwp-modal cwp-modal--danger">
+    <div class="cwp-modal__hd">
+      <div class="cwp-modal__hd-l">
+        <i class="fas fa-person-falling-burst" style="color:rgba(220,100,60,1)"></i>
+        <h3>Personnage bloqué</h3>
+      </div>
+      <button class="cwp-modal__close" onclick="cwpClose('cwpUnstuckOverlay')"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="cwp-modal__bd">
+      <div class="cwp-modal__alert cwp-modal__alert--warn">
+        <i class="fas fa-triangle-exclamation"></i>
+        <p><strong>Important —</strong> Quittez le jeu avant de valider. Votre personnage sera téléporté au point de rassemblement de faction.</p>
+      </div>
+      <div class="cwp-modal__field">
+        <label for="cwpUnstuckSelect"><i class="fas fa-user"></i>Choisir un personnage</label>
+        <?php if (empty($all_chars)): ?>
+          <p style="font-family:'Crimson Pro',serif;font-size:1.05rem;font-style:italic;color:#4a6278">Aucun personnage trouvé.</p>
+        <?php else: ?>
+        <select class="cwp-modal__select" id="cwpUnstuckSelect">
+          <option value="">— Sélectionner —</option>
+          <?php foreach ($all_chars as $c): ?>
+          <option value="<?= htmlspecialchars($c['name']); ?>"><?= htmlspecialchars($c['name']); ?></option>
+          <?php endforeach; ?>
+        </select>
+        <?php endif; ?>
+      </div>
+    </div>
+    <div class="cwp-modal__ft">
+      <button class="cwp-modal__cancel" onclick="cwpClose('cwpUnstuckOverlay')"><i class="fas fa-xmark"></i>Annuler</button>
+      <?php if (!empty($all_chars)): ?>
+      <button class="cwp-modal__submit cwp-modal__submit--danger" onclick="cwpSubmitUnstuck()"><i class="fas fa-check"></i>Valider le débloquage</button>
+      <?php endif; ?>
+    </div>
+  </div>
+</div>
+<form id="cwpUnstuckForm" method="POST" action="<?= current_url(); ?>" style="display:none">
+  <input type="hidden" name="unstuck_char_name" id="cwpUnstuckInput">
+  <input type="hidden" name="unstuck_nonce"     value="<?= $nonce_value_u; ?>">
+</form>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODALE — TRANSFERT DE PERSONNAGE
+═══════════════════════════════════════════════════════════ -->
+<div class="cwp-overlay" id="cwpTransferOverlay" role="dialog" aria-modal="true">
+  <div class="cwp-modal cwp-modal--warning">
+    <div class="cwp-modal__hd">
+      <div class="cwp-modal__hd-l">
+        <i class="fas fa-right-left" style="color:rgba(220,180,60,1)"></i>
+        <h3>Transférer un personnage</h3>
+      </div>
+      <button class="cwp-modal__close" onclick="cwpClose('cwpTransferOverlay')"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="cwp-modal__bd">
+      <div class="cwp-modal__alert cwp-modal__alert--info">
+        <i class="fas fa-circle-info"></i>
+        <p>Le transfert coûte <strong><?= $TRANSFER_COST; ?> DP</strong>.<br>
+        Votre solde : <span class="cwp-dp-badge"><i class="fas fa-gem"></i><?= $dp_balance; ?> DP</span>
+        <?php if ($dp_balance < $TRANSFER_COST): ?><br><span style="color:#e08080;font-size:1rem">⚠ Solde insuffisant.</span><?php endif; ?>
+        </p>
+      </div>
+      <div class="cwp-modal__alert cwp-modal__alert--warn">
+        <i class="fas fa-triangle-exclamation"></i>
+        <p><strong>Attention —</strong> Action <strong>irréversible</strong>. Le compte destinataire doit avoir moins de 10 personnages.</p>
+      </div>
+      <div class="cwp-modal__field">
+        <label for="cwpTransferSelect"><i class="fas fa-user"></i>Personnage à transférer</label>
+        <?php if (empty($all_chars)): ?>
+          <p style="font-family:'Crimson Pro',serif;font-size:1.05rem;font-style:italic;color:#4a6278">Aucun personnage trouvé.</p>
+        <?php else: ?>
+        <select class="cwp-modal__select" id="cwpTransferSelect">
+          <option value="">— Sélectionner —</option>
+          <?php foreach ($all_chars as $c): ?>
+          <option value="<?= htmlspecialchars($c['name']); ?>"><?= htmlspecialchars($c['name']); ?></option>
+          <?php endforeach; ?>
+        </select>
+        <?php endif; ?>
+      </div>
+      <div class="cwp-modal__field">
+        <label for="cwpTransferAccount"><i class="fas fa-at"></i>Compte destinataire</label>
+        <input class="cwp-modal__input" type="text" id="cwpTransferAccount"
+               placeholder="Nom du compte WoW" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+    <div class="cwp-modal__ft">
+      <button class="cwp-modal__cancel" onclick="cwpClose('cwpTransferOverlay')"><i class="fas fa-xmark"></i>Annuler</button>
+      <?php if (!empty($all_chars) && $dp_balance >= $TRANSFER_COST): ?>
+      <button class="cwp-modal__submit cwp-modal__submit--warning" onclick="cwpSubmitTransfer()">
+        <i class="fas fa-check"></i>Confirmer (<?= $TRANSFER_COST; ?> DP)
+      </button>
+      <?php else: ?>
+      <button class="cwp-modal__submit cwp-modal__submit--warning" disabled style="opacity:.4;cursor:not-allowed">
+        <i class="fas fa-ban"></i>Solde insuffisant
+      </button>
+      <?php endif; ?>
+    </div>
+  </div>
+</div>
+<form id="cwpTransferForm" method="POST" action="<?= current_url(); ?>" style="display:none">
+  <input type="hidden" name="transfer_char_name"      id="cwpTransferCharInput">
+  <input type="hidden" name="transfer_target_account" id="cwpTransferAccountInput">
+  <input type="hidden" name="transfer_nonce"          value="<?= $nonce_value_t; ?>">
+</form>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODALE — PARRAINAGE (MODULE 1 : GÉNÉRATION TOKEN)
+═══════════════════════════════════════════════════════════ -->
+<div class="cwp-overlay" id="cwpReferralOverlay" role="dialog" aria-modal="true">
+  <div class="cwp-modal cwp-modal--gold" style="max-width:600px;">
+    <div class="cwp-modal__hd">
+      <div class="cwp-modal__hd-l">
+        <i class="fas fa-gift" style="color:#c8a84b"></i>
+        <h3>Programme de Parrainage</h3>
+      </div>
+      <button class="cwp-modal__close" onclick="cwpClose('cwpReferralOverlay')"><i class="fas fa-xmark"></i></button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="cwp-ref-tabs">
+      <button class="cwp-ref-tab is-active" data-tab="Parrain" onclick="cwpRefTab('Parrain')">
+        <i class="fas fa-crown"></i>Parrain
+      </button>
+      <button class="cwp-ref-tab" data-tab="Filleul" onclick="cwpRefTab('Filleul')">
+        <i class="fas fa-user-plus"></i>Filleul
+      </button>
+      <button class="cwp-ref-tab" data-tab="Tokens" onclick="cwpRefTab('Tokens')">
+        <i class="fas fa-key"></i>Mes tokens
+      </button>
+    </div>
+
+    <!-- TAB PARRAIN -->
+    <div id="cwpRefPanelParrain" class="cwp-ref-panel is-active">
+      <?php if (!empty($ref_rewards_sponsor)): ?>
+      <ul class="cwp-ref-rewards">
+        <?php foreach ($ref_rewards_sponsor as $rw):
+          $nom_lc = strtolower($rw->nom);
+          if      (strpos($nom_lc, 'dp')      !== false) $icon = 'fa-gem';
+          elseif  (strpos($nom_lc, 'remise')  !== false) $icon = 'fa-tag';
+          elseif  (strpos($nom_lc, 'monture') !== false) $icon = 'fa-horse';
+          else    $icon = 'fa-gift';
+        ?>
+        <li class="cwp-ref-reward">
+          <i class="fas <?= $icon; ?>"></i>
+          <div class="cwp-ref-reward-body">
+            <span class="cwp-ref-reward-name"><?= htmlspecialchars($rw->nom); ?></span>
+            <span class="cwp-ref-reward-desc"><?= htmlspecialchars($rw->description ?? ''); ?>
+              <?php if ($rw->duree_en_jour > 0): ?> <em style="color:rgba(200,168,75,.6)">(<?= $rw->duree_en_jour; ?> jours)</em><?php endif; ?>
+            </span>
+          </div>
+        </li>
+        <?php endforeach; ?>
+      </ul>
+      <?php endif; ?>
+
+      <div class="cwp-ref-warns">
+        <div class="cwp-ref-warn">
+          <i class="fas fa-clock"></i>
+          Les r&eacute;compenses sont attribu&eacute;es automatiquement quand votre filleul atteint
+          <strong>3h de jeu</strong> et poss&egrave;de <strong>2 personnages niveau&nbsp;&ge;&nbsp;20</strong>.
+        </div>
+        <div class="cwp-ref-warn">
+          <i class="fas fa-ban"></i>
+          Un token est valable <strong>une seule fois</strong>, pour un <strong>nouveau compte uniquement</strong>.
+        </div>
+        <div class="cwp-ref-warn">
+          <i class="fas fa-calendar-day"></i>
+          Maximum <strong><?= $ref_cfg_row->max_tokens_per_day ?? 5; ?> tokens/jour</strong>.
+          Validit&eacute; : <strong><?= $ref_cfg_row->token_validity_days ?? 30; ?> jours</strong>.
+        </div>
+        <div class="cwp-ref-warn">
+          <i class="fas fa-envelope"></i>
+          Votre adresse e-mail doit &ecirc;tre valide pour recevoir votre token.
+        </div>
+      </div>
+
+      <div class="cwp-ref-generate">
+        <div class="cwp-ref-generate-info">
+          <?php if (!empty($user_email) && filter_var($user_email, FILTER_VALIDATE_EMAIL)): ?>
+          Token envoy&eacute; &agrave; <strong><?= htmlspecialchars($user_email); ?></strong><br>
+          <span style="color:var(--text-lo);font-size:.95rem"><?= $tokens_today; ?> / <?= $ref_cfg_row->max_tokens_per_day ?? 5; ?> token(s) g&eacute;n&eacute;r&eacute;(s) aujourd'hui</span>
+          <?php else: ?>
+          <span style="color:#e08080">⚠ E-mail invalide — mettez &agrave; jour vos param&egrave;tres.</span>
+          <?php endif; ?>
+        </div>
+        <?php if (!empty($user_email) && filter_var($user_email, FILTER_VALIDATE_EMAIL) && $tokens_today < ($ref_cfg_row->max_tokens_per_day ?? 5)): ?>
+        <button class="cwp-ref-gen-btn" onclick="cwpGenerateToken()">
+          <i class="fas fa-wand-magic-sparkles"></i>G&eacute;n&eacute;rer un token
+        </button>
+        <?php else: ?>
+        <button class="cwp-ref-gen-btn" disabled style="opacity:.4;cursor:not-allowed">
+          <i class="fas fa-ban"></i>Indisponible
+        </button>
+        <?php endif; ?>
+      </div>
+    </div><!-- /parrain panel -->
+
+    <!-- TAB FILLEUL -->
+    <div id="cwpRefPanelFilleul" class="cwp-ref-panel">
+      <?php if (!empty($ref_rewards_referee)): ?>
+      <ul class="cwp-ref-rewards">
+        <?php foreach ($ref_rewards_referee as $rw):
+          $nom_lc = strtolower($rw->nom);
+          if      (strpos($nom_lc, 'sesame')    !== false || strpos($nom_lc, 'sésame') !== false) $icon = 'fa-bolt';
+          elseif  (strpos($nom_lc, 'profession') !== false) $icon = 'fa-hammer';
+          elseif  (strpos($nom_lc, 'monture')    !== false) $icon = 'fa-horse';
+          elseif  (strpos($nom_lc, 'remise')     !== false) $icon = 'fa-tag';
+          else    $icon = 'fa-gift';
+        ?>
+        <li class="cwp-ref-reward">
+          <i class="fas <?= $icon; ?>"></i>
+          <div class="cwp-ref-reward-body">
+            <span class="cwp-ref-reward-name"><?= htmlspecialchars($rw->nom); ?></span>
+            <span class="cwp-ref-reward-desc"><?= htmlspecialchars($rw->description ?? ''); ?>
+              <?php if ($rw->duree_en_jour > 0): ?> <em style="color:rgba(200,168,75,.6)">(<?= $rw->duree_en_jour; ?> jours)</em><?php endif; ?>
+            </span>
+          </div>
+        </li>
+        <?php endforeach; ?>
+      </ul>
+      <?php endif; ?>
+
+      <div class="cwp-ref-warns">
+        <div class="cwp-ref-warn">
+          <i class="fas fa-circle-info"></i>
+          Le token de parrainage vous sera demand&eacute; lors de votre <strong>inscription</strong> sur le site.
+        </div>
+        <div class="cwp-ref-warn">
+          <i class="fas fa-clock"></i>
+          Vos r&eacute;compenses sont d&eacute;bloqu&eacute;es automatiquement apr&egrave;s <strong>3h de jeu</strong> et
+          <strong>2 personnages niveau&nbsp;&ge;&nbsp;20</strong>.
+        </div>
+        <div class="cwp-ref-warn">
+          <i class="fas fa-wifi"></i>
+          Validation par <strong>adresse IP</strong> — un seul parrainage par connexion.
+        </div>
+        <div class="cwp-ref-warn">
+          <i class="fas fa-ban"></i>
+          Chaque token n'est utilisable qu'<strong>une seule fois</strong>, uniquement pour les <strong>nouveaux comptes</strong>.
+        </div>
+      </div>
+    </div><!-- /filleul panel -->
+
+    <!-- TAB MES TOKENS -->
+    <div id="cwpRefPanelTokens" class="cwp-ref-panel">
+      <div class="cwp-ref-tokens-hd"><i class="fas fa-key"></i>Mes tokens de parrainage</div>
+      <div class="cwp-ref-token-list">
+        <?php if (empty($my_tokens)): ?>
+        <div class="cwp-ref-token-empty">Aucun token g&eacute;n&eacute;r&eacute; pour l'instant.</div>
+        <?php else: ?>
+          <?php foreach ($my_tokens as $tk): ?>
+          <div class="cwp-ref-token-row">
+            <span class="cwp-ref-token-code" onclick="cwpCopyToken('<?= $tk->token; ?>')" title="Cliquer pour copier"><?= $tk->token; ?></span>
+            <button class="cwp-ref-token-copy" onclick="cwpCopyToken('<?= $tk->token; ?>')" title="Copier"><i class="fas fa-copy"></i></button>
+            <span class="cwp-ref-token-badge badge-<?= $tk->token_status === 'generated' ? 'pending' : $tk->token_status; ?>">
+              <?php
+              if      ($tk->token_status === 'generated') echo 'Actif';
+              elseif  ($tk->token_status === 'used')      echo 'Utilis&eacute;';
+              else                                         echo 'Expir&eacute;';
+              ?>
+            </span>
+            <span style="font-size:.9rem;color:var(--text-lo);white-space:nowrap">
+              <?php if ($tk->token_status === 'generated'): ?>
+                exp. <?= date('d/m/y', strtotime($tk->expires_at)); ?>
+              <?php elseif ($tk->token_status === 'used'): ?>
+                <?= $tk->referee_username ? htmlspecialchars($tk->referee_username) : 'utilis&eacute;'; ?>
+              <?php else: ?>
+                expir&eacute;
+              <?php endif; ?>
+            </span>
+          </div>
+          <?php endforeach; ?>
+        <?php endif; ?>
+      </div>
+
+      <div class="cwp-ref-generate" style="margin-top:1rem">
+        <div class="cwp-ref-generate-info">
+          <strong><?= max(0, ($ref_cfg_row->max_tokens_per_day ?? 5) - $tokens_today); ?></strong> g&eacute;n&eacute;ration(s) restante(s) aujourd'hui
+        </div>
+        <?php if (!empty($user_email) && filter_var($user_email, FILTER_VALIDATE_EMAIL) && $tokens_today < ($ref_cfg_row->max_tokens_per_day ?? 5)): ?>
+        <button class="cwp-ref-gen-btn" onclick="cwpGenerateToken()">
+          <i class="fas fa-wand-magic-sparkles"></i>Nouveau token
+        </button>
+        <?php else: ?>
+        <button class="cwp-ref-gen-btn" disabled style="opacity:.4;cursor:not-allowed"><i class="fas fa-ban"></i>Indisponible</button>
+        <?php endif; ?>
+      </div>
+    </div><!-- /tokens panel -->
+
+  </div><!-- /modal -->
+</div><!-- /overlay referral -->
+
+<form id="cwpReferralForm" method="POST" action="<?= current_url(); ?>" style="display:none">
+  <input type="hidden" name="referral_action" value="generate">
+  <input type="hidden" name="referral_nonce"  value="<?= $referral_nonce_val; ?>">
+</form>
+
+
+<!-- Toast copie -->
+<div class="cwp-copy-toast" id="cwpCopyToast"></div>
+
+
+<script>
+(function(){
+  /* ── Ouvrir / fermer modales ── */
+  window.cwpOpen = function(id){ document.getElementById(id).classList.add('is-open'); document.body.style.overflow='hidden'; };
+  window.cwpClose = function(id){ document.getElementById(id).classList.remove('is-open'); document.body.style.overflow=''; };
+  document.querySelectorAll('.cwp-overlay').forEach(function(ov){
+    ov.addEventListener('click', function(e){ if(e.target===ov) cwpClose(ov.id); });
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape') document.querySelectorAll('.cwp-overlay.is-open').forEach(function(ov){ cwpClose(ov.id); });
+  });
+
+  /* ── Unstuck ── */
+  window.cwpSubmitUnstuck = function(){
+    var sel=document.getElementById('cwpUnstuckSelect');
+    if(!sel||!sel.value){ sel.style.borderColor='rgba(220,80,60,.6)'; sel.focus(); return; }
+    document.getElementById('cwpUnstuckInput').value=sel.value;
+    document.getElementById('cwpUnstuckForm').submit();
+  };
+
+  /* ── Transfert ── */
+  window.cwpSubmitTransfer = function(){
+    var sel=document.getElementById('cwpTransferSelect');
+    var acct=document.getElementById('cwpTransferAccount');
+    var ok=true;
+    if(!sel||!sel.value){ sel.style.borderColor='rgba(220,80,60,.6)'; sel.focus(); ok=false; }
+    if(!acct||!acct.value.trim()){ acct.style.borderColor='rgba(220,80,60,.6)'; if(ok) acct.focus(); ok=false; }
+    if(!ok) return;
+    if(!confirm('Confirmer le transfert de "'+sel.value+'" vers "'+acct.value+'" pour <?= $TRANSFER_COST; ?> DP ?')) return;
+    document.getElementById('cwpTransferCharInput').value=sel.value;
+    document.getElementById('cwpTransferAccountInput').value=acct.value.trim();
+    document.getElementById('cwpTransferForm').submit();
+  };
+
+  /* Reset bordures */
+  ['cwpUnstuckSelect','cwpTransferSelect','cwpTransferAccount'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.addEventListener('focus', function(){ this.style.borderColor=''; });
+  });
+
+  /* Scroll vers notif */
+  var notif=document.querySelector('.cwp__notif');
+  if(notif) setTimeout(function(){ notif.scrollIntoView({behavior:'smooth',block:'center'}); },300);
+
+  /* ── Tabs parrainage ── */
+  window.cwpRefTab=function(tab){
+    document.querySelectorAll('.cwp-ref-tab').forEach(function(t){ t.classList.remove('is-active'); });
+    document.querySelectorAll('.cwp-ref-panel').forEach(function(p){ p.classList.remove('is-active'); });
+    document.querySelector('.cwp-ref-tab[data-tab="'+tab+'"]').classList.add('is-active');
+    document.getElementById('cwpRefPanel'+tab).classList.add('is-active');
+  };
+
+  /* ── Copier token ── */
+  window.cwpCopyToken=function(token){
+    if(navigator.clipboard){
+      navigator.clipboard.writeText(token).then(function(){
+        var toast=document.getElementById('cwpCopyToast');
+        toast.textContent='✓ Token "'+token+'" copié !';
+        toast.classList.add('show');
+        setTimeout(function(){ toast.classList.remove('show'); },2000);
+      });
+    }
+  };
+
+  /* ── Générer token ── */
+  window.cwpGenerateToken=function(){
+    if(!confirm('Générer un nouveau token de parrainage ? Il sera valable <?= $ref_cfg_row->token_validity_days ?? 30; ?> jours.')) return;
+    document.getElementById('cwpReferralForm').submit();
+  };
+
+  /* ── Sidebar animation ── */
+  var widget=document.querySelector('.cwp-referral');
+  if(widget){
+    var ray=document.createElement('div');
+    ray.className='cwp-referral__ray';
+    widget.appendChild(ray);
+    setInterval(function(){
+      ray.classList.add('active');
+      setTimeout(function(){ ray.classList.remove('active'); },900);
+    },5000);
+    var glowStep=0;
+    setInterval(function(){
+      glowStep=(glowStep+1)%2;
+      widget.style.boxShadow=glowStep
+        ?'0 0 18px rgba(200,168,75,.18),0 0 1px rgba(200,168,75,.1)'
+        :'0 0 6px rgba(200,168,75,.06)';
+    },2800);
+  }
+
+})();
+</script>

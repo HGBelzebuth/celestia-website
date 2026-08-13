@@ -1,0 +1,218 @@
+/* ══════════════════════════════════════════════════════════
+   PVP.CSS — Celestia-WoW 2026
+   Modernisation de la page Statistiques PvP
+   ══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Outfit:wght@300;400;600;700&display=swap');
+
+:root {
+    --store-ice: #00e1ff;
+    --store-ice-dim: #008ba3;
+    --store-glow: rgba(0, 225, 255, 0.25);
+    --store-bg: #02050a;
+    --store-border: rgba(255, 255, 255, 0.08);
+    --font-title: 'Cinzel', serif;
+    --font-body: 'Outfit', sans-serif;
+}
+
+/* ── Fond de page ── */
+.Pane-bg { filter: brightness(0.3) saturate(0.8) !important; transition: 0.3s; }
+.Pane-overlay {
+    background: linear-gradient(180deg, rgba(2,5,10,0.6) 0%, rgba(2,5,10,0.95) 100%) !important;
+}
+
+/* ── Titre principal ── */
+.Pane-content h4.uk-h4 {
+    font-family: var(--font-title);
+    color: #fff;
+    font-size: 1.8rem !important;
+    letter-spacing: 2px;
+    text-shadow: 0 0 15px var(--store-glow);
+    margin-bottom: 24px;
+    text-transform: uppercase;
+}
+.Pane-content h4.uk-h4 i { color: var(--store-ice); margin-right: 10px; }
+
+/* ═══════════════════════════════════════
+   ONGLETS DES ROYAUMES (Subnav Pill)
+═══════════════════════════════════════ */
+.uk-subnav-pill {
+    margin-bottom: 20px !important;
+    gap: 12px;
+}
+.uk-subnav-pill > * > a {
+    font-family: var(--font-title);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #94a3b8 !important;
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid var(--store-border) !important;
+    border-radius: 6px;
+    padding: 10px 24px !important;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.uk-subnav-pill > * > a:hover {
+    color: #fff !important;
+    background: rgba(0, 225, 255, 0.05) !important;
+    border-color: var(--store-ice-dim) !important;
+    box-shadow: 0 0 15px var(--store-glow);
+}
+.uk-subnav-pill > .uk-active > a {
+    background: linear-gradient(135deg, var(--store-ice), var(--store-ice-dim)) !important;
+    color: #01050a !important;
+    border-color: var(--store-ice) !important;
+    box-shadow: 0 0 15px var(--store-glow);
+}
+
+/* Enlève les bordures par défaut du switcher global */
+ul.uk-switcher.uk-card.uk-card-default {
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    border: none !important;
+}
+
+/* ═══════════════════════════════════════
+   BADGES (uk-label)
+═══════════════════════════════════════ */
+.uk-label {
+    display: inline-block;
+    border-radius: 4px !important;
+    font-family: var(--font-title);
+    letter-spacing: 1px;
+    padding: 6px 14px !important;
+    text-transform: uppercase;
+    background: rgba(0,0,0,0.6) !important;
+    margin-bottom: 12px;
+    margin-top: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+.uk-label-success { color: #00ff88 !important; border: 1px solid rgba(0,255,136,0.3) !important; }
+.uk-label-warning { color: #ffcc00 !important; border: 1px solid rgba(255,204,0,0.3) !important; }
+.uk-label-danger  { color: #ff4d4d !important; border: 1px solid rgba(255,77,77,0.3) !important; }
+.uk-label:not(.uk-label-success):not(.uk-label-warning):not(.uk-label-danger) {
+    color: var(--store-ice) !important; border: 1px solid var(--store-ice-dim) !important;
+}
+
+/* ═══════════════════════════════════════
+   CONTENEURS DE TABLEAUX (Card Bento)
+═══════════════════════════════════════ */
+.uk-overflow-auto {
+    background: linear-gradient(145deg, rgba(15, 22, 36, 0.6) 0%, rgba(5, 10, 18, 0.8) 100%) !important;
+    border: 1px solid var(--store-border);
+    border-radius: 12px;
+    padding: 15px 20px;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+}
+
+/* ═══════════════════════════════════════
+   TABLEAUX - STYLES COMMUNS
+═══════════════════════════════════════ */
+.uk-table {
+    width: 100% !important;
+    table-layout: fixed !important;
+}
+.uk-table th.uk-table-expand,
+.uk-table th.uk-width-small {
+    width: auto !important; /* Désactive la logique UIkit */
+}
+.uk-table-divider > tr > td, 
+.uk-table-divider > tbody > tr > td,
+.uk-table-divider > thead > tr > th {
+    border-color: rgba(255,255,255,0.06) !important;
+}
+.uk-table th {
+    font-family: var(--font-title);
+    font-size: 0.9rem !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding-bottom: 12px !important;
+    border-bottom: 2px solid var(--store-border) !important;
+}
+.uk-table td {
+    color: #e2e8f0 !important;
+    font-family: var(--font-body);
+    font-size: 1.05rem !important;
+    vertical-align: middle !important;
+    padding: 12px 10px !important;
+}
+.uk-table tbody tr { transition: background 0.2s; }
+.uk-table tbody tr:hover { background: rgba(0, 225, 255, 0.04); }
+
+/* ═══════════════════════════════════════
+   TABLEAUX D'ARÈNE (3 colonnes)
+═══════════════════════════════════════ */
+.uk-grid-small .uk-overflow-auto .uk-table th { color: #fff !important; }
+
+/* Largeurs spécifiques Arène */
+.uk-grid-small .uk-overflow-auto .uk-table th:nth-child(1),
+.uk-grid-small .uk-overflow-auto .uk-table td:nth-child(1) { width: 40%; text-align: center !important; }
+
+.uk-grid-small .uk-overflow-auto .uk-table th:nth-child(2),
+.uk-grid-small .uk-overflow-auto .uk-table td:nth-child(2) { width: 40%; text-align: center !important; }
+
+.uk-grid-small .uk-overflow-auto .uk-table th:nth-child(3),
+.uk-grid-small .uk-overflow-auto .uk-table td:nth-child(3) { width: 20%; text-align: center !important; }
+
+/* Icônes de classe dans les arènes (côte à côte) */
+.uk-grid-small .uk-overflow-auto .uk-table td img {
+    display: inline-block;
+    margin: 0 3px;
+    width: 32px !important;
+    height: 32px !important;
+    border: 1px solid var(--store-border);
+    box-shadow: 0 0 8px rgba(0,0,0,0.5);
+    border-radius: 4px;
+    background: rgba(0,0,0,0.5);
+    padding: 1px;
+}
+
+/* Couleurs des titres d'arène en fonction du parent */
+dir:nth-child(1) .uk-table th { color: #00ff88 !important; } /* 2v2 Success */
+div:nth-child(2) .uk-table th { color: #ffcc00 !important; } /* 3v3 Warning */
+dir:nth-child(3) .uk-table th { color: #ff4d4d !important; } /* 5v5 Danger */
+
+/* ═══════════════════════════════════════
+   TABLEAU TOP 20 (7 colonnes)
+═══════════════════════════════════════ */
+.uk-margin > .uk-overflow-auto .uk-table th { color: var(--store-ice) !important; }
+
+/* Largeurs spécifiques Top 20 (Total = 100%) */
+.uk-margin > .uk-overflow-auto .uk-table th:nth-child(1), .uk-margin > .uk-overflow-auto .uk-table td:nth-child(1) { width: 20%; text-align: left !important; } /* Nom */
+.uk-margin > .uk-overflow-auto .uk-table th:nth-child(2), .uk-margin > .uk-overflow-auto .uk-table td:nth-child(2) { width: 10%; text-align: center !important; } /* Race */
+.uk-margin > .uk-overflow-auto .uk-table th:nth-child(3), .uk-margin > .uk-overflow-auto .uk-table td:nth-child(3) { width: 10%; text-align: center !important; } /* Classe */
+.uk-margin > .uk-overflow-auto .uk-table th:nth-child(4), .uk-margin > .uk-overflow-auto .uk-table td:nth-child(4) { width: 10%; text-align: center !important; } /* Faction */
+.uk-margin > .uk-overflow-auto .uk-table th:nth-child(5), .uk-margin > .uk-overflow-auto .uk-table td:nth-child(5) { width: 16%; text-align: center !important; } /* Total Kills */
+.uk-margin > .uk-overflow-auto .uk-table th:nth-child(6), .uk-margin > .uk-overflow-auto .uk-table td:nth-child(6) { width: 17%; text-align: center !important; } /* Today Kills */
+.uk-margin > .uk-overflow-auto .uk-table th:nth-child(7), .uk-margin > .uk-overflow-auto .uk-table td:nth-child(7) { width: 17%; text-align: center !important; } /* Yesterday Kills */
+
+/* Icônes centrées pour le Top 20 */
+.uk-margin > .uk-overflow-auto .uk-table td img {
+    display: block;
+    margin: 0 auto;
+    width: 34px !important;
+    height: 34px !important;
+    border: 1px solid var(--store-border);
+    box-shadow: 0 0 8px rgba(0,0,0,0.5);
+    border-radius: 4px;
+    background: rgba(0,0,0,0.5);
+    padding: 1px;
+}
+
+/* ── Responsive Mobile ── */
+@media (max-width: 959px) {
+    .uk-grid-small > * { margin-bottom: 20px; }
+}
+@media (max-width: 768px) {
+    .uk-overflow-auto { padding: 10px; }
+    .uk-table th, .uk-table td { font-size: 0.8rem !important; padding: 6px 3px !important; }
+    .uk-table th i { display: none; }
+    .uk-margin > .uk-overflow-auto .uk-table th:nth-child(1), .uk-margin > .uk-overflow-auto .uk-table td:nth-child(1) { width: 25%; }
+    .uk-table td img { width: 24px !important; height: 24px !important; }
+}

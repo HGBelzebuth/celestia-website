@@ -1,0 +1,37 @@
+<link rel="stylesheet" href="<?= base_url('application/modules/armory/assets/css/armory.css'); ?>">
+<div class="armory-page-bg"></div>
+
+<section class="armory-hero">
+    <div class="armory-hero-content">
+        <div class="armory-hero-medallion"><i class="fas fa-shield-halved"></i></div>
+        <h1>Armurerie</h1>
+        <p>Recherchez un joueur ou une guilde</p>
+        <div class="armory-hero-line"></div>
+    </div>
+</section>
+
+<div class="armory-layout">
+    <div class="armory-container">
+        <div class="armory-panel">
+            <div class="armory-panel-header">
+                <div class="armory-panel-header-icon"><i class="fas fa-magnifying-glass"></i></div>
+                <h2>Recherche</h2>
+            </div>
+            <div class="armory-panel-body">
+                <?= form_open('armory/result', ['method' => 'get', 'id' => 'searcharmoryForm']); ?>
+                <div class="armory-search-form">
+                    <input class="armory-search-input" id="search" name="search" type="text" placeholder="Nom du joueur ou de la guilde…" required autocomplete="off">
+                    <select class="armory-search-select" id="realm" name="realm">
+                        <?php foreach ($realms as $realm): ?>
+                            <option value="<?= $realm->realmID ?>"><?= $this->wowrealm->getRealmName($realm->realmID); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <button type="submit" class="armory-search-btn">
+                        <i class="fas fa-magnifying-glass"></i> Rechercher
+                    </button>
+                </div>
+                <?= form_close(); ?>
+            </div>
+        </div>
+    </div>
+</div>

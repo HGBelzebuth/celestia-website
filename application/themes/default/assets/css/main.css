@@ -1,0 +1,411 @@
+/*!
+ * BlizzCMS - Celestia WoW (Refonte DA 2026 Showcase)
+ * Integration Givre & Saronite (Glassmorphism + Neon UI)
+ */
+
+@font-face {
+  font-family: 'Lobster';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/lobster-regular-webfont.woff2') format('woff2'), url('../fonts/lobster-regular-webfont.woff') format('woff');
+}
+
+/* ── BASE ── */
+html {
+  overflow-y: scroll;
+  background: transparent;
+  color: var(--text-body, #94a3b8);
+}
+
+body {
+  background-color: var(--bg-page, #02050a);
+  background-image: none; /* Le fond est géré par layout.php ou home.php */
+}
+
+img {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+a {
+  color: var(--ice, #00e1ff);
+  text-decoration: none;
+  transition: color ease-in .2s, text-shadow ease-in .2s;
+}
+
+a:hover {
+  color: #fff;
+  text-decoration: none;
+  text-shadow: 0 0 10px var(--ice-glow, rgba(0, 225, 255, 0.3));
+}
+
+hr, .uk-hr {
+  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+}
+
+h1, h2, h3, h4, h5, h6,
+.uk-h1, .uk-h2, .uk-h3, .uk-h4, .uk-h5, .uk-h6 {
+  color: var(--text-title, #fff);
+  font-family: var(--font-title, 'Cinzel', serif);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── UIKIT MODALS & OFFCANVAS (Glassmorphism) ── */
+.uk-offcanvas-bar {
+  background: rgba(2, 5, 10, 0.95);
+  backdrop-filter: blur(20px);
+  border-left: 1px solid var(--border);
+}
+
+.uk-modal-dialog {
+  background: rgba(10, 16, 28, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 16px);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.uk-modal-header, .uk-modal-footer {
+  background: transparent;
+  border-color: var(--border);
+}
+
+.uk-modal-title {
+  color: #fff;
+  font-family: var(--font-title);
+}
+
+/* ── CARTES GÉNÉRALES (Panel, News, MyAccount) ── */
+.uk-card-default {
+  background: var(--bg-card, rgba(10, 16, 28, 0.4));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border, rgba(255,255,255,0.08));
+  border-radius: var(--radius, 12px);
+  color: var(--text-body);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.uk-card-default .uk-card-header {
+  border-bottom: 1px solid var(--border);
+  padding: 15px 20px;
+}
+
+.uk-card-default .uk-card-footer {
+  border-top: 1px solid var(--border);
+  padding: 15px 20px;
+}
+
+.uk-card-body {
+  padding: 20px;
+}
+
+/* Cartes cliquables (News) */
+.uk-card-default.news-card {
+  overflow: hidden;
+  position: relative;
+}
+
+.uk-card-default.news-card:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius, 12px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.uk-card-default.uk-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.5), 0 0 20px var(--ice-glow, rgba(0,225,255,0.1));
+  border-color: var(--border-hover, rgba(0,225,255,0.3));
+}
+
+.uk-card-hover:hover.uk-card-default.news-card:after {
+  border-color: var(--ice);
+  box-shadow: inset 0 0 20px var(--ice-glow);
+}
+
+/* ── IMAGES DES ARTICLES ── */
+.image-card, .image-post {
+  position: relative;
+  display: block;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  width: 100%;
+  border-radius: 8px 8px 0 0;
+}
+.image-card { height: 180px; }
+.image-post { height: 350px; border-radius: 12px; }
+
+.image-card:after, .image-post:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
+  border-radius: inherit;
+}
+
+@media screen and (max-width: 640px) {
+  .image-card { height: 120px; }
+  .image-post { height: 200px; }
+}
+
+/* ── BOUTONS MODERNES 2026 ── */
+.uk-button {
+  border-radius: 6px;
+  font-family: var(--font-title, 'Cinzel');
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Bouton Principal (Bleu Givre) */
+.uk-button-default {
+  background: linear-gradient(135deg, var(--ice, #00e1ff), var(--ice-dim, #008ba3));
+  border: none;
+  color: #01050a;
+  box-shadow: 0 4px 15px var(--ice-glow);
+}
+
+.uk-button-default:focus,
+.uk-button-default:hover,
+.uk-button-default.uk-active,
+.uk-button-default:active {
+  background: linear-gradient(135deg, #fff, var(--ice));
+  color: #01050a;
+  box-shadow: 0 6px 20px var(--ice-glow-strong);
+  transform: translateY(-2px);
+}
+
+/* Bouton Danger (Rouge Néon) */
+.uk-button-danger {
+  background: linear-gradient(135deg, #ff4d4d, #b30000);
+  border: none;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(255, 77, 77, 0.2);
+}
+
+.uk-button-danger:focus,
+.uk-button-danger:hover,
+.uk-button-danger.uk-active,
+.uk-button-danger:active {
+  background: linear-gradient(135deg, #ff8080, #ff4d4d);
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(255, 77, 77, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Bouton Secondaire (Sombre) */
+.uk-button-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: #fff;
+  backdrop-filter: blur(5px);
+}
+
+.uk-button-secondary:focus,
+.uk-button-secondary:hover,
+.uk-button-secondary.uk-active,
+.uk-button-secondary:active {
+  background: rgba(0, 225, 255, 0.1);
+  border-color: var(--ice);
+  color: var(--ice);
+  box-shadow: 0 0 15px var(--ice-glow);
+}
+
+.uk-button:disabled {
+  opacity: 0.5;
+  filter: grayscale(1);
+  pointer-events: none;
+}
+
+/* Petits boutons icones */
+.uk-icon-button {
+  background: rgba(0, 225, 255, 0.05);
+  color: var(--ice);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+}
+
+.uk-icon-button:focus,
+.uk-icon-button:hover,
+.uk-active > .uk-icon-button {
+  background-color: var(--ice-dim);
+  color: #fff;
+  border-color: var(--ice);
+  box-shadow: 0 0 10px var(--ice-glow);
+  transform: scale(1.1);
+}
+
+/* ── ALERTES (Notifications) ── */
+.uk-alert {
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 15px 20px;
+}
+.uk-alert-danger { background: rgba(255, 54, 54, 0.15); border-color: rgba(255, 54, 54, 0.5); color: #ffb3b3; }
+.uk-alert-warning { background: rgba(255, 139, 54, 0.15); border-color: rgba(255, 139, 54, 0.5); color: #ffd6b3; }
+.uk-alert-success { background: rgba(37, 206, 92, 0.15); border-color: rgba(37, 206, 92, 0.5); color: #b3ffcc; }
+
+.uk-alert-close { top: 18px; color: inherit; opacity: 0.7; transition: opacity 0.2s; }
+.uk-alert-close:hover { opacity: 1; }
+
+/* ── ONGLETS (Tabs) ── */
+.uk-tab::before { border-bottom-color: var(--border); }
+.uk-tab > * > a { color: var(--text-body); border-bottom: 2px solid transparent; transition: all 0.3s; }
+.uk-tab > * > a:focus, .uk-tab > * > a:hover { color: #fff; border-bottom-color: rgba(255,255,255,0.3); }
+.uk-tab > .uk-active > a { color: var(--ice); border-color: var(--ice); text-shadow: 0 0 8px var(--ice-glow); }
+
+/* ── TABLEAUX & FORUM ── */
+.uk-table th { color: #fff; font-family: var(--font-title); letter-spacing: 0.05em; }
+.uk-table td { border-bottom: 1px solid var(--border); }
+
+.uk-table-divider > :first-child > tr:not(:first-child),
+.uk-table-divider > :not(:first-child) > tr,
+.uk-table-divider > tr:not(:first-child) {
+  border-top: 1px solid var(--border);
+}
+
+.forum-table .uk-table caption {
+  background: rgba(0, 225, 255, 0.05);
+  border: 1px solid var(--border);
+  border-bottom: 2px solid var(--ice-dim);
+  color: var(--ice);
+  border-radius: 8px 8px 0 0;
+}
+
+.forum-table .uk-table tbody tr { background: rgba(10, 16, 28, 0.3); border: 1px solid var(--border); transition: background 0.2s; }
+.forum-table .uk-table-hover tbody tr:hover { background: rgba(0, 225, 255, 0.03); }
+
+.forum-who-icon {
+  background-color: rgba(0, 225, 255, 0.05);
+  border: 1px solid var(--ice-dim);
+  box-shadow: 0 0 10px var(--ice-glow);
+  color: var(--ice);
+}
+
+.topic-author-avatar {
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.topic-author-staff .topic-author-avatar { border-color: var(--ice); box-shadow: 0 0 15px var(--ice-glow); }
+.author-rank-staff { background: linear-gradient(90deg, var(--ice-dim), var(--ice)); color: #000; border: none; border-radius: 4px; box-shadow: 0 0 10px var(--ice-glow); }
+
+/* ── BOUTIQUE (Store) ── */
+.blizzcms-item-container {
+  background: rgba(10, 16, 28, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  padding: 10px;
+}
+.blizzcms-item-container:hover {
+  border-color: var(--border-hover);
+  background: rgba(15, 25, 45, 0.7);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.4), 0 0 15px var(--ice-glow);
+  transform: translateY(-3px);
+}
+
+.item-store-icon {
+  border: 2px solid var(--ice-dim);
+  border-radius: 6px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+.blizzcms-item-container:hover .item-store-icon {
+  border-color: var(--ice);
+  box-shadow: 0 0 15px var(--ice-glow);
+}
+
+.blizzcms-store-summary .uk-accordion-title {
+  background: rgba(0, 225, 255, 0.05);
+  border: 1px solid var(--ice-dim);
+  color: var(--ice);
+  border-radius: 6px;
+}
+
+/* ── PAGINATION ── */
+.uk-pagination > * > * {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: #fff;
+}
+.uk-pagination > * > :focus,
+.uk-pagination > * > :hover,
+.uk-pagination > .uk-active > * {
+  background: var(--ice-dim);
+  border-color: var(--ice);
+  color: #fff;
+  box-shadow: 0 0 10px var(--ice-glow);
+}
+
+/* ── MENU COMPTE (Panel) ── */
+.uk-nav-default.myaccount-nav {
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.uk-nav-default.myaccount-nav > li > a { transition: all 0.2s; border-left: 3px solid transparent; }
+.uk-nav-default.myaccount-nav > li > a:hover { background: rgba(0, 225, 255, 0.05); color: var(--ice); border-left-color: var(--ice-dim); }
+.uk-nav-default.myaccount-nav > li.uk-active > a { background: rgba(0, 225, 255, 0.1); border-left-color: var(--ice); color: var(--ice); font-weight: bold; }
+
+/* ── BARRES DE POPULATION ── */
+.uk-tile.alliance-bar { background: linear-gradient(90deg, #1e7fe1, #104e8f); border-color: rgba(30, 127, 225, 0.5); box-shadow: inset 0 0 10px rgba(30, 127, 225, 0.3); }
+.uk-tile.horde-bar { background: linear-gradient(90deg, #e11e1e, #8f1010); border-color: rgba(225, 30, 30, 0.5); box-shadow: inset 0 0 10px rgba(225, 30, 30, 0.3); }
+
+/* ════════════════════════════════════════════════════════════
+   ICÔNES DEVISES GLOBALES (Logic Différenciée)
+════════════════════════════════════════════════════════════ */
+
+/* Style de base pour toutes les icônes */
+.dp-icon, .vp-icon {
+    display: inline-block; 
+    width: 18px; 
+    height: 18px; 
+    background-size: contain; 
+    background-repeat: no-repeat; 
+    vertical-align: text-bottom; 
+    margin-left: 4px;
+}
+
+/* --- CAS 1 : DANS LA NAVBAR (Fichiers DP.png / VP.png) --- */
+/* On cible les icônes qui sont enfants de ton élément de navigation */
+.nav .dp-icon, .navbar .dp-icon, .header .dp-icon { 
+    background-image: url("/assets/images/DP.png"); 
+    filter: none; /* Souvent pas besoin de glow dans la nav */
+}
+.nav .vp-icon, .navbar .vp-icon, .header .vp-icon { 
+    background-image: url("/assets/images/VP.png"); 
+    filter: none;
+}
+
+/* --- CAS 2 : PARTOUT AILLEURS (Fichiers DP-coin.png / VP-coin.png) --- */
+/* On utilise DP-coin par défaut pour le panier, les modals, etc. */
+.dp-icon { 
+    background-image: url("/assets/images/DP-coin.png"); 
+    filter: drop-shadow(0 0 5px rgba(220, 185, 80, 0.8)); 
+}
+.vp-icon { 
+    background-image: url("/assets/images/VP-coin.png"); 
+    filter: drop-shadow(0 0 5px rgba(160, 200, 240, 0.8)); 
+}
+
+/* Fin du fichier css */

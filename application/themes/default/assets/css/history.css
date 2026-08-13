@@ -1,0 +1,108 @@
+/* ════════════════════════════════════════════════════════════
+   HISTORY.CSS — Celestia-WoW 2026
+════════════════════════════════════════════════════════════ */
+
+.hist-list { padding: 10px 0; }
+
+/* ── LIGNE D'HISTORIQUE ── */
+.hist-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--store-border);
+    background: rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.hist-row:hover {
+    background: rgba(0, 225, 255, 0.03);
+    box-shadow: inset 3px 0 0 var(--store-ice);
+}
+
+.hist-row:last-child { border-bottom: none; }
+
+/* ── ICÔNES DE TYPE (LUMINEUSES) ── */
+.hist-type-dot {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--store-border);
+    transition: all 0.3s ease;
+}
+
+.hist-row:hover .hist-type-dot { 
+    transform: scale(1.1);
+    box-shadow: 0 0 15px var(--glow);
+}
+
+/* Couleurs thématiques 2026 */
+.type-item    { color: var(--store-ice); border-color: var(--store-ice-dim); --glow: rgba(0, 225, 255, 0.3); }
+.type-gold    { color: #ffcc00; border-color: #9a7a30; --glow: rgba(255, 204, 0, 0.2); }
+.type-level   { color: #00ff88; border-color: #008a4a; --glow: rgba(0, 255, 136, 0.2); }
+.type-service { color: #e273ff; border-color: #8a309a; --glow: rgba(226, 115, 255, 0.2); }
+
+/* ── INFOS ARTICLE ── */
+.hist-main { flex: 1; min-width: 0; }
+
+.hist-name {
+    font-family: var(--font-title);
+    font-size: 1.15rem; font-weight: 700;
+    color: #fff; text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 4px;
+}
+
+.hist-meta { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; }
+
+.hist-gift-pill {
+    background: rgba(226, 115, 255, 0.1); border: 1px solid rgba(226, 115, 255, 0.3);
+    color: #e273ff; padding: 2px 10px; border-radius: 4px; font-weight: 600;
+}
+
+.hist-char-label { color: var(--store-text); font-weight: 500; }
+
+/* ── DATE & HEURE ── */
+.hist-date-col { text-align: right; min-width: 100px; }
+.hist-date-day  { color: #fff; font-weight: 600; font-size: 0.95rem; }
+.hist-date-time { color: var(--store-text); font-size: 0.85rem; margin-top: 2px; }
+
+/* ── PRIX (ALIGNE SUR LE PANIER) ── */
+.hist-price-col {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 5px; min-width: 100px;
+}
+
+.hist-price-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--store-border);
+    border-radius: 6px; padding: 6px 12px; color: #fff; font-weight: 700;
+}
+
+/* ── BADGES DE STATUT ── */
+.hist-badge-col { min-width: 110px; text-align: right; }
+.hist-badge {
+    padding: 4px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    background: rgba(255, 255, 255, 0.05); border: 1px solid var(--store-border);
+    color: var(--store-text);
+}
+.hist-badge.type-item { color: var(--store-ice); border-color: var(--store-ice-dim); }
+
+/* ── PAGINATION BENTO ── */
+.hist-pagination { display: flex; align-items: center; gap: 8px; }
+.hist-page-btn {
+    width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+    background: rgba(0, 0, 0, 0.5); border: 1px solid var(--store-border);
+    border-radius: 8px; color: #fff; text-decoration: none; transition: 0.3s;
+}
+.hist-page-btn:hover { background: var(--store-ice-dim); border-color: var(--store-ice); }
+.hist-page-btn.active { background: var(--store-ice); border-color: var(--store-ice); color: #000; font-weight: 800; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+    .hist-row { flex-direction: column; align-items: flex-start; padding: 20px; gap: 15px; }
+    .hist-date-col, .hist-badge-col { text-align: left; min-width: 0; }
+    .hist-price-col { width: 100%; flex-direction: row; justify-content: space-between; border-top: 1px solid var(--store-border); padding-top: 15px; }
+}

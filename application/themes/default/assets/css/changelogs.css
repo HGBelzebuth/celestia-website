@@ -1,0 +1,149 @@
+/* ══════════════════════════════════════════════════════════
+   CHANGELOGS.CSS — Celestia-WoW 2026
+   Modernisation de la structure UIkit (Panel / Changelogs)
+   ══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Outfit:wght@300;400;600;700&display=swap');
+
+:root {
+    --store-ice: #00e1ff;
+    --store-ice-dim: #008ba3;
+    --store-glow: rgba(0, 225, 255, 0.25);
+    --store-bg: #02050a;
+    --store-border: rgba(255, 255, 255, 0.08);
+    --font-title: 'Cinzel', serif;
+    --font-body: 'Outfit', sans-serif;
+}
+
+/* ── Ajustements Fond de page ── */
+.Pane-bg { filter: brightness(0.3) saturate(0.8) !important; transition: 0.3s; }
+.Pane-overlay {
+    background: linear-gradient(180deg, rgba(2,5,10,0.6) 0%, rgba(2,5,10,0.95) 100%) !important;
+}
+
+/* ── Titre de page ── */
+.Pane-content h4.uk-h4 {
+    font-family: var(--font-title);
+    color: #fff;
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    text-shadow: 0 0 15px var(--store-glow);
+    margin-bottom: 24px;
+    text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════
+   MENU LATÉRAL (Sidebar)
+═══════════════════════════════════════ */
+.myaccount-nav {
+    background: linear-gradient(145deg, rgba(15, 22, 36, 0.6) 0%, rgba(5, 10, 18, 0.8) 100%);
+    border: 1px solid var(--store-border);
+    border-radius: 8px;
+    padding: 16px 0;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    font-family: var(--font-body);
+}
+.myaccount-nav > li > a {
+    color: #94a3b8 !important;
+    padding: 10px 20px !important;
+    transition: all 0.2s ease;
+    display: flex; align-items: center; gap: 12px;
+    border-left: 3px solid transparent;
+    text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
+}
+.myaccount-nav > li > a:hover,
+.myaccount-nav > li > a:focus {
+    background: rgba(0, 225, 255, 0.05);
+    color: #fff !important;
+    border-left: 3px solid var(--store-ice-dim);
+    padding-left: 24px !important;
+    text-decoration: none;
+}
+.myaccount-nav > li > a i { width: 20px; text-align: center; color: rgba(255,255,255,0.3); transition: 0.2s; }
+.myaccount-nav > li > a:hover i { color: var(--store-ice); }
+
+/* Item actif */
+.myaccount-nav > li.uk-active > a {
+    background: rgba(0, 225, 255, 0.08);
+    color: var(--store-ice) !important;
+    border-left: 3px solid var(--store-ice);
+    padding-left: 24px !important;
+    text-shadow: 0 0 10px var(--store-glow);
+}
+.myaccount-nav > li.uk-active > a i { color: var(--store-ice); }
+
+/* Séparateur menu */
+.myaccount-nav .uk-nav-divider {
+    border-top: 1px solid var(--store-border);
+    margin: 8px 0;
+}
+
+/* ═══════════════════════════════════════
+   CARTES CHANGELOGS (UIkit Cards override)
+═══════════════════════════════════════ */
+.Pane-content .uk-card-default {
+    background: linear-gradient(145deg, rgba(15, 22, 36, 0.6) 0%, rgba(5, 10, 18, 0.8) 100%) !important;
+    border: 1px solid var(--store-border);
+    border-radius: 8px;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+    color: #e2e8f0;
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.Pane-content .uk-card-default:hover {
+    transform: translateY(-4px);
+    border-color: var(--store-ice);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.7), 0 0 15px var(--store-glow) !important;
+}
+
+/* Header de la carte */
+.Pane-content .uk-card-header {
+    border-bottom: 1px solid var(--store-border) !important;
+    padding: 16px 24px !important;
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px 8px 0 0;
+}
+.Pane-content .uk-card-header .uk-h5 {
+    font-family: var(--font-title);
+    color: var(--store-ice) !important;
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+.Pane-content .uk-card-header .uk-text-small {
+    color: #94a3b8 !important; margin: 0; display: flex; align-items: center; gap: 6px;
+}
+
+/* Corps de la carte */
+.Pane-content .uk-card-body {
+    padding: 24px !important;
+    font-family: var(--font-body);
+    line-height: 1.6;
+    color: #cbd5e1;
+    font-size: 1.05rem;
+}
+.Pane-content .uk-card-body ul { padding-left: 20px; }
+.Pane-content .uk-card-body li { margin-bottom: 8px; }
+.Pane-content .uk-card-body p:last-child { margin-bottom: 0; }
+
+/* ═══════════════════════════════════════
+   ALERTES / VIDE
+═══════════════════════════════════════ */
+.Pane-content .uk-alert-warning {
+    background: rgba(0, 225, 255, 0.05) !important;
+    border: 1px solid var(--store-ice-dim);
+    color: var(--store-ice) !important;
+    border-radius: 8px;
+    padding: 24px !important;
+    box-shadow: 0 0 15px var(--store-glow);
+    font-family: var(--font-body);
+}
+
+/* ── Responsive ── */
+@media (max-width: 959px) {
+    .Pane-content .uk-grid { margin-top: 20px; }
+    .myaccount-nav { margin-bottom: 30px; }
+    .Pane-content h4.uk-h4 { text-align: center; }
+}

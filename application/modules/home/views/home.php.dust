@@ -1,0 +1,582 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+  /* ═══════════════════════════════════════════════════════════
+   VARIABLES 2026
+═══════════════════════════════════════════════════════════ */
+  :root {
+    --ice: #00e1ff;
+    --ice-soft: #b3f4ff;
+    --ice-dim: #008ba3;
+    --ice-glow: rgba(0, 225, 255, 0.2);
+    --ice-glow-strong: rgba(0, 225, 255, 0.5);
+    
+    --bg-page: #02050a;
+    --bg-card: rgba(10, 16, 28, 0.4);
+    --bg-card-hover: rgba(15, 25, 45, 0.6);
+
+    --text-title: #ffffff;
+    --text-body: #94a3b8;
+    --text-ice: #80eaff;
+
+    --border: rgba(255, 255, 255, 0.08);
+    --border-hover: rgba(0, 225, 255, 0.3);
+
+    --font-title: 'Cinzel', serif;
+    --font-body: 'Outfit', sans-serif;
+
+    --transition: 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    --radius: 16px;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════════════════ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  img { max-width: 100%; display: block; }
+  a { text-decoration: none; color: inherit; }
+
+  .cw-page {
+    background: var(--bg-page);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--text-body);
+    overflow-x: hidden;
+  }
+
+  .cw-wrap {
+    width: 100%;
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 0 clamp(1.5rem, 5vw, 4rem);
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+   HERO CINÉMATIQUE (Haut de page)
+═══════════════════════════════════════════════════════════ */
+  .hero-showcase {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: var(--nav-h, 76px);
+    background-image: url("<?= $template['location'] . 'assets/images/lk_no_background.png'; ?>");
+    background-size: cover;
+    background-position: center 20%;
+    background-attachment: fixed;
+  }
+
+  .hero-showcase::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(2,5,10,0.3) 0%, rgba(2,5,10,0.7) 60%, var(--bg-page) 100%);
+    pointer-events: none;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    transform: translateY(-5%);
+  }
+
+  .hero-logo img {
+    height: clamp(120px, 15vw, 220px);
+    margin: 0 auto;
+    filter: drop-shadow(0 0 30px rgba(0, 225, 255, 0.2));
+  }
+
+  .hero-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .hero-title {
+    font-family: var(--font-title);
+    font-size: clamp(2rem, 5vw, 4rem);
+    color: var(--text-title);
+    line-height: 1.1;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-shadow: 0 10px 30px rgba(0,0,0,0.8);
+  }
+
+  .hero-title span {
+    color: var(--ice);
+    text-shadow: 0 0 20px var(--ice-glow);
+  }
+
+  .hero-subtitle {
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    font-weight: 300;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+   STATUT SERVEUR (Pilule cliquable)
+═══════════════════════════════════════════════════════════ */
+  .hero-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(10, 16, 28, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    padding: 0.6rem 1.8rem;
+    border-radius: 50px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #fff;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    transition: var(--transition);
+  }
+
+  a.hero-status-pill:hover {
+    border-color: var(--ice);
+    background: rgba(0, 225, 255, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 15px 25px rgba(0,0,0,0.6), 0 0 15px var(--ice-glow);
+    color: #fff;
+  }
+
+  .status-dot-modern {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .status-dot-modern.online {
+    background: #00ff88;
+    box-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88;
+    animation: pulse-dot 2s infinite;
+  }
+  .status-dot-modern.offline {
+    background: #ff4444;
+    box-shadow: 0 0 10px #ff4444;
+  }
+
+  @keyframes pulse-dot {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(0, 255, 136, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 136, 0); }
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+   BOUTONS MODERNES
+═══════════════════════════════════════════════════════════ */
+  .btn-epic {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem 2.5rem;
+    font-family: var(--font-title);
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #01050a !important;
+    background: linear-gradient(135deg, var(--ice), var(--ice-dim));
+    border-radius: 4px;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 225, 255, 0.3);
+  }
+
+  .btn-epic::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; width: 50%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+    transform: skewX(-20deg);
+    transition: var(--transition);
+  }
+
+  .btn-epic:hover {
+    background: linear-gradient(135deg, var(--ice-soft), var(--ice));
+    box-shadow: 0 0 30px rgba(0, 225, 255, 0.6);
+    transform: translateY(-2px);
+  }
+  .btn-epic:hover::before { left: 200%; transition: 0.7s; }
+
+  .btn-outline {
+    display: inline-flex;
+    padding: 1rem 2.5rem;
+    font-family: var(--font-title);
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    transition: var(--transition);
+    backdrop-filter: blur(5px);
+  }
+
+  .btn-outline:hover {
+    border-color: var(--ice);
+    background: rgba(0, 225, 255, 0.05);
+    color: var(--ice) !important;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+   BENTO GRID (Design Premium 2026)
+═══════════════════════════════════════════════════════════ */
+  .section-showcase {
+    padding: 6rem 0;
+    position: relative;
+    z-index: 5;
+  }
+
+  .section-header {
+    margin-bottom: 3rem;
+  }
+
+  .section-header h2 {
+    font-family: var(--font-title);
+    font-size: clamp(1.8rem, 3vw, 2.5rem);
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .section-header p {
+    font-size: 1.1rem;
+    color: var(--ice-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin-bottom: 0.5rem;
+  }
+
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto auto;
+    gap: 1.5rem;
+  }
+
+  .bento-card {
+    background: linear-gradient(145deg, rgba(15, 22, 36, 0.6) 0%, rgba(5, 10, 18, 0.8) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 10px 30px rgba(0, 0, 0, 0.3);
+    border-radius: var(--radius);
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1.5rem;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bento-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 225, 255, 0.4), transparent);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+
+  .bento-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 50%;
+    background: linear-gradient(to top, rgba(0, 225, 255, 0.06), transparent);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .bento-card > div, .bento-card > a {
+    position: relative;
+    z-index: 1;
+  }
+
+  .bento-card:hover {
+    border-color: rgba(0, 225, 255, 0.15);
+    transform: translateY(-4px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 20px 40px rgba(0, 0, 0, 0.6), 0 10px 20px rgba(0, 225, 255, 0.05);
+  }
+
+  .bento-card:hover::before,
+  .bento-card:hover::after {
+    opacity: 1;
+  }
+
+  .bento-large { grid-column: span 2; grid-row: span 2; }
+  .bento-medium { grid-column: span 1; }
+
+  .bento-icon {
+    font-size: 2.2rem;
+    color: var(--ice);
+    margin-bottom: 1rem;
+    display: inline-block;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  
+  .bento-card:hover .bento-icon {
+    transform: scale(1.15) rotate(-5deg);
+    color: #fff;
+    text-shadow: 0 0 15px var(--ice-glow-strong);
+  }
+
+  .bento-title {
+    font-family: var(--font-title);
+    font-size: 1.5rem;
+    color: #fff;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .bento-large .bento-title { font-size: 2.2rem; }
+
+  .bento-desc {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--text-body);
+  }
+  .bento-large .bento-desc { font-size: 1.15rem; max-width: 80%; }
+
+  .bento-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--ice);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.9rem;
+    transition: var(--transition);
+    margin-top: auto;
+  }
+  .bento-link:hover { gap: 1rem; color: #fff; }
+
+  /* ═══════════════════════════════════════════════════════════
+   BANNIÈRE DISCORD
+═══════════════════════════════════════════════════════════ */
+  .discord-banner {
+    background: linear-gradient(90deg, rgba(88, 101, 242, 0.1), rgba(10, 16, 28, 0.8));
+    border: 1px solid rgba(88, 101, 242, 0.3);
+    border-radius: var(--radius);
+    padding: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 2rem;
+    margin-top: 4rem;
+  }
+
+  .discord-banner-content h3 {
+    font-family: var(--font-title);
+    color: #fff;
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+  }
+  .discord-banner-content p { color: var(--text-body); max-width: 500px; line-height: 1.6;}
+
+  .btn-discord {
+    background: #5865F2;
+    color: #fff !important;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8rem;
+    transition: var(--transition);
+  }
+  .btn-discord:hover { background: #4752c4; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(88, 101, 242, 0.3); }
+
+  /* ═══════════════════════════════════════════════════════════
+   STORE GRID
+═══════════════════════════════════════════════════════════ */
+  .store-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════════ */
+  @media (max-width: 992px) {
+    .bento-grid { grid-template-columns: 1fr; }
+    .bento-large, .bento-medium { grid-column: span 1; grid-row: auto; }
+    .bento-large .bento-desc { max-width: 100%; }
+    .hero-content { flex-direction: column; }
+  }
+  @media (max-width: 768px) {
+    .discord-banner { flex-direction: column; text-align: center; justify-content: center; }
+  }
+</style>
+
+<div class="cw-page">
+
+  <header class="hero-showcase">
+    <div class="cw-wrap">
+      <div class="hero-content">
+        
+        <div class="hero-logo">
+          <img src="<?= $template['location'] . 'assets/images/logo.png'; ?>" alt="Celestia-WoW">
+        </div>
+
+        <div class="hero-text">
+          <h1 class="hero-title">Forge ta <span>Légende</span></h1>
+          <p class="hero-subtitle">Plonge dans le serveur custom Wrath of the Lich King le plus abouti. Des quêtes inédites, un contenu exclusif et une communauté passionnée.</p>
+        </div>
+
+        <div class="hero-actions">
+          <a href="https://celestia-wow.com/en/register" class="btn-epic">Créer un compte</a>
+          <a href="https://celestia-wow.com/download" class="btn-outline">Télécharger</a>
+        </div>
+
+        <?php if ($this->wowmodule->getRealmStatus()): ?>
+          <?php foreach ($realmsList as $charsMultiRealm):
+            $multiRealm = $this->wowrealm->getRealmConnectionData($charsMultiRealm->id);
+            $isOnline   = $this->wowrealm->RealmStatus(
+              $charsMultiRealm->realmID,
+              $this->wowrealm->realmGetHostname($charsMultiRealm->realmID)
+            );
+          ?>
+            <?php if ($isOnline): ?>
+              <a href="<?= base_url('online'); ?>" class="hero-status-pill">
+                <span class="status-dot-modern online"></span>
+                <span><?= $this->wowrealm->getRealmName($charsMultiRealm->realmID); ?> : <?= $this->wowrealm->getCharactersOnlineAlliance($multiRealm) + $this->wowrealm->getCharactersOnlineHorde($multiRealm); ?> Joueurs</span>
+              </a>
+            <?php else: ?>
+              <div class="hero-status-pill">
+                <span class="status-dot-modern offline"></span>
+                <span style="color:#ff4444">Serveur Hors Ligne</span>
+              </div>
+            <?php endif ?>
+          <?php endforeach ?>
+        <?php endif ?>
+
+      </div>
+    </div>
+  </header>
+
+  <section class="section-showcase">
+    <div class="cw-wrap">
+      
+      <div class="section-header">
+        <p>Découvrir Celestia</p>
+        <h2>L'expérience Ultime</h2>
+      </div>
+
+      <div class="bento-grid">
+        
+        <div class="bento-card bento-large">
+          <div>
+            <i class="fas fa-dragon bento-icon"></i>
+            <h3 class="bento-title">Contenu Custom Inédit</h3>
+            <p class="bento-desc">Nous ne nous contentons pas d'émuler WotLK. Nous l'enrichissons. Explorez de nouvelles zones conçues par notre équipe, affrontez des World Boss exclusifs et découvrez des suites de quêtes épiques qui prolongent l'histoire de Norfendre.</p>
+          </div>
+          <a href="https://celestia-wow.com/en/modifications" class="bento-link">En savoir plus <i class="fas fa-arrow-right"></i></a>
+        </div>
+
+        <div class="bento-card bento-medium">
+          <div>
+            <i class="fas fa-rocket bento-icon"></i>
+            <h3 class="bento-title">Launcher Auto</h3>
+            <p class="bento-desc">Fini les installations complexes. Notre launcher télécharge le jeu et applique les patchs customs automatiquement en un clic.</p>
+          </div>
+          <a href="https://celestia-wow.com/download" class="bento-link">Télécharger <i class="fas fa-download"></i></a>
+        </div>
+
+        <div class="bento-card bento-medium">
+          <div>
+            <i class="fas fa-shield-alt bento-icon"></i>
+            <h3 class="bento-title">Sésame lvl 80</h3>
+            <p class="bento-desc">Pas le temps de pex ? Propulsez votre personnage directement au niveau maximum avec un équipement de départ prêt pour les raids.</p>
+          </div>
+          <a href="https://celestia-wow.com/en/store/5" class="bento-link">Voir l'offre <i class="fas fa-arrow-right"></i></a>
+        </div>
+
+      </div>
+
+      <?php if ($this->wowmodule->getDiscordStatus() == '1'): ?>
+      <div class="discord-banner">
+        <div class="discord-banner-content">
+          <h3>Rejoins la Taverne</h3>
+          <p>Discute avec les développeurs, trouve ta future guilde et ne manque aucune annonce de mise à jour.</p>
+        </div>
+        <a href="https://discord.gg/<?= $this->config->item('discord_invitation'); ?>" target="_blank" class="btn-discord">
+          <i class="fab fa-discord" style="font-size:1.5rem;"></i> Rejoindre le Discord
+        </a>
+      </div>
+      <?php endif ?>
+
+    </div>
+  </section>
+
+  <section class="section-showcase" style="background: rgba(2,5,10,0.5); border-top: 1px solid var(--border);">
+    <div class="cw-wrap">
+      
+      <div class="section-header" style="text-align: center;">
+        <p>Boutique & Support</p>
+        <h2>Améliore ton jeu</h2>
+      </div>
+
+      <div class="store-grid">
+        
+        <div class="bento-card">
+          <div>
+            <i class="fas fa-gem bento-icon"></i>
+            <h3 class="bento-title">Promos du jour</h3>
+            <p class="bento-desc">Customise ton aventure avec des montures exclusives et des objets cosmétiques introuvables ailleurs.</p>
+          </div>
+          <a href="<?= base_url('store'); ?>" class="bento-link">Ouvrir la boutique <i class="fas fa-arrow-right"></i></a>
+        </div>
+
+        <div class="bento-card">
+          <div>
+            <i class="fas fa-heart bento-icon"></i>
+            <h3 class="bento-title">Contribuer</h3>
+            <p class="bento-desc">Celestia est un projet bénévole. Si tu apprécies l'aventure, tu peux soutenir le développement du serveur et débloquer le statut de Donateur en guise de remerciement.</p>
+          </div>
+          <a href="<?= base_url('donate'); ?>" class="bento-link">Soutenir le projet <i class="fas fa-arrow-right"></i></a>
+        </div>
+
+        <div class="bento-card">
+          <div>
+            <i class="fas fa-star bento-icon"></i>
+            <h3 class="bento-title">Voter</h3>
+            <p class="bento-desc">Aide Celestia à rayonner ! Fais grimper le serveur dans les classements et remporte une monnaie exclusive à échanger contre des récompenses uniques en jeu.</p>
+          </div>
+          <a href="https://celestia-wow.com/en/vote" class="bento-link">Voter maintenant <i class="fas fa-arrow-right"></i></a>
+        </div>
+
+      </div>
+
+    </div>
+  </section>

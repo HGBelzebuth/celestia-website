@@ -1,0 +1,858 @@
+/* ══════════════════════════════════════════════════════════
+   ARMORY.CSS — Celestia-WoW — Pages Armurerie
+   ══════════════════════════════════════════════════════════ */
+
+@font-face {
+    font-family: 'Morpheus';
+    src: url('https://wow.zamimg.com/fonts/morpheus.woff') format('woff'),
+         url('https://wow.zamimg.com/fonts/morpheus.ttf') format('truetype');
+    font-display: swap;
+}
+
+:root {
+    --gold:           #c8a95a;
+    --gold-light:     #e8c97a;
+    --gold-dark:      #9a7a30;
+    --silver:         #a8b8c8;
+    --silver-light:   #d0dde8;
+    --silver-dim:     rgba(168,184,200,0.15);
+    --silver-line:    rgba(168,184,200,0.25);
+    --blue-deep:      #0a1628;
+    --bg-deep:        #020508;
+    --border-silver:  rgba(168,184,200,0.2);
+    --text-light:     #c8bfa8;
+    --text-dim:       #5a6a7a;
+}
+
+/* ════════════════════════════════════════════════════════════
+   FOND DE PAGE
+════════════════════════════════════════════════════════════ */
+.armory-page-bg { position: fixed; inset: 0; z-index: -1; background-color: var(--bg-deep); pointer-events: none; }
+.armory-page-bg::before {
+    content: ''; position: fixed; inset: 0;
+    background:
+        radial-gradient(ellipse 80% 45% at 50% -5%,  rgba(80,160,220,0.10) 0%, transparent 65%),
+        radial-gradient(ellipse 45% 60% at -5% 45%,  rgba(40,100,180,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 55% at 105% 55%, rgba(60,120,200,0.06) 0%, transparent 55%),
+        radial-gradient(ellipse 40% 30% at 50% 95%,  rgba(140,100,30,0.06) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+/* ════════════════════════════════════════════════════════════
+   HERO
+════════════════════════════════════════════════════════════ */
+.armory-hero {
+    position: relative; min-height: 220px;
+    display: flex; align-items: flex-end;
+    overflow: hidden; padding-top: 120px;
+}
+.armory-hero::before {
+    content: ''; position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(to bottom, rgba(2,5,8,0.1) 0%, rgba(2,5,8,0.5) 50%, rgba(2,5,8,0.97) 100%);
+}
+.armory-hero-content {
+    position: relative; z-index: 2; width: 100%;
+    padding: 0 0 40px; text-align: center;
+}
+.armory-hero-medallion {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: linear-gradient(135deg, rgba(168,184,200,0.18), rgba(10,22,40,0.6));
+    border: 1px solid rgba(168,184,200,0.35);
+    box-shadow: 0 0 30px rgba(168,184,200,0.15), 0 0 60px rgba(80,140,220,0.10), inset 0 1px 0 rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 18px; font-size: 1.75rem; color: var(--silver-light);
+}
+.armory-hero h1 {
+    font-family: 'Morpheus', 'Palatino Linotype', serif;
+    font-size: 3rem; font-weight: normal; color: var(--silver-light);
+    text-shadow: 0 0 50px rgba(168,184,200,0.4), 0 0 20px rgba(80,140,220,0.3), 0 2px 6px rgba(0,0,0,0.9);
+    letter-spacing: 0.05em; margin: 0 0 8px;
+}
+.armory-hero p {
+    font-size: 1.05rem; color: #4a6a8a;
+    letter-spacing: 0.2em; text-transform: uppercase; margin: 0 0 22px;
+}
+.armory-hero-line {
+    width: 240px; height: 1px; margin: 0 auto;
+    background: linear-gradient(90deg, transparent, rgba(168,184,200,0.3), rgba(168,184,200,0.55), rgba(240,248,255,0.85), rgba(168,184,200,0.55), rgba(168,184,200,0.3), transparent);
+}
+
+/* ════════════════════════════════════════════════════════════
+   LAYOUT
+════════════════════════════════════════════════════════════ */
+.armory-layout { padding: 40px 0 80px; }
+.armory-container {
+    max-width: 1100px; margin: 0 auto; padding: 0 28px;
+}
+
+/* ════════════════════════════════════════════════════════════
+   PANEL (carte principale)
+════════════════════════════════════════════════════════════ */
+.armory-panel {
+    background: linear-gradient(160deg, rgba(10,18,34,0.98) 0%, rgba(4,10,22,0.99) 100%);
+    border: 1px solid var(--border-silver); border-radius: 6px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(168,184,200,0.04), inset 0 1px 0 rgba(255,255,255,0.03);
+    position: relative; overflow: hidden; margin-bottom: 24px;
+}
+.armory-panel::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent 0%, rgba(168,184,200,0.5) 10%, rgba(168,184,200,0.95) 50%, rgba(168,184,200,0.5) 90%, transparent 100%);
+}
+.armory-panel-header {
+    display: flex; align-items: center; gap: 14px; padding: 20px 28px;
+    border-bottom: 1px solid var(--border-silver);
+    background: linear-gradient(90deg, rgba(168,184,200,0.05) 0%, transparent 60%);
+    position: relative; min-height: 80px;
+}
+.armory-panel-header::before {
+    content: ''; position: absolute; left: 0; top: 20%; bottom: 20%;
+    width: 3px; background: linear-gradient(180deg, transparent, var(--silver), transparent); border-radius: 2px;
+}
+.armory-panel-header-icon {
+    width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(168,184,200,0.18), rgba(168,184,200,0.04));
+    border: 1px solid rgba(168,184,200,0.28); box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--silver-light); font-size: 1.1rem;
+}
+.armory-panel-header h2 {
+    font-family: 'Morpheus', serif; font-size: 2rem; font-weight: normal;
+    color: transparent;
+    background: linear-gradient(180deg, #f0f4ff 0%, #d0dde8 40%, #a8b8c8 70%, #7a9ab8 100%);
+    -webkit-background-clip: text; background-clip: text;
+    letter-spacing: 0.12em; margin: 0;
+    filter: drop-shadow(0 0 14px rgba(168,184,200,0.5)) drop-shadow(0 2px 5px rgba(0,0,0,0.95));
+}
+.armory-panel-body { padding: 28px; }
+
+/* ════════════════════════════════════════════════════════════
+   RECHERCHE
+════════════════════════════════════════════════════════════ */
+.armory-search-form {
+    display: flex; gap: 12px; align-items: stretch; flex-wrap: wrap;
+}
+.armory-search-input {
+    flex: 1; min-width: 200px;
+    background: rgba(4,10,22,0.8);
+    border: 1px solid rgba(168,184,200,0.22);
+    border-radius: 5px; color: var(--silver-light);
+    padding: 10px 16px; font-size: 1rem;
+    transition: border-color 0.25s, box-shadow 0.25s;
+    outline: none;
+}
+.armory-search-input::placeholder { color: rgba(168,184,200,0.3); }
+.armory-search-input:focus {
+    border-color: rgba(168,184,200,0.55);
+    box-shadow: 0 0 0 3px rgba(168,184,200,0.08);
+}
+.armory-search-select {
+    background: rgba(4,10,22,0.8);
+    border: 1px solid rgba(168,184,200,0.22);
+    border-radius: 5px; color: var(--silver-light);
+    padding: 10px 14px; font-size: 1rem;
+    outline: none; cursor: pointer;
+    transition: border-color 0.25s;
+}
+.armory-search-select:focus { border-color: rgba(168,184,200,0.55); }
+.armory-search-btn {
+    display: flex; align-items: center; gap: 8px;
+    background: linear-gradient(135deg, rgba(168,184,200,0.14) 0%, rgba(100,120,150,0.06) 100%);
+    border: 1px solid rgba(168,184,200,0.28); border-radius: 5px;
+    color: var(--silver-light); padding: 10px 24px;
+    font-size: 1rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    cursor: pointer; transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
+    white-space: nowrap;
+}
+.armory-search-btn:hover {
+    background: linear-gradient(135deg, rgba(168,184,200,0.26) 0%, rgba(100,120,150,0.14) 100%);
+    border-color: rgba(200,218,240,0.55);
+    box-shadow: 0 0 20px rgba(168,184,200,0.15);
+}
+
+/* ════════════════════════════════════════════════════════════
+   TABS RÉSULTATS
+════════════════════════════════════════════════════════════ */
+.armory-tabs {
+    display: flex; gap: 4px; margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-silver); padding-bottom: 0;
+}
+.armory-tab-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 22px; cursor: pointer;
+    background: transparent; border: none;
+    color: rgba(168,184,200,0.45);
+    font-size: 1rem; font-family: 'Morpheus', serif;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px; transition: color 0.2s, border-color 0.2s;
+}
+.armory-tab-btn:hover { color: var(--silver-light); }
+.armory-tab-btn.active {
+    color: var(--silver-light);
+    border-bottom-color: var(--silver-light);
+}
+.armory-tab-content { display: none; }
+.armory-tab-content.active { display: block; }
+
+/* ════════════════════════════════════════════════════════════
+   TABLE
+════════════════════════════════════════════════════════════ */
+.armory-table {
+    width: 100%; border-collapse: collapse;
+}
+.armory-table thead tr {
+    border-bottom: 1px solid var(--border-silver);
+}
+.armory-table th {
+    padding: 10px 16px; text-align: left;
+    font-family: 'Morpheus', serif; font-size: 0.85rem;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: rgba(168,184,200,0.45); font-weight: normal;
+}
+.armory-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(168,184,200,0.06);
+    color: var(--silver-light); font-size: 1rem;
+}
+.armory-table tbody tr {
+    transition: background 0.18s;
+}
+.armory-table tbody tr:hover {
+    background: rgba(168,184,200,0.04);
+}
+.armory-table td.center { text-align: center; }
+.armory-table-link {
+    color: var(--silver-light); font-weight: 700;
+    transition: color 0.2s;
+}
+.armory-table-link:hover { color: #fff; text-shadow: 0 0 12px rgba(168,184,200,0.4); }
+.armory-table-icon {
+    width: 36px; height: 36px; vertical-align: middle;
+    border-radius: 50%; border: 1px solid rgba(168,184,200,0.15);
+}
+.armory-table-empty {
+    text-align: center; padding: 40px 16px;
+    color: rgba(168,184,200,0.3); font-style: italic;
+}
+
+/* ════════════════════════════════════════════════════════════
+   FICHE JOUEUR — Header
+════════════════════════════════════════════════════════════ */
+.armory-player-header {
+    display: flex; align-items: center; gap: 24px;
+    padding: 28px; border-bottom: 1px solid var(--border-silver);
+    background: linear-gradient(90deg, rgba(168,184,200,0.04) 0%, transparent 70%);
+    flex-wrap: wrap;
+}
+.armory-player-avatar {
+    width: 80px; height: 80px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(168,184,200,0.12), rgba(4,10,22,0.8));
+    border: 2px solid rgba(168,184,200,0.25);
+    box-shadow: 0 0 24px rgba(168,184,200,0.12), inset 0 1px 0 rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+}
+.armory-player-avatar img { width: 60px; height: 60px; }
+.armory-player-info { flex: 1; min-width: 0; }
+.armory-player-name {
+    font-family: 'Morpheus', serif; font-size: 2.2rem; font-weight: normal;
+    color: transparent;
+    background: linear-gradient(180deg, #f0f4ff 0%, #d0dde8 40%, #a8b8c8 70%, #7a9ab8 100%);
+    -webkit-background-clip: text; background-clip: text;
+    letter-spacing: 0.1em; margin: 0 0 6px;
+    filter: drop-shadow(0 0 12px rgba(168,184,200,0.4)) drop-shadow(0 2px 4px rgba(0,0,0,0.9));
+}
+.armory-player-meta {
+    display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
+}
+.armory-player-meta-item {
+    display: flex; align-items: center; gap: 8px;
+    color: rgba(168,184,200,0.55); font-size: 0.95rem;
+}
+.armory-player-meta-item img {
+    width: 28px; height: 28px; border-radius: 4px;
+    border: 1px solid rgba(168,184,200,0.15);
+}
+.armory-player-meta-item span { color: var(--silver-light); font-weight: 600; }
+.armory-player-stats {
+    display: flex; gap: 12px; flex-wrap: wrap; margin-left: auto;
+}
+.armory-stat-badge {
+    display: flex; flex-direction: column; align-items: center;
+    background: rgba(4,10,22,0.6); border: 1px solid rgba(168,184,200,0.15);
+    border-radius: 6px; padding: 10px 18px; min-width: 80px;
+}
+.armory-stat-badge-value {
+    font-family: 'Morpheus', serif; font-size: 1.4rem;
+    color: var(--silver-light); letter-spacing: 0.05em;
+}
+.armory-stat-badge-label {
+    font-size: 0.75rem; color: rgba(168,184,200,0.4);
+    letter-spacing: 0.15em; text-transform: uppercase; margin-top: 2px;
+}
+
+/* ════════════════════════════════════════════════════════════
+   ÉQUIPEMENT — Grille d'items
+════════════════════════════════════════════════════════════ */
+.armory-equip-section { padding: 28px; }
+.armory-equip-title {
+    font-family: 'Morpheus', serif; font-size: 1.1rem; font-weight: normal;
+    color: rgba(168,184,200,0.5); letter-spacing: 0.2em; text-transform: uppercase;
+    margin: 0 0 20px; display: flex; align-items: center; gap: 10px;
+}
+.armory-equip-title::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, rgba(168,184,200,0.2), transparent);
+}
+.armory-equip-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+}
+.armory-item-slot {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(4,10,22,0.6); border: 1px solid rgba(168,184,200,0.12);
+    border-radius: 6px; padding: 10px 14px;
+    transition: border-color 0.2s, background 0.2s;
+}
+.armory-item-slot:hover {
+    border-color: rgba(168,184,200,0.28);
+    background: rgba(168,184,200,0.04);
+}
+.armory-item-slot-icon {
+    width: 40px; height: 40px; flex-shrink: 0;
+    border-radius: 4px; border: 1px solid rgba(168,184,200,0.2);
+    background: rgba(0,0,0,0.4);
+    overflow: hidden; display: flex; align-items: center; justify-content: center;
+}
+.armory-item-slot-icon img { width: 40px; height: 40px; }
+.armory-item-slot-icon-empty {
+    color: rgba(168,184,200,0.15); font-size: 1rem;
+}
+.armory-item-slot-info { min-width: 0; flex: 1; }
+.armory-item-slot-name {
+    font-size: 0.9rem; font-weight: 600; color: var(--silver-light);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    line-height: 1.3;
+}
+.armory-item-slot-name a { color: inherit; transition: color 0.2s; }
+.armory-item-slot-name a:hover { color: #fff; }
+.armory-item-slot-label {
+    font-size: 0.75rem; color: rgba(168,184,200,0.35);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-top: 2px;
+}
+
+/* Couleurs qualité items WoW */
+.q0 { color: #9d9d9d; } /* Commun */
+.q1 { color: #ffffff; } /* Peu commun */
+.q2 { color: #1eff00; } /* Rare */
+.q3 { color: #0070dd; } /* Épique */
+.q4 { color: #a335ee; } /* Légendaire */
+.q5 { color: #ff8000; } /* Artefact */
+
+/* ════════════════════════════════════════════════════════════
+   GUILDE
+════════════════════════════════════════════════════════════ */
+.armory-guild-header {
+    display: flex; align-items: center; gap: 20px;
+    padding: 28px; border-bottom: 1px solid var(--border-silver);
+    background: linear-gradient(90deg, rgba(168,184,200,0.04) 0%, transparent 70%);
+}
+.armory-guild-emblem {
+    width: 68px; height: 68px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(168,184,200,0.15), rgba(4,10,22,0.8));
+    border: 2px solid rgba(168,184,200,0.25);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem; color: rgba(168,184,200,0.5);
+}
+.armory-guild-info { flex: 1; }
+.armory-guild-name {
+    font-family: 'Morpheus', serif; font-size: 2rem; font-weight: normal;
+    color: transparent;
+    background: linear-gradient(180deg, #f0f4ff 0%, #d0dde8 40%, #a8b8c8 70%, #7a9ab8 100%);
+    -webkit-background-clip: text; background-clip: text;
+    letter-spacing: 0.1em; margin: 0 0 6px;
+    filter: drop-shadow(0 0 12px rgba(168,184,200,0.4));
+}
+.armory-guild-motd {
+    font-style: italic; color: rgba(168,184,200,0.45); font-size: 1rem;
+}
+
+/* ════════════════════════════════════════════════════════════
+   EMPTY STATE
+════════════════════════════════════════════════════════════ */
+.armory-empty {
+    text-align: center; padding: 60px 20px;
+    color: rgba(168,184,200,0.3);
+}
+.armory-empty i { font-size: 3rem; margin-bottom: 16px; display: block; opacity: 0.3; }
+.armory-empty p { font-size: 1.05rem; }
+
+/* ════════════════════════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .armory-page-bg::before { display: none; }
+    .armory-hero { min-height: 160px; padding-top: 90px; }
+    .armory-hero h1 { font-size: 2rem; }
+    .armory-container { padding: 0 14px; }
+    .armory-panel-body { padding: 16px; }
+    .armory-player-header { gap: 16px; padding: 20px; }
+    .armory-player-name { font-size: 1.6rem; }
+    .armory-player-stats { margin-left: 0; }
+    .armory-equip-grid { grid-template-columns: repeat(2, 1fr); }
+    .armory-search-form { flex-direction: column; }
+    .armory-search-btn { justify-content: center; }
+}
+
+@media (max-width: 480px) {
+    .armory-hero h1 { font-size: 1.6rem; }
+    .armory-equip-grid { grid-template-columns: 1fr; }
+}
+
+/* ════════════════════════════════════════════════════════════
+   STATS ROW
+════════════════════════════════════════════════════════════ */
+.armory-stats-row {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    justify-content: center; margin-bottom: 24px;
+}
+
+/* ════════════════════════════════════════════════════════════
+   MANNEQUIN
+════════════════════════════════════════════════════════════ */
+.armory-mannequin {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 28px 20px 0;
+    gap: 0;
+}
+
+.armory-mannequin-center {
+    flex-shrink: 0;
+    width: 320px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.armory-mannequin-img {
+    width: 320px;
+    height: auto;
+    display: block;
+}
+
+/* ── Colonnes slots ── */
+.armory-slots-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 8px;
+}
+
+/* ── Slot individuel ── */
+.armory-slot {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.armory-slot a {
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.armory-slot-frame {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    width: 68px !important;
+    height: 68px !important;
+    min-width: 68px;
+    min-height: 68px;
+    object-fit: fill;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.armory-slot-icon {
+    width: 56px;
+    height: 56px;
+    display: block;
+    border-radius: 3px;
+    border: 1px solid rgba(168,184,200,0.15);
+    background: rgba(0,0,0,0.5);
+    transition: filter 0.2s;
+}
+
+.armory-slot:hover .armory-slot-icon:not(.armory-slot-icon-empty) {
+    filter: brightness(1.2) drop-shadow(0 0 8px rgba(168,184,200,0.4));
+}
+
+.armory-slot-empty {
+    opacity: 0.3;
+}
+
+.armory-slot-icon-empty {
+    opacity: 0.25;
+}
+
+/* ── Ligne du bas (armes) ── */
+.armory-slots-bottom {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 16px 20px 24px;
+}
+
+/* ════════════════════════════════════════════════════════════
+   RESPONSIVE MANNEQUIN
+════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+    .armory-mannequin {
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .armory-slots-col {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding-top: 0;
+    }
+
+    .armory-mannequin-center {
+        order: -1;
+        width: 200px;
+    }
+
+    .armory-mannequin-img {
+        width: 200px;
+    }
+}
+
+/* ════════════════════════════════════════════════════════════
+   BLOQUER LE REMPLACEMENT D'ICÔNES PAR WOWHEAD
+════════════════════════════════════════════════════════════ */
+/* Wowhead injecte des <img> avec la classe "icon" après nos images.
+   On masque ces injections tout en gardant nos propres icônes. */
+.armory-slot a.q0 img:not(.armory-slot-icon):not(.armory-slot-frame),
+.armory-slot a.q1 img:not(.armory-slot-icon):not(.armory-slot-frame),
+.armory-slot a.q2 img:not(.armory-slot-icon):not(.armory-slot-frame),
+.armory-slot a.q3 img:not(.armory-slot-icon):not(.armory-slot-frame),
+.armory-slot a.q4 img:not(.armory-slot-icon):not(.armory-slot-frame),
+.armory-slot-link > a > img:not(.armory-slot-icon):not(.armory-slot-frame),
+.armory-slot div[data-wowhead] > img:not(.nwh):not(.armory-slot-frame) {
+    display: none !important;
+}
+.armory-slot-link { display: block; position: relative; width: 56px; height: 56px; }
+
+/* ── Slot frame ── */
+.armory-slot-frame {
+    position: absolute;
+    top: -6px; left: -6px;
+    width: 68px !important; height: 68px !important;
+    min-width: 68px; min-height: 68px;
+    z-index: 2; pointer-events: none;
+    object-fit: fill;
+}
+.armory-slot-empty { opacity: 0.25; }
+.armory-slot-icon-empty { opacity: 0.18; }
+
+/* ── Mannequin center ── */
+.armory-mannequin-center {
+    flex: 1; height: 520px;
+    display: flex; align-items: flex-start; justify-content: center;
+    overflow: hidden;
+}
+.armory-mannequin-img {
+    width: 100%; height: 520px;
+    display: block; object-fit: cover; object-position: center top;
+}
+
+/* ── Armes bas ── */
+.armory-slots-bottom {
+    display: flex; justify-content: center; gap: 24px;
+    padding: 16px 20px 24px;
+}
+
+/* ════════════════════════════════════════════════════════════
+   FICHE JOUEUR — DESIGN BLIZZARD-INSPIRED
+════════════════════════════════════════════════════════════ */
+
+/* ── Hero ── */
+.pv-hero {
+    position: relative; min-height: 280px;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    overflow: hidden;
+    background:
+        radial-gradient(ellipse 70% 60% at 50% 100%, rgba(80,130,220,0.12) 0%, transparent 65%),
+        radial-gradient(ellipse 50% 40% at 20% 50%,  rgba(100,80,200,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 35% at 80% 30%,  rgba(60,140,200,0.07) 0%, transparent 55%),
+        linear-gradient(180deg, #020508 0%, #040a14 60%, #06111c 100%);
+    padding: 0 clamp(1.5rem, 5vw, 4rem);
+}
+.pv-hero-overlay {
+    position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(to bottom, transparent 0%, rgba(2,5,10,0.3) 60%, rgba(2,5,10,0.85) 100%);
+}
+.pv-back-btn {
+    position: absolute; top: 24px; left: clamp(1.5rem, 5vw, 4rem); z-index: 3;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 7px 18px;
+    background: rgba(168,184,200,0.08); border: 1px solid rgba(168,184,200,0.2);
+    border-radius: 20px; color: rgba(168,184,200,0.7);
+    font-size: 1rem; letter-spacing: 0.05em; text-decoration: none;
+    transition: all 0.25s;
+}
+.pv-back-btn:hover {
+    background: rgba(168,184,200,0.16); border-color: rgba(168,184,200,0.45);
+    color: var(--silver-light); transform: translateX(-3px);
+}
+.pv-hero-body {
+    position: relative; z-index: 2;
+    display: flex; align-items: center; gap: 20px;
+    padding: 36px 0 16px;
+}
+.pv-hero-avatar-img {
+    width: 72px; height: 72px; border-radius: 50%;
+    border: 2px solid rgba(168,184,200,0.3);
+    box-shadow: 0 0 24px rgba(168,184,200,0.2);
+    object-fit: cover;
+}
+.pv-hero-name {
+    font-family: 'Morpheus', serif; font-weight: normal;
+    font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+    color: transparent;
+    background: linear-gradient(180deg, #fff 0%, #d0dde8 50%, #a8b8c8 100%);
+    -webkit-background-clip: text; background-clip: text;
+    letter-spacing: 0.06em; line-height: 1; margin: 0 0 10px;
+    filter: drop-shadow(0 0 18px rgba(168,184,200,0.4));
+}
+.pv-hero-meta {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    color: rgba(168,184,200,0.55); font-size: 1rem;
+}
+.pv-meta-icon { width: 20px; height: 20px; border-radius: 3px; }
+.pv-hero-meta strong { color: var(--silver-light); }
+.pv-sep { opacity: 0.3; }
+.pv-hero-stats {
+    position: relative; z-index: 2;
+    display: flex;
+    border-top: 1px solid rgba(168,184,200,0.08);
+    margin: 0 calc(-1 * clamp(1.5rem, 5vw, 4rem));
+    padding: 0 clamp(1.5rem, 5vw, 4rem);
+}
+.pv-stat {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 24px; flex: 1;
+    border-right: 1px solid rgba(168,184,200,0.06);
+    transition: background 0.2s;
+}
+.pv-stat:last-child { border-right: none; }
+.pv-stat:hover { background: rgba(168,184,200,0.04); }
+.pv-stat i { font-size: 1.2rem; flex-shrink: 0; }
+.pv-stat-val {
+    display: block; font-family: 'Morpheus', serif;
+    font-size: 1.3rem; color: var(--silver-light); line-height: 1;
+}
+.pv-stat-lbl {
+    display: block; font-size: 1rem;
+    color: rgba(168,184,200,0.38);
+    letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px;
+}
+
+/* ── Équipement ── */
+.pv-equip-wrap {
+    background: var(--bg-deep);
+    padding: 0 0 60px;
+    position: relative;
+    background-size: cover; background-position: center top;
+    overflow: hidden;
+}
+.pv-equip-wrap::before {
+    content: ''; position: absolute; inset: 0; z-index: 0;
+    background: inherit;
+    background-size: cover; background-position: center top;
+    filter: brightness(0.32) saturate(0.6);
+}
+.pv-equip-wrap::after {
+    content: ''; position: absolute; inset: 0; z-index: 0;
+    background:
+        linear-gradient(to right, rgba(4,8,18,0.45) 0%, transparent 20%, transparent 80%, rgba(4,8,18,0.45) 100%),
+        linear-gradient(to bottom, rgba(4,8,18,0.2) 0%, transparent 10%, transparent 90%, rgba(4,8,18,0.6) 100%);
+    pointer-events: none;
+}
+.pv-equip-container {
+    max-width: 1200px; margin: 0 auto;
+    position: relative; z-index: 1;
+}
+
+.pv-panel {
+    display: flex; align-items: stretch;
+    position: relative; z-index: 1;
+}
+
+/* Colonnes */
+.pv-col {
+    display: flex; flex-direction: column;
+    gap: 0; flex-shrink: 0; width: 280px;
+    background: transparent;
+    position: relative; z-index: 1;
+}
+
+/* Item row */
+.pv-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(168,184,200,0.04);
+    transition: background 0.18s;
+    min-height: 64px;
+}
+.pv-item:hover { background: rgba(168,184,200,0.05); }
+.pv-item-empty { opacity: 0.35; }
+
+/* Gauche : nom à droite de l'icône → inversé : nom à gauche */
+.pv-item-left { flex-direction: row-reverse; }
+.pv-item-left .pv-item-name-wrap { text-align: right; }
+
+/* Droite : icône à droite, nom à gauche */
+.pv-item-right { flex-direction: row-reverse; }
+.pv-item-right .pv-item-name-wrap { text-align: left; }
+
+.pv-item-icon-wrap {
+    position: relative; width: 56px; height: 56px; flex-shrink: 0;
+}
+.pv-item-icon-wrap a { display: block; width: 100%; height: 100%; position: relative; text-decoration: none; }
+.pv-item-icon-wrap .armory-slot-frame {
+    position: absolute; top: -6px; left: -6px;
+    width: 68px !important; height: 68px !important;
+    min-width: 68px; min-height: 68px;
+    z-index: 2; pointer-events: none; object-fit: fill;
+}
+.pv-item-icon-wrap .armory-slot-icon {
+    width: 56px; height: 56px; display: block;
+    border-radius: 3px; background: rgba(0,0,0,0.5);
+    transition: filter 0.2s;
+}
+.pv-item:hover .armory-slot-icon:not(.armory-slot-icon-empty) {
+    filter: brightness(1.2) drop-shadow(0 0 8px rgba(168,184,200,0.4));
+}
+
+.pv-item-name-wrap {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column; gap: 3px;
+}
+.pv-item-name {
+    font-size: 1rem; font-weight: 600;
+    color: rgba(168,184,200,0.75);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: color 0.2s;
+}
+.pv-item:hover .pv-item-name { color: var(--silver-light); }
+.pv-item-slot-lbl {
+    font-size: 0.85rem; color: rgba(168,184,200,0.28);
+    letter-spacing: 0.1em; text-transform: uppercase;
+}
+
+/* ── Centre ── */
+.pv-center {
+    flex: 1; position: relative; min-height: 512px; z-index: 1;
+}
+.pv-center-bg { display: none; }
+.pv-center-vignette { display: none; }
+.pv-center-label {
+    position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 8px;
+    color: rgba(168,184,200,0.22); font-size: 1rem;
+    letter-spacing: 0.22em; text-transform: uppercase; white-space: nowrap;
+}
+
+/* ── Armes ── */
+.pv-weapons {
+    display: flex; align-items: flex-start; justify-content: center; gap: 32px;
+    padding: 20px 20px 28px;
+    background: transparent;
+    border-top: none;
+    position: relative; z-index: 1;
+}
+.pv-weapon {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.pv-weapon .armory-slot { width: 56px; height: 56px; position: relative; }
+.pv-weapon .armory-slot a { display: block; width: 100%; height: 100%; position: relative; text-decoration: none; }
+.pv-weapon-name {
+    font-size: 1rem; color: rgba(168,184,200,0.65);
+    text-align: center; max-width: 120px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: color 0.2s;
+}
+.pv-weapon:hover .pv-weapon-name { color: var(--silver-light); }
+.pv-item-empty .pv-weapon-name { color: rgba(168,184,200,0.25); }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+    .pv-col { width: 220px; }
+    .pv-item-name { font-size: 0.9rem; }
+}
+@media (max-width: 700px) {
+    .pv-panel { flex-direction: column; }
+    .pv-col { width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: center; }
+    .pv-item { width: 80px; flex-direction: column; text-align: center; padding: 8px 4px; }
+    .pv-item-name-wrap { display: none; }
+    .pv-center { min-height: 200px; }
+    .pv-hero-stats { flex-wrap: wrap; }
+    .pv-stat { min-width: 50%; }
+}
+
+/* ── Couleurs qualité WoW ── */
+.pv-item-name.q0 { color: #9d9d9d; }
+.pv-item-name.q1 { color: rgba(168,184,200,0.75); }
+.pv-item-name.q2 { color: #1eff00; }
+.pv-item-name.q3 { color: #0070dd; }
+.pv-item-name.q4 { color: #a335ee; }
+.pv-item-name.q5 { color: #ff8000; }
+.pv-item-name.q6 { color: #e6cc80; }
+
+/* Qualité pour les armes du bas */
+.pv-weapon-name.q0 { color: #9d9d9d; }
+.pv-weapon-name.q1 { color: rgba(168,184,200,0.65); }
+.pv-weapon-name.q2 { color: #1eff00; }
+.pv-weapon-name.q3 { color: #0070dd; }
+.pv-weapon-name.q4 { color: #a335ee; }
+.pv-weapon-name.q5 { color: #ff8000; }
+.pv-weapon-name.q6 { color: #e6cc80; }
+
+/* ── Icônes armes sans cadre ── */
+.pv-weapon-icon {
+    position: relative; width: 64px; height: 64px; flex-shrink: 0;
+}
+.pv-weapon-icon a { display: block; width: 100%; height: 100%; }
+.pv-weapon-img {
+    width: 64px; height: 64px; display: block;
+    border-radius: 6px;
+    border: 1px solid rgba(168,184,200,0.2);
+    background: rgba(0,0,0,0.5);
+    transition: filter 0.2s, transform 0.2s, border-color 0.2s;
+}
+.pv-weapon:hover .pv-weapon-img {
+    filter: brightness(1.2) drop-shadow(0 0 10px rgba(168,184,200,0.5));
+    transform: scale(1.06);
+    border-color: rgba(168,184,200,0.5);
+}
+
+/* ── Tooltip anchor — invisible, positionné au-dessus de l'icône ── */
+.pv-item-link { display: block; width: 100%; height: 100%; position: relative; text-decoration: none; }
+.pv-tooltip-anchor {
+    position: absolute;
+    top: -8px; left: 50%; transform: translateX(-50%);
+    width: 1px; height: 1px;
+    display: block; pointer-events: none;
+}

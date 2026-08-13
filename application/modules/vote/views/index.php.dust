@@ -1,0 +1,257 @@
+<?php
+/* ══════════════════════════════════════════════════════════
+   VOTE/INDEX.PHP — Celestia-WoW — Page de vote
+   ══════════════════════════════════════════════════════════
+   OPTIMISATIONS v2 :
+   - isDoubleWeek()  → lu depuis $data si dispo, sinon fallback model
+   - getTimeLogExpired() + hasPendingVote() + getVoteUrl()
+     → préchargés via 3 méthodes Bulk avant la boucle
+     → de 3×N requêtes DB à 3 requêtes fixes (O(n) → O(1) par carte)
+   - $afterVP        → variable morte supprimée
+   - $voteItem->image → htmlspecialchars() ajouté partout
+   - <link> CSS      → commentaire pour le remonter dans le <head> du layout
+   ══════════════════════════════════════════════════════════ */
+
+$userid       = (int) $this->session->userdata('wow_sess_id');
+$isDoubleWeek = isset($isDoubleWeek) ? $isDoubleWeek : $this->vote_model->isDoubleWeek();
+$voteStatus   = $this->session->flashdata('vote_status');
+$currentVP    = (int) $this->vote_model->getCredits($userid);
+$now          = $this->wowgeneral->getTimestamp();
+
+/* ── Préchargement bulk — 3 requêtes pour toutes les cartes ────────────────
+   Remplace 3 × N appels individuels dans la boucle.
+   Ces 3 méthodes sont à ajouter dans vote_model :
+     getTimeLogExpiredBulk($ids, $userid) → [vote_id => timestamp]
+     hasPendingVoteBulk($userid, $ids)    → [vote_id => bool]
+     getVoteUrlBulk($ids)                 → [vote_id => url]
+   Voir commentaires dans vote_model.php pour l'implémentation suggérée.
+   ─────────────────────────────────────────────────────────────────────── */
+$voteIds    = array_map(fn($v) => (int)$v->id, $voteList);
+$expiredMap = $this->vote_model->getTimeLogExpiredBulk($voteIds, $userid);
+$pendingMap = $this->vote_model->hasPendingVoteBulk($userid, $voteIds);
+$urlMap     = $this->vote_model->getVoteUrlBulk($voteIds);
+?>
+
+<?php /* ── À remonter dans le <head> du layout principal pour éviter le FOUC :
+   <link rel="preload" as="style" href="...css/vote-index.css">
+   <link rel="stylesheet" href="...css/vote-index.css">
+   Laissé ici en fallback si le layout ne le permet pas encore. */ ?>
+<link rel="stylesheet" href="<?= $template['assets'] ?>css/vote-index.css">
+
+<div class="vt-page-bg"></div>
+
+<div class="vt-hero" style="background-image:url('<?= htmlspecialchars($template['assets']) ?>core/css/images/980479.jpg')">
+    <h1><i class="fas fa-vote-yea"></i> <?= $this->lang->line('tab_vote') ?></h1>
+    <p>Votez chaque jour et récoltez des Vote Points exclusifs</p>
+</div>
+
+<?php if ($isDoubleWeek): ?>
+<div class="vt-double-banner">
+    <div class="vt-double-banner-inner">
+        <i class="fas fa-star"></i>
+        <span>Semaine double VP ! Tous vos votes rapportent <strong>2× plus de points</strong> jusqu'au 7 du mois.</span>
+        <i class="fas fa-star"></i>
+    </div>
+</div>
+<?php endif; ?>
+
+<?php if ($voteStatus): ?>
+<div class="vt-alerts">
+    <?php if ($voteStatus === 'success'): ?>
+    <div class="vt-alert vt-alert-success">
+        <i class="far fa-check-circle"></i>
+        <span><strong>Succès :</strong> <?= $this->lang->line('notification_vote_successful') ?></span>
+        <button class="vt-alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+    </div>
+    <?php elseif ($voteStatus === 'error'): ?>
+    <div class="vt-alert vt-alert-danger">
+        <i class="far fa-times-circle"></i>
+        <span><strong>Erreur :</strong> <?= $this->lang->line('notification_vote_error') ?></span>
+        <button class="vt-alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+    </div>
+    <?php elseif ($voteStatus === 'pending'): ?>
+    <div class="vt-alert vt-alert-warning">
+        <i class="fas fa-spinner fa-spin"></i>
+        <span><strong>En attente :</strong> Ton vote est en cours de vérification. Tes VP seront crédités automatiquement après confirmation.</span>
+        <button class="vt-alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+    </div>
+    <?php endif; ?>
+</div>
+<?php endif; ?>
+
+<div class="vt-grid">
+<?php foreach ($voteList as $voteItem):
+    $id            = (int) $voteItem->id;
+    $expired       = isset($expiredMap[$id])  ? (int)  $expiredMap[$id]  : 0;
+    $isPending     = isset($pendingMap[$id])  ? (bool) $pendingMap[$id]  : false;
+    $voteUrl       = htmlspecialchars(isset($urlMap[$id]) ? $urlMap[$id] : '');
+    $canVote       = $now >= $expired;
+    $remaining     = max(0, $expired - $now);
+    $gainVP        = (int) $voteItem->points;
+    $totalCooldown = $voteItem->time * 60;
+    $progressPct   = $totalCooldown > 0
+                     ? max(0, min(100, round((1 - $remaining / $totalCooldown) * 100)))
+                     : 100;
+
+    $t = (int) $voteItem->time;
+    $h = (int) floor($t / 60);
+    $m = $t % 60;
+    if ($h > 0 && $m > 0)  $cdLabel = $h.'h'.$m;
+    elseif ($h > 0)         $cdLabel = $h.'h';
+    else                    $cdLabel = $m.'min';
+
+    $imgUrl = htmlspecialchars($voteItem->image);
+?>
+    <div class="vt-card<?= $isPending ? ' js-pending-card' : '' ?><?= $isDoubleWeek ? ' is-double' : '' ?>"
+         data-remaining="<?= $remaining ?>">
+        <div class="vt-card-side"></div>
+
+        <div class="vt-site-pill"><?= htmlspecialchars($voteItem->name) ?></div>
+
+        <div class="vt-card-header">
+            <div class="vt-card-header-blur" style="background-image:url('<?= $imgUrl ?>')"></div>
+            <div class="vt-card-header-bg"   style="background-image:url('<?= $imgUrl ?>')"></div>
+            <div class="vt-card-header-overlay"></div>
+        </div>
+
+        <div class="vt-card-body">
+
+            <div class="vt-points-block">
+                <div class="vt-points-inner">
+                    <div class="vt-points-val">
+                        <?= $gainVP ?>
+                        <?php if ($isDoubleWeek): ?>
+                        <div class="vt-x2-coin-wrap">
+                            <img src="<?= htmlspecialchars($template['assets']) ?>images/VP-coin.png" class="vt-x2-coin" alt="VP">
+                            <div class="vt-x2-badge">×2</div>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <div class="vt-points-label"><?= $this->lang->line('panel_vp') ?></div>
+            </div>
+
+            <div class="vt-sep-wrap">
+                <div class="vt-sep-line"></div>
+                <div class="vt-cooldown-badge">
+                    <i class="fas fa-clock"></i><?= $cdLabel ?>
+                </div>
+            </div>
+
+            <div class="vt-progress-wrap">
+                <div class="vt-progress-bar"
+                     data-pct="<?= $progressPct ?>"
+                     data-remaining="<?= $remaining ?>"
+                     data-cooldown="<?= $totalCooldown ?>">
+                </div>
+            </div>
+
+            <div class="vt-countdown-wrap"
+                 uk-grid
+                 uk-countdown="date: <?= date('c', $expired) ?>">
+                <div><div class="uk-countdown-number uk-countdown-hours"></div></div>
+                <div class="uk-countdown-separator">:</div>
+                <div><div class="uk-countdown-number uk-countdown-minutes"></div></div>
+                <div class="uk-countdown-separator">:</div>
+                <div><div class="uk-countdown-number uk-countdown-seconds"></div></div>
+            </div>
+
+        </div>
+
+        <div class="vt-btn-wrap">
+            <?php if ($isPending): ?>
+            <div class="vt-btn vt-btn--polling js-auto-verify"
+                 data-verify-url="<?= base_url('vote/verifyvote/'.$id) ?>"
+                 data-vote-url="<?= $voteUrl ?>">
+                <div class="vt-poll-row">
+                    <div class="vt-poll-dots">
+                        <span class="vt-poll-dot"></span>
+                        <span class="vt-poll-dot"></span>
+                        <span class="vt-poll-dot"></span>
+                    </div>
+                    <span class="vt-poll-label">Vérification en cours</span>
+                </div>
+                <span class="vt-poll-sub">VP crédités auto (<span class="vt-poll-timer">0s</span>)</span>
+            </div>
+            <a href="<?= $voteUrl ?>" target="_blank" class="vt-reopen-link">
+                <i class="fas fa-external-link-alt"></i> Rouvrir la page de vote
+            </a>
+            <?php elseif ($canVote): ?>
+            <button class="vt-btn js-vote-btn"
+                    type="button"
+                    data-vote-id="<?= $id ?>"
+                    data-vote-url="<?= base_url('vote/votenow/'.$id) ?>">
+                <i class="fas fa-vote-yea"></i><?= $this->lang->line('tab_vote') ?>
+            </button>
+            <?php else: ?>
+            <button class="vt-btn" type="button" disabled>
+                <i class="fas fa-clock"></i><?= $this->lang->line('tab_vote') ?>
+            </button>
+            <?php endif; ?>
+        </div>
+
+    </div>
+<?php endforeach; ?>
+</div>
+
+<!-- ═══════════════════════════════════════
+     CLASSEMENT TOP VOTES
+═══════════════════════════════════════ -->
+<div class="vt-lb-section">
+
+    <!-- Header controls -->
+    <div class="vt-lb-header">
+        <div class="vt-lb-title">
+            <i class="fas fa-crown"></i>
+            <span>Classement des Votes</span>
+        </div>
+        <div class="vt-lb-period-bar">
+            <button class="vt-lb-period-btn active" data-period="daily">
+                <i class="fas fa-sun"></i> Quotidien
+            </button>
+            <button class="vt-lb-period-btn" data-period="weekly">
+                <i class="fas fa-calendar-week"></i> Hebdo
+            </button>
+            <button class="vt-lb-period-btn" data-period="monthly">
+                <i class="fas fa-calendar-alt"></i> Mensuel
+            </button>
+        </div>
+        <div class="vt-lb-timer-wrap">
+            <i class="fas fa-hourglass-half"></i>
+            <span>Reset dans&nbsp;:</span>
+            <span class="vt-lb-timer" id="vtLbTimer">--</span>
+        </div>
+    </div>
+
+    <!-- Rewards bar -->
+    <div class="vt-lb-rewards" id="vtLbRewards"></div>
+
+    <!-- Podium top 3 -->
+    <div class="vt-lb-podium" id="vtLbPodium">
+        <div class="vt-lb-podium-loading"><i class="fas fa-spinner fa-spin"></i></div>
+    </div>
+
+    <!-- Liste rang 4+ -->
+    <div class="vt-lb-list-wrap">
+        <div class="vt-lb-list-header">
+            <span class="vt-lb-lh-rank">Place</span>
+            <span class="vt-lb-lh-name">Compte</span>
+            <span class="vt-lb-lh-pts">Points</span>
+            <span class="vt-lb-lh-reward">Récompense</span>
+        </div>
+        <div id="vtLbList" class="vt-lb-list">
+            <!-- rempli par JS -->
+        </div>
+    </div>
+
+</div>
+
+<script>
+var VOTE_CONFIG = {
+    voteLabel:     '<i class="fas fa-vote-yea"></i> <?= $this->lang->line('tab_vote') ?>',
+    baseUrl:       '<?= base_url('vote') ?>',
+    lbUrl:         '<?= base_url('vote/leaderboard_data') ?>',
+    currentUserId: <?= (int)$this->session->userdata('wow_sess_id') ?>
+};
+</script>
+<script src="<?= $template['assets'] ?>js/vote-index.js"></script>

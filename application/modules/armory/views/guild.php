@@ -1,0 +1,94 @@
+<link rel="stylesheet" href="<?= base_url('application/modules/armory/assets/css/armory_search.css?v='.time()); ?>">
+<div class="armory-page-bg"></div>
+
+<?php foreach ($realms as $charsMultiRealm):
+    $MultiRealm = $this->wowrealm->getRealmConnectionData($charsMultiRealm->id);
+    $guildResult = $this->armory_model->getGuildInfo($MultiRealm, $guildid)->result();
+    if (empty($guildResult)) continue;
+    $guild = $guildResult[0];
+    $members = $this->armory_model->getGuildMembers($MultiRealm, $guildid)->result();
+?>
+
+<section class="armory-hero">
+    <div class="armory-hero-back">
+        <a href="<?= base_url('armory'); ?>" class="armory-back-btn">
+            <i class="fas fa-arrow-left"></i> Retour à la recherche
+        </a>
+    </div>
+    <div class="armory-hero-content">
+        <div class="armory-hero-medallion"><i class="fas fa-shield-alt"></i></div>
+        <h1><?= htmlspecialchars($guild->name); ?></h1>
+        <p>Guilde</p>
+        <div class="armory-hero-line"></div>
+    </div>
+</section>
+
+<div class="armory-layout">
+    <div class="armory-container">
+        <div class="armory-panel">
+
+            <div class="armory-guild-header">
+                <div class="armory-guild-emblem"><i class="fas fa-shield-alt"></i></div>
+                <div class="armory-guild-info">
+                    <div class="armory-guild-name"><?= htmlspecialchars($guild->name); ?></div>
+                    <?php if (!empty($guild->motd)): ?>
+                        <div class="armory-guild-motd">"<?= htmlspecialchars($guild->motd); ?>"</div>
+                    <?php endif; ?>
+                </div>
+                <div class="armory-stat-badge">
+                    <span class="armory-stat-badge-value"><?= count($members); ?></span>
+                    <span class="armory-stat-badge-label">Membres</span>
+                </div>
+            </div>
+
+            <div class="armory-panel-body">
+                <div class="armory-equip-title"><i class="fas fa-users"></i> Membres</div>
+                <?php if (empty($members)): ?>
+                    <div class="armory-empty">
+                        <i class="fas fa-users"></i>
+                        <p>Aucun membre trouvé.</p>
+                    </div>
+                <?php else: ?>
+                <table class="armory-table">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th class="center">Niveau</th>
+                            <th class="center">Race</th>
+                            <th class="center">Classe</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($members as $member): ?>
+                        <tr>
+                            <td>
+                                <a href="<?= base_url('armory/player/' . $member->guid); ?>" class="armory-table-link">
+                                    <?= htmlspecialchars($member->name); ?>
+                                </a>
+                            </td>
+                            <td class="center"><?= $member->level; ?></td>
+                            <td class="center">
+                                <img class="armory-table-icon"
+                                    src="<?= base_url('assets/images/races/' . $this->wowgeneral->getRaceIcon($member->race)); ?>"
+                                    title="<?= $this->wowgeneral->getRaceName($member->race); ?>"
+                                    alt="<?= $this->wowgeneral->getRaceName($member->race); ?>">
+                            </td>
+                            <td class="center">
+                                <img class="armory-table-icon"
+                                    src="<?= base_url('assets/images/class/' . $this->wowgeneral->getClassIcon($member->class)); ?>"
+                                    title="<?= $this->wowgeneral->getClassName($member->class); ?>"
+                                    alt="<?= $this->wowgeneral->getClassName($member->class); ?>">
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <?php endif; ?>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<?php endforeach; ?>

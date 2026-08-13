@@ -1,0 +1,58 @@
+<?php
+class Wmmv extends CI_Controller {
+    public function proxy() {
+        $path = implode('/', $this->uri->segments);
+        $path = preg_replace('#^[a-z]{2}/armory/wmmv/proxy/#', '', $path);
+        
+        if (empty($path)) {
+            http_response_code(404);
+            exit;
+        }
+        
+        // Sécurité - empêche path traversal
+        if (strpos($path, '..') !== false) {
+            http_response_code(403);
+            exit;
+        }
+        
+        $cacheDir = APPPATH . 'modules/armory/assets/wmmv-cache/' . dirname($path);
+        $cacheFile = APPPATH . 'modules/armory/assets/wmmv-cache/' . $path;
+        
+        // Si déjà en cache, on sert directement
+        if (file_exists($cacheFile)) {
+            $this->serveFile($cacheFile, $path);
+            exit;
+        }
+        
+        // Sinon on télécharge depuis Warmane CDN
+        $url = 'https://cdn.warmane.com/wmmv/' . $path;
+        $content = @file_get_contents($url);
+        
+        if ($content === false) {
+            http_response_code(404);
+            exit;
+        }
+        
+        // On sauvegarde en cache
+        if (!is_dir($cacheDir)) {
+            mkdir($cacheDir, 0755, true);
+        }
+        file_put_contents($cacheFile, $content);
+        
+        $this->serveFile($cacheFile, $path);
+    }
+    
+    private function serveFile($file, $path) {
+        $ext = pathinfo($path, PATHINFO_EXTENSION);
+        $mimes = [
+            'json' => 'application/json',
+            'png'  => 'image/png',
+            'js'   => 'application/javascript',
+        ];
+        $mime = isset($mimes[$ext]) ? $mimes[$ext] : 'application/octet-stream';
+        header('Content-Type: ' . $mime);
+        header('Access-Control-Allow-Origin: *');
+        header('Cache-Control: max-age=86400');
+        echo file_get_contents($file);
+    }
+}

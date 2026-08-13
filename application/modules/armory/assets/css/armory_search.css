@@ -1,0 +1,311 @@
+/* ══════════════════════════════════════════════════════════
+   ARMORY-SEARCH.CSS — Celestia-WoW 2026
+   Recherche, Résultats et Profil de Guilde
+   ══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Outfit:wght@300;400;600;700&display=swap');
+
+:root {
+    --store-ice: #00e1ff;
+    --store-ice-dim: #008ba3;
+    --store-glow: rgba(0, 225, 255, 0.25);
+    --store-bg: #02050a;
+    --store-border: rgba(255, 255, 255, 0.08);
+    --font-title: 'Cinzel', serif;
+    --font-body: 'Outfit', sans-serif;
+}
+
+/* ── Fond de page ── */
+.armory-page-bg {
+    position: fixed; inset: 0; z-index: -1;
+    background-color: var(--store-bg); pointer-events: none;
+}
+.armory-page-bg::before {
+    content: ''; position: fixed; inset: 0;
+    background: radial-gradient(ellipse 60% 40% at 50% 50%, rgba(0, 225, 255, 0.04) 0%, transparent 80%);
+    pointer-events: none;
+}
+
+/* ═══════════════════════════════════════
+   HERO (En-tête)
+═══════════════════════════════════════ */
+.armory-hero {
+    position: relative;
+    padding: 140px 20px 40px;
+    text-align: center;
+    background: linear-gradient(180deg, rgba(2,5,10,0.6) 0%, rgba(2,5,10,0.95) 100%),
+                url('https://wow.zamimg.com/uploads/screenshots/normal/1066530.jpg') center/cover no-repeat;
+}
+.armory-hero-content {
+    position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center;
+}
+
+.armory-hero-medallion {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: rgba(0, 225, 255, 0.05); border: 1px solid var(--store-ice-dim);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem; color: var(--store-ice); box-shadow: 0 0 20px var(--store-glow);
+    margin-bottom: 20px;
+}
+
+.armory-hero h1 {
+    font-family: var(--font-title); font-size: 3rem; font-weight: 700;
+    color: #fff; text-shadow: 0 0 20px var(--store-glow); margin: 0 0 10px;
+    text-transform: uppercase; letter-spacing: 2px;
+}
+.armory-hero p {
+    font-family: var(--font-body); font-size: 1.1rem; color: #94a3b8;
+    text-transform: uppercase; letter-spacing: 2px; margin: 0 0 24px;
+}
+.armory-hero-line {
+    width: 150px; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--store-ice), transparent); margin-top: 10px;
+}
+
+/* Bouton Retour (Hero Guilde) */
+.armory-hero-back { position: absolute; top: 100px; left: 30px; z-index: 10; }
+.armory-back-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--store-ice); text-decoration: none;
+    font-family: var(--font-title); font-size: 0.95rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    padding: 8px 16px; border-radius: 4px;
+    border: 1px solid var(--store-ice-dim);
+    background: rgba(0, 225, 255, 0.05); transition: all 0.2s ease;
+}
+.armory-back-btn:hover {
+    background: rgba(0, 225, 255, 0.15); border-color: var(--store-ice); color: #fff;
+    box-shadow: 0 0 15px var(--store-glow); transform: translateX(-3px);
+}
+
+/* ═══════════════════════════════════════
+   CONTENEUR PRINCIPAL & PANNEAU
+═══════════════════════════════════════ */
+.armory-layout {
+    padding: 60px 20px 100px; display: flex; justify-content: center;
+}
+.armory-container {
+    width: 100%; max-width: 900px; /* Légèrement élargi pour la guilde */
+}
+
+/* Carte "Bento" */
+.armory-panel {
+    background: linear-gradient(145deg, rgba(15, 22, 36, 0.6) 0%, rgba(5, 10, 18, 0.8) 100%);
+    border: 1px solid var(--store-border); border-radius: 12px;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6); overflow: hidden;
+}
+
+/* En-tête générique */
+.armory-panel-header {
+    background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--store-border);
+    padding: 20px 30px; display: flex; align-items: center; gap: 14px;
+}
+.armory-panel-header-icon { color: var(--store-ice); font-size: 1.2rem; }
+.armory-panel-header h2 {
+    font-family: var(--font-title); font-size: 1.4rem; font-weight: 700;
+    color: #fff; margin: 0; text-transform: uppercase; letter-spacing: 1px;
+}
+.armory-panel-body { padding: 40px 30px; }
+
+/* ═══════════════════════════════════════
+   FORMULAIRE DE RECHERCHE
+═══════════════════════════════════════ */
+.armory-search-form { display: flex; gap: 16px; align-items: stretch; }
+
+.armory-search-input, .armory-search-select {
+    background: rgba(0, 0, 0, 0.5); border: 1px solid var(--store-border);
+    border-radius: 6px; padding: 0 20px; height: 54px; color: #fff;
+    font-family: var(--font-body); font-size: 1.05rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.armory-search-input { flex: 1; }
+.armory-search-input::placeholder { color: rgba(255,255,255,0.3); }
+
+.armory-search-select {
+    width: 200px; cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300e1ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em;
+}
+.armory-search-select option { background: #02050a; color: #fff; }
+
+.armory-search-input:focus, .armory-search-select:focus {
+    outline: none; border-color: var(--store-ice); box-shadow: 0 0 15px var(--store-glow);
+}
+
+.armory-search-btn {
+    background: linear-gradient(135deg, var(--store-ice), var(--store-ice-dim));
+    color: #01050a; border: none; border-radius: 6px; padding: 0 30px;
+    font-family: var(--font-title); font-weight: 700; font-size: 1.1rem;
+    text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
+    transition: all 0.3s ease; display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 0 15px var(--store-glow);
+}
+.armory-search-btn:hover {
+    background: linear-gradient(135deg, #fff, var(--store-ice));
+    color: #000; box-shadow: 0 0 25px rgba(0, 225, 255, 0.5); transform: translateY(-2px);
+}
+
+/* ═══════════════════════════════════════
+   ONGLETS (TABS RÉSULTATS)
+═══════════════════════════════════════ */
+.armory-tabs {
+    display: flex; gap: 8px; margin-bottom: 24px;
+    border-bottom: 1px solid var(--store-border);
+    overflow-x: auto;
+}
+.armory-tab-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 24px; cursor: pointer;
+    background: transparent; border: none;
+    color: #94a3b8; font-family: var(--font-title);
+    font-size: 1rem; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px; transition: all 0.2s ease;
+    white-space: nowrap;
+}
+.armory-tab-btn:hover { color: #fff; background: rgba(0, 225, 255, 0.05); }
+.armory-tab-btn.active {
+    color: var(--store-ice); border-bottom-color: var(--store-ice);
+    background: rgba(0, 225, 255, 0.08); text-shadow: 0 0 10px var(--store-glow);
+}
+
+.armory-tab-content { display: none; }
+.armory-tab-content.active { display: block; animation: fadeInTab 0.3s ease; }
+@keyframes fadeInTab { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+
+/* ═══════════════════════════════════════
+   EN-TÊTE DE GUILDE
+═══════════════════════════════════════ */
+.armory-guild-header {
+    display: flex; align-items: center; gap: 24px;
+    padding: 30px; border-bottom: 1px solid var(--store-border);
+    background: rgba(0,0,0,0.3);
+    flex-wrap: wrap;
+}
+.armory-guild-emblem {
+    width: 80px; height: 80px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(0,225,255,0.1), rgba(4,10,22,0.8));
+    border: 2px solid var(--store-ice-dim);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; color: var(--store-ice);
+    box-shadow: 0 0 20px var(--store-glow);
+}
+.armory-guild-info { flex: 1; min-width: 0; }
+.armory-guild-name {
+    font-family: var(--font-title); font-size: 2.2rem; font-weight: 700;
+    color: #fff; text-shadow: 0 0 15px var(--store-glow);
+    margin: 0 0 6px; text-transform: uppercase; letter-spacing: 2px;
+}
+.armory-guild-motd {
+    font-style: italic; color: #94a3b8; font-size: 1.05rem; font-family: var(--font-body);
+}
+
+/* Badge Statistiques */
+.armory-stat-badge {
+    display: flex; flex-direction: column; align-items: center;
+    background: rgba(0, 0, 0, 0.5); border: 1px solid var(--store-border);
+    border-radius: 8px; padding: 12px 20px; min-width: 100px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+}
+.armory-stat-badge-value {
+    font-family: var(--font-title); font-size: 1.6rem; font-weight: 700;
+    color: var(--store-ice); text-shadow: 0 0 10px var(--store-glow); line-height: 1;
+}
+.armory-stat-badge-label {
+    font-size: 0.8rem; color: #94a3b8; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; margin-top: 6px;
+}
+
+/* Titre de section "Membres" */
+.armory-equip-title {
+    font-family: var(--font-title); font-size: 1.2rem; font-weight: 700;
+    color: #fff; letter-spacing: 1px; text-transform: uppercase;
+    margin: 0 0 20px; display: flex; align-items: center; gap: 12px;
+}
+.armory-equip-title i { color: var(--store-ice); }
+.armory-equip-title::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, var(--store-ice-dim), transparent); opacity: 0.5;
+}
+
+
+/* ═══════════════════════════════════════
+   TABLEAUX (Résultats & Guildes)
+═══════════════════════════════════════ */
+.armory-table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    table-layout: fixed; /* Respect des largeurs */
+}
+
+/* Base et Tableau Membres Guilde (4 colonnes) */
+.armory-table th:nth-child(1), .armory-table td:nth-child(1) { width: 40%; text-align: left; }
+.armory-table th:nth-child(2), .armory-table td:nth-child(2) { width: 20%; text-align: center; }
+.armory-table th:nth-child(3), .armory-table td:nth-child(3) { width: 20%; text-align: center; }
+.armory-table th:nth-child(4), .armory-table td:nth-child(4) { width: 20%; text-align: center; }
+
+/* Tableau Résultats Guildes (2 colonnes) */
+#tab-guilds .armory-table th:nth-child(1), #tab-guilds .armory-table td:nth-child(1) { width: 40%; text-align: left; }
+#tab-guilds .armory-table th:nth-child(2), #tab-guilds .armory-table td:nth-child(2) { width: 60%; text-align: left; }
+
+.armory-table thead tr { border-bottom: 2px solid var(--store-border); }
+.armory-table th {
+    padding: 12px 16px;
+    font-family: var(--font-title); font-size: 0.95rem; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase; color: var(--store-ice);
+}
+.armory-table td {
+    padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: #e2e8f0; font-size: 1.05rem; font-family: var(--font-body);
+    vertical-align: middle;
+}
+.armory-table tbody tr { transition: background 0.2s; }
+.armory-table tbody tr:hover { background: rgba(0, 225, 255, 0.04); }
+.armory-table th.center, .armory-table td.center { text-align: center; }
+
+/* Liens des joueurs et guildes */
+.armory-table-link {
+    color: #fff; font-weight: 600; text-decoration: none;
+    transition: color 0.2s, text-shadow 0.2s;
+    display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.armory-table-link:hover { color: var(--store-ice); text-shadow: 0 0 10px var(--store-glow); }
+
+/* Icônes centrées à la perfection */
+.armory-table-icon {
+    display: block;
+    margin: 0 auto;
+    width: 36px; height: 36px; 
+    border-radius: 4px; border: 1px solid var(--store-border);
+    box-shadow: 0 0 8px rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.5); padding: 1px;
+}
+
+/* ═══════════════════════════════════════
+   ÉTAT VIDE (Aucun résultat)
+═══════════════════════════════════════ */
+.armory-empty {
+    text-align: center; padding: 60px 20px; color: #94a3b8;
+}
+.armory-empty i {
+    font-size: 3rem; margin-bottom: 16px; display: block; color: rgba(255,255,255,0.1);
+}
+.armory-empty p { font-size: 1.1rem; font-family: var(--font-body); margin: 0; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .armory-hero-back { top: 70px; left: 20px; }
+    .armory-search-form { flex-direction: column; }
+    .armory-search-select { width: 100%; }
+    .armory-search-btn { height: 54px; justify-content: center; }
+    .armory-hero h1 { font-size: 2.2rem; }
+    .armory-panel-body { padding: 20px; }
+    
+    .armory-guild-header { flex-direction: column; text-align: center; }
+    .armory-stat-badge { width: 100%; }
+
+    .armory-table th, .armory-table td { padding: 8px 4px; font-size: 0.85rem; }
+    .armory-table-icon { width: 28px; height: 28px; }
+}

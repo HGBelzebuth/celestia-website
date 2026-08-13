@@ -1,0 +1,122 @@
+<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+
+<div class="pn-qty-overlay" id="giftOverlay">
+    <div class="pn-qty-modal gift-modal">
+        <button class="pn-qty-close" onclick="closeGiftModal()"><i class="fas fa-times"></i></button>
+        <div class="pn-qty-modal-icon" style="border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:var(--store-ice); margin-top: -10px;"><i class="fas fa-gift"></i></div>
+        <div class="pn-qty-modal-title" style="text-align: center;">Offrir des cadeaux</div>
+        <div class="pn-qty-modal-sep" style="margin-top:15px; margin-bottom: 20px;"></div>
+
+        <div class="gift-modal-body">
+            <div class="gift-items-multiple" id="giftItemsMultiple">
+                <div class="gift-items-header">
+                    <h4>Articles à offrir</h4>
+                    <button class="btn-epic" style="padding: 6px 12px; font-size: 0.85rem;" id="giftAddItemBtn" onclick="showAvailableItems()">
+                        <i class="fas fa-plus"></i> Ajouter
+                    </button>
+                </div>
+                <div class="gift-selected-items-list" id="giftSelectedItemsList">
+                    <div class="gift-no-items-multi">Aucun article sélectionné</div>
+                </div>
+                <div class="gift-available-items-selector hidden" id="giftAvailableSelector">
+                    <label class="gift-field-label">Choisissez un article à ajouter</label>
+                    <div class="gift-available-items-list" id="giftAvailableItemsList"></div>
+                </div>
+            </div>
+
+            <div class="gift-vp-block" id="giftVpBlock" style="display:none;">
+                <div class="pn-qty-modal-icon" style="color:#ff4d4d; border-color:#ff4d4d; font-size:1.5rem; display:flex; align-items:center; justify-content:center;"><i class="fas fa-ban"></i></div>
+                <div class="pn-qty-modal-title" style="color:#ff4d4d; font-size: 1.3rem;">Cadeau indisponible</div>
+                <div class="pn-qty-modal-sub" style="text-transform:none; line-height:1.5; margin-top: 10px;">
+                    Certains articles sont payables uniquement en <strong>Vote Points</strong>.<br>
+                    La fonctionnalité cadeau est réservée aux articles payés en DP.
+                </div>
+                <button class="pn-qty-cancel" style="width:100%; margin-top:15px;" onclick="closeGiftModal()">Retour au panier</button>
+            </div>
+
+            <div class="gift-recipient-block" id="giftRecipientBlock">
+                <div class="gift-total-cost" id="giftTotalCost">
+                    <span class="gift-total-label">Total de vos cadeaux</span>
+                    <span class="gift-total-amount">
+                        <span id="giftTotalAmount">0</span> <i class="dp-icon"></i>
+                    </span>
+                </div>
+
+                <div class="gift-points-recap" id="giftPointsRecap">
+                    <span id="giftRecapCur"></span>
+                    <span id="giftRecapCost"></span>
+                    <span id="giftRecapAfter"></span>
+                </div>
+
+                <label class="gift-field-label" for="giftCharInput">Personnage destinataire</label>
+                <div class="gift-input-wrap" id="giftInputWrap">
+                    <input class="gift-input" type="text" id="giftCharInput" placeholder="Entrez le nom exact…" maxlength="12" autocomplete="off" spellcheck="false">
+                    <div class="gift-status-icon" id="giftStatusIcon"><i class="fas fa-user" id="giftStatusIco"></i></div>
+                </div>
+                <div class="gift-status-msg" id="giftStatusMsg"></div>
+
+                <div class="pn-qty-modal-sep" style="margin-top:15px; margin-bottom:15px;"></div>
+
+                <div class="pn-qty-modal-actions">
+                    <button class="pn-qty-cancel" onclick="closeGiftModal()">Annuler</button>
+                    <button class="btn-epic" id="giftBtnConfirm" disabled onclick="confirmMultipleGifts()">
+                        <i class="fas fa-paper-plane"></i> Envoyer
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="pn-qty-overlay" id="cartCharAlert">
+    <div class="pn-qty-modal">
+        <div class="pn-qty-modal-icon" style="border-radius:50%; color:#ff4d4d; border-color:#ff4d4d; font-size:1.5rem; display:flex; align-items:center; justify-content:center;"><i class="fas fa-user-slash"></i></div>
+        <div class="pn-qty-modal-title" style="color:#ff4d4d;">Personnage requis</div>
+        <div class="pn-qty-modal-sub" style="text-transform:none; color:var(--store-text); line-height:1.5;">
+            Vous devez sélectionner un personnage destinataire pour <strong>chaque article</strong> avant de procéder au paiement.
+        </div>
+        <button class="pn-qty-cancel" style="width:100%; margin-top:10px;" onclick="document.getElementById('cartCharAlert').classList.remove('open')">
+            Compléter ma sélection
+        </button>
+    </div>
+</div>
+
+<div class="pn-cart-overlay" id="cartConfirmModal">
+    <div class="pn-cart-modal" style="padding: 30px;">
+        <div class="pn-qty-modal-icon" style="border-radius:50%; color:var(--store-ice); border-color:var(--store-ice); font-size:1.5rem; display:flex; align-items:center; justify-content:center;"><i class="fas fa-coins"></i></div>
+        <div class="pn-cart-modal-title">Confirmer l'achat</div>
+        <div class="pn-cart-modal-sep" style="margin-bottom: 20px;"></div>
+        
+        <div class="cart-confirm-body">
+            <div class="cart-confirm-summary" id="cartConfirmSummary"></div>
+            
+            <div class="cart-confirm-warning" style="background:rgba(255,77,77,0.1); border:1px solid rgba(255,77,77,0.3); border-radius:6px; padding:12px; color:#ffb3b3; font-size:0.95rem; margin-bottom:20px; display:flex; align-items:center; gap:10px; text-align:left;">
+                <i class="fas fa-lock" style="font-size: 1.2rem;"></i>
+                <span>Action irréversible. Les articles seront envoyés en jeu par courrier.</span>
+            </div>
+            
+            <div class="pn-cart-modal-actions">
+                <button class="pn-qty-cancel" style="width:100%" onclick="closeConfirmModal()">Annuler</button>
+                <button class="btn-epic" style="width:100%" id="cartConfirmPay">
+                    <i class="fas fa-check"></i> Payer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="pn-cart-overlay" id="cartSuccessModal">
+    <div class="pn-cart-modal">
+        <div class="pn-cart-modal-check" style="margin-bottom: 5px;"><i class="fas fa-check"></i></div>
+        <div class="pn-cart-modal-title" id="cartSuccessTitle" style="color:#00ff88; font-size: 2rem;">Achat confirmé</div>
+        <div class="pn-cart-modal-sub" id="cartSuccessText" style="text-transform:none; line-height:1.5; color: var(--store-text);">
+            Merci pour votre achat sur Celestia.<br>Vos articles seront livrés prochainement.
+        </div>
+        <div class="pn-cart-modal-sep"></div>
+        <div class="pn-cart-modal-actions">
+            <button class="pn-qty-cancel" onclick="closeSuccessModal()">Retour</button>
+            <a href="<?= base_url('store') ?>" class="btn-epic" style="text-decoration:none;">Boutique</a>
+        </div>
+    </div>
+</div>

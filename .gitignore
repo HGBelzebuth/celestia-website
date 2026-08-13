@@ -1,0 +1,39 @@
+# ── Credentials & secrets (à recréer manuellement) ──────────────
+application/config/database.php
+application/config/email.php
+application/config/launcher_secrets.php
+
+# ── Runtime (générés à l'exécution) ──────────────────────────────
+application/logs/
+application/cache/
+application/sessions/
+
+# ── Vendor PHP (recréer avec : composer install) ──────────────────
+vendor/
+
+# ── Cache viewer armory (regénéré automatiquement) ────────────────
+application/modules/armory/assets/wmmv-cache/
+
+# ── Uploads utilisateurs/admin (sauvegarder séparément) ──────────
+assets/images/profiles/
+assets/images/news/
+assets/images/store/
+assets/images/donate/
+
+# ── Fichiers temp/système ─────────────────────────────────────────
+*.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.bak
+*.bak*
+
+# ── Fichiers de copie accidentels ────────────────────────────────
+*Copie*
+* - Copie*
+
+# ── Archives & binaires lourds ───────────────────────────────────
+*.zip
+*.tar.gz
+*.rar
+*.7z

@@ -1,0 +1,144 @@
+/* ══════════════════════════════════════════════════════════
+   modifications/assets/css/modifications_home.css
+   Page d'accueil des modifications — Celestia-WoW 2026
+   ══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Outfit:wght@300;400;600;700&display=swap');
+
+:root {
+    --store-ice: #00e1ff;
+    --store-ice-dim: #008ba3;
+    --store-glow: rgba(0, 225, 255, 0.25);
+    
+    --amber: #f5a623;
+    --amber-glow: rgba(245, 166, 35, 0.25);
+    
+    --store-bg: #02050a;
+    --bg-card: rgba(10, 14, 24, 0.55);
+    --bg-card-hover: rgba(15, 22, 36, 0.85);
+
+    --store-border: rgba(255, 255, 255, 0.08);
+    --store-border-highlight: rgba(255, 255, 255, 0.15);
+    
+    --store-text: #94a3b8;
+    --store-title: #ffffff;
+    --font-title: 'Cinzel', serif;
+    --font-body: 'Outfit', sans-serif;
+}
+
+/* ── Fond global (Auras hybrides) ───────────────────────── */
+.pn-page-bg { position: fixed; inset: 0; z-index: -1; background-color: var(--store-bg); pointer-events: none; }
+.pn-page-bg::before {
+    content: ''; position: fixed; inset: 0;
+    background: 
+      radial-gradient(circle at 15% 20%, rgba(0, 225, 255, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 85% 80%, rgba(245, 166, 35, 0.08) 0%, transparent 50%);
+    mix-blend-mode: screen; pointer-events: none; z-index: 0; transform: translateZ(0); 
+}
+
+/* ── Hero (En-tête) ─────────────────────────────────────── */
+.mod-hero { position: relative; min-height: 350px; display: flex; align-items: center; justify-content: center; overflow: hidden; padding-top: 86px; padding-bottom: 4rem;}
+.mod-hero-bg { 
+    position: absolute; inset: 0; background-size: cover; background-position: center; 
+    /* Fondu en douceur vers le bas */
+    -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+.mod-hero-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(2,5,10,0.6) 0%, rgba(2,5,10,0.85) 60%, var(--store-bg) 100%); z-index: 1; }
+.mod-hero-content { position: relative; z-index: 2; width: 100%; text-align: center; }
+
+/* Médaillon Hybride */
+.mod-hero-medallion {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: rgba(4, 7, 13, 0.6);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--store-border-highlight);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2rem;
+    transform: translateZ(0);
+}
+.mod-hero-medallion i {
+    background: linear-gradient(135deg, var(--store-ice), var(--amber));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 10px rgba(255,255,255,0.1));
+}
+
+.mod-hero h1 { font-family: var(--font-title); font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 700; color: var(--store-title); margin: 0 0 10px; text-transform: uppercase; text-shadow: 0 0 1px #000, 0 0 2px #000, 0 0 4px #000, 0 0 8px #000, 0 10px 40px rgba(0,0,0,0.9); }
+.mod-hero h1 span { color: var(--store-ice); text-shadow: 0 0 1px #000, 0 0 2px #000, 0 0 4px #000, 0 0 25px rgba(0,225,255,0.8), 0 10px 40px rgba(0,0,0,0.9); }
+.mod-hero p { font-family: var(--font-body); font-size: 1.15rem; color: #f8fafc; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; margin: 0; text-shadow: 0 0 1px #000, 0 0 3px #000, 0 0 6px #000, 0 5px 20px rgba(0,0,0,0.8); }
+
+/* ── Grille et Layout ───────────────────────────────────── */
+.mod-layout { padding: 40px 0 100px; position: relative; z-index: 2; }
+.mod-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 26px;
+    max-width: 1300px; margin: 0 auto; padding: 0 clamp(1.5rem, 5vw, 4rem); font-family: var(--font-body);
+}
+
+/* ── Carte Bento (Glassmorphism & Bordures Magiques) ────── */
+.mod-card {
+    background: var(--bg-card); border: 1px solid var(--store-border); border-top: 1px solid var(--store-border-highlight);
+    border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; text-decoration: none;
+    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4); transform: translateZ(0); transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    min-height: 220px;
+}
+
+/* Le Masque Magique (Givre / Sable) */
+.mod-card::before {
+    content: ''; position: absolute; inset: 0; border-radius: 16px; padding: 2px; 
+    background: linear-gradient(135deg, var(--store-ice), transparent 40%, transparent 60%, var(--amber));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    opacity: 0; transition: opacity 0.5s ease; pointer-events: none; z-index: 2;
+}
+
+/* Lueur interne au survol */
+.mod-card::after {
+    content: ''; position: absolute; inset: 0; border-radius: 16px;
+    background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.03) 0%, transparent 70%);
+    opacity: 0.5; transition: opacity 0.4s ease; pointer-events: none; z-index: 1;
+}
+.mod-card > * { position: relative; z-index: 3; }
+
+.mod-card:not(.mod-card--disabled):hover {
+    background: var(--bg-card-hover); border-color: var(--store-border-highlight); transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 -10px 40px -10px rgba(0, 225, 255, 0.08);
+}
+.mod-card:not(.mod-card--disabled):hover::before { opacity: 1; }
+.mod-card:not(.mod-card--disabled):hover::after { opacity: 1; background: radial-gradient(circle at 50% 0%, rgba(0, 225, 255, 0.08) 0%, transparent 70%); }
+
+.mod-card--disabled { cursor: not-allowed; opacity: 0.6; filter: grayscale(1); border-color: rgba(255,255,255,0.05); box-shadow: none; }
+
+.mod-card-bg { position: absolute; inset: 0; background-size: cover; background-position: center; filter: brightness(0.2) saturate(0.5); transition: filter 0.4s; z-index: 0 !important; }
+.mod-card:not(.mod-card--disabled):hover .mod-card-bg { filter: brightness(0.4) saturate(1); }
+.mod-card-overlay { position: absolute; inset: 0; background: linear-gradient(160deg, rgba(5,10,18,0.7) 0%, rgba(5,10,18,0.9) 60%, rgba(5,10,18,0.98) 100%); z-index: 0 !important; }
+
+.mod-card-body { position: relative; z-index: 2; padding: 28px 24px 24px; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
+.mod-card-top { display: flex; align-items: flex-start; gap: 16px; }
+
+/* Icône animée */
+.mod-card-icon {
+    width: 48px; height: 48px; border-radius: 50%; background: rgba(0, 225, 255, 0.05); border: 1px solid var(--store-ice-dim);
+    display: flex; align-items: center; justify-content: center; color: var(--store-text); font-size: 1.2rem; flex-shrink: 0;
+    box-shadow: 0 0 15px var(--store-glow); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.mod-card:not(.mod-card--disabled):hover .mod-card-icon { background: rgba(0, 225, 255, 0.15); color: var(--store-ice); box-shadow: 0 0 25px rgba(0, 225, 255, 0.4); transform: scale(1.1) rotate(-5deg); }
+
+.mod-card-info { flex: 1; }
+.mod-card-title { font-family: var(--font-title); font-size: 1.4rem; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 6px; transition: color 0.2s; }
+.mod-card:not(.mod-card--disabled):hover .mod-card-title { color: var(--store-ice); text-shadow: 0 0 15px var(--store-glow); }
+.mod-card-desc { color: var(--store-text); font-size: 0.95rem; line-height: 1.5; margin: 0; transition: color 0.2s; }
+.mod-card:not(.mod-card--disabled):hover .mod-card-desc { color: #fff; }
+
+.mod-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 20px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.05); }
+.mod-card-count, .mod-card-soon { font-size: 0.9rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 4px 12px; border: 1px solid var(--store-ice-dim); border-radius: 4px; background: rgba(0, 225, 255, 0.05); color: var(--store-ice); }
+.mod-card-count span { font-size: 1rem; margin-right: 4px; font-weight: 800; }
+.mod-card-arrow { color: var(--store-text); font-size: 1.1rem; transition: transform 0.4s, color 0.4s; }
+.mod-card:not(.mod-card--disabled):hover .mod-card-arrow { transform: translateX(5px); color: var(--store-ice); }
+
+/* ── Responsive ─────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .mod-hero { padding-top: 100px; min-height: 250px; }
+    .mod-hero h1 { font-size: 2rem; }
+    .mod-grid { grid-template-columns: 1fr; }
+}

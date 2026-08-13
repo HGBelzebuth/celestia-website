@@ -1,0 +1,163 @@
+/* ══════════════════════════════════════════════════════════
+   ONLINE.CSS — Celestia-WoW 2026
+   Modernisation de la page Joueurs en ligne
+   ══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Outfit:wght@300;400;600;700&display=swap');
+
+:root {
+    --store-ice: #00e1ff;
+    --store-ice-dim: #008ba3;
+    --store-glow: rgba(0, 225, 255, 0.25);
+    --store-bg: #02050a;
+    --store-border: rgba(255, 255, 255, 0.08);
+    --font-title: 'Cinzel', serif;
+    --font-body: 'Outfit', sans-serif;
+}
+
+/* ── Fond de page ── */
+.Pane-bg { filter: brightness(0.3) saturate(0.8) !important; transition: 0.3s; }
+.Pane-overlay {
+    background: linear-gradient(180deg, rgba(2,5,10,0.6) 0%, rgba(2,5,10,0.95) 100%) !important;
+}
+
+/* ── Titre principal ── */
+.Pane-content h4.uk-h4 {
+    font-family: var(--font-title);
+    color: #fff;
+    font-size: 1.8rem !important;
+    letter-spacing: 2px;
+    text-shadow: 0 0 15px var(--store-glow);
+    margin-bottom: 24px;
+    text-transform: uppercase;
+}
+.Pane-content h4.uk-h4 i { color: var(--store-ice); margin-right: 10px; }
+
+/* ═══════════════════════════════════════
+   ONGLETS DES ROYAUMES (Subnav Pill)
+═══════════════════════════════════════ */
+.uk-subnav-pill {
+    margin-bottom: 20px !important;
+    gap: 12px;
+}
+.uk-subnav-pill > * > a {
+    font-family: var(--font-title);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #94a3b8 !important;
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid var(--store-border) !important;
+    border-radius: 6px;
+    padding: 10px 24px !important;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.uk-subnav-pill > * > a:hover {
+    color: #fff !important;
+    background: rgba(0, 225, 255, 0.05) !important;
+    border-color: var(--store-ice-dim) !important;
+    box-shadow: 0 0 15px var(--store-glow);
+}
+.uk-subnav-pill > .uk-active > a {
+    background: linear-gradient(135deg, var(--store-ice), var(--store-ice-dim)) !important;
+    color: #01050a !important;
+    border-color: var(--store-ice) !important;
+    box-shadow: 0 0 15px var(--store-glow);
+}
+
+/* ═══════════════════════════════════════
+   CONTENEUR DU TABLEAU (Card Bento)
+═══════════════════════════════════════ */
+.uk-overflow-auto {
+    background: linear-gradient(145deg, rgba(15, 22, 36, 0.6) 0%, rgba(5, 10, 18, 0.8) 100%) !important;
+    border: 1px solid var(--store-border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+}
+
+/* ═══════════════════════════════════════
+   TABLEAU (Corrections d'alignement + Fixed)
+═══════════════════════════════════════ */
+.uk-table {
+    width: 100% !important;
+    table-layout: fixed !important; /* Force le respect des largeurs */
+}
+
+/* Désactive expand UIkit */
+.uk-table th.uk-table-expand {
+    width: auto !important;
+}
+
+/* Proportions parfaites des colonnes (Ajustées pour icônes 36px) */
+.uk-table th:nth-child(1), .uk-table td:nth-child(1) { width: 22%; text-align: left !important; } /* Nom */
+.uk-table th:nth-child(2), .uk-table td:nth-child(2) { width: 12%; text-align: center !important; } /* Level */
+.uk-table th:nth-child(3), .uk-table td:nth-child(3) { width: 18%; text-align: center !important; } /* Race */
+.uk-table th:nth-child(4), .uk-table td:nth-child(4) { width: 18%; text-align: center !important; } /* Class */
+.uk-table th:nth-child(5), .uk-table td:nth-child(5) { width: 30%; text-align: center !important; } /* Zone */
+
+/* Bordures des lignes */
+.uk-table-divider > tr > td, 
+.uk-table-divider > tbody > tr > td,
+.uk-table-divider > thead > tr > th {
+    border-color: rgba(255,255,255,0.06) !important;
+}
+
+/* En-têtes (Titre des colonnes) */
+.uk-table th {
+    color: var(--store-ice) !important;
+    font-family: var(--font-title);
+    font-size: 0.95rem !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding-bottom: 12px !important;
+    border-bottom: 2px solid var(--store-border) !important;
+}
+.uk-table th i { margin-right: 6px; }
+
+/* Contenu des cellules */
+.uk-table td {
+    color: #e2e8f0 !important;
+    font-family: var(--font-body);
+    font-size: 1.05rem !important;
+    vertical-align: middle !important;
+    padding: 12px 10px !important;
+}
+
+/* Effet au survol de la ligne */
+.uk-table tbody tr {
+    transition: background 0.2s;
+}
+.uk-table tbody tr:hover {
+    background: rgba(0, 225, 255, 0.04);
+}
+
+/* Icônes de race et classe centrées et AGRANDIES (36px) */
+.uk-table td img {
+    display: block; /* Essentiel pour le centrage auto */
+    margin: 0 auto; /* Centrage horizontal parfait */
+    
+    /* NOUVELLE TAILLE 2026 */
+    width: 36px !important; /* Force l'override de l'inline width="20" */
+    height: 36px !important; /* Force l'override de l'inline height="20" */
+    /* -------------------- */
+
+    border: 1px solid var(--store-border);
+    box-shadow: 0 0 8px rgba(0,0,0,0.5);
+    border-radius: 4px;
+    background: rgba(0,0,0,0.5);
+    padding: 1px;
+}
+
+/* ── Responsive Mobile ── */
+@media (max-width: 768px) {
+    .uk-overflow-auto { padding: 10px; }
+    .uk-table th, .uk-table td { font-size: 0.8rem !important; padding: 6px 3px !important; }
+    .uk-table th i { display: none; } /* Cache les icônes de titre sur mobile */
+    .uk-table td img { width: 28px !important; height: 28px !important; } /* Icônes légèrement plus petites sur mobile */
+}

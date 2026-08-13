@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title><?= $this->config->item('website_name'); ?> — <?= $pagetitle ?></title>
+	<?= $template['metadata']; ?>
+	<link rel="icon" type="image/x-icon" href="<?= $template['location'] . 'assets/images/favicon.ico'; ?>" />
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+	<link rel="stylesheet" href="<?= $template['assets'] . 'core/uikit/css/uikit.min.css'; ?>">
+	<link rel="stylesheet" href="<?= $template['location'] . 'assets/css/main.css'; ?>">
+	<link href="<?= $template['assets'] . 'core/css/core.f0a1c125520131b6cb88.css'; ?>" rel="stylesheet">
+	<link href="<?= $template['assets'] . 'core/css/3.130ed27842b953a05ff8.css'; ?>" rel="stylesheet">
+	<script src="<?= $template['assets'] . 'core/uikit/js/uikit.min.js'; ?>"></script>
+	<script src="<?= $template['assets'] . 'core/uikit/js/uikit-icons.min.js'; ?>"></script>
+	<script src="<?= $template['assets'] . 'core/js/core.66a3d362300af79ba147.js'; ?>"></script>
+	<script id="init">
+		window.trigger && window.trigger("init");
+	</script>
+
+	<style>
+		/* ═══════════════════════════════════════════════════════
+   TOKENS  (charte identique à home.php)
+═══════════════════════════════════════════════════════ */
+		:root {
+			--gold: #c8d4e0;
+			--gold-soft: #e2eaf2;
+			--gold-dim: #8a9fb5;
+			--gold-pale: rgba(180, 200, 220, .07);
+			--gold-glow: rgba(180, 200, 220, .18);
+
+			--bg-page: #06111c;
+			--bg-deep: #020910;
+			--bg-card: rgba(10, 24, 40, .92);
+
+			--text-hi: #d8e4f0;
+			--text-mid: #8da5bb;
+			--text-lo: #4a6278;
+			--text-gold: #b8cfe0;
+
+			--border: rgba(180, 200, 220, .22);
+			--border-lo: rgba(180, 200, 220, .10);
+
+			--font-rune: 'Cinzel', Georgia, serif;
+			--font-prose: 'Crimson Pro', Georgia, serif;
+
+			--nav-h: 86px;
+			--nav-bg: rgba(3, 8, 17, .88);
+
+			--ease-out: cubic-bezier(.22, 1, .36, 1);
+			--t: .35s;
+		}
+
+		/* ── Base ── */
+		*,
+		*::before,
+		*::after {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0
+		}
+
+		html {
+			scroll-behavior: smooth
+		}
+
+		body {
+			background: var(--bg-page);
+			font-family: var(--font-prose);
+			color: var(--text-hi);
+			min-height: 100vh;
+			font-size: 1.05rem;
+			line-height: 1.65
+		}
+
+		a {
+			text-decoration: none;
+			color: inherit
+		}
+
+		img {
+			display: block;
+			max-width: 100%
+		}
+
+		::-webkit-scrollbar {
+			width: 4px
+		}
+
+		::-webkit-scrollbar-track {
+			background: var(--bg-deep)
+		}
+
+		::-webkit-scrollbar-thumb {
+			background: var(--gold-dim);
+			border-radius: 2px
+		}
+
+
+		/* ═══════════════════════════════════════════════════════
+   NAVBAR
+═══════════════════════════════════════════════════════ */
+		.nav {
+			position: fixed;
+			inset-inline: 0;
+			top: 0;
+			z-index: 9000;
+			height: var(--nav-h);
+			background: var(--nav-bg);
+			backdrop-filter: blur(18px) saturate(160%);
+			-webkit-backdrop-filter: blur(18px) saturate(160%);
+			border-bottom: 1px solid transparent;
+			transition: background var(--t), border-color var(--t), box-shadow var(--t);
+		}
+
+		.nav::before {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='.025'/%3E%3C/svg%3E");
+			opacity: .4;
+			pointer-events: none;
+		}
+
+		.nav.is-scrolled {
+			background: rgba(2, 6, 14, .97);
+			border-bottom-color: var(--border-lo);
+			box-shadow: 0 2px 40px rgba(0, 0, 0, .55);
+		}
+
+		/* Trait d'or animé */
+		.nav__gold-line {
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			height: 1px;
+			background: linear-gradient(90deg, transparent 0%, var(--gold-dim) 20%, var(--gold) 50%, var(--gold-dim) 80%, transparent 100%);
+			transform: scaleX(0);
+			transform-origin: center;
+			transition: transform .6s var(--ease-out);
+			pointer-events: none;
+			opacity: .7;
+		}
+
+		.nav.is-scrolled .nav__gold-line {
+			transform: scaleX(1)
+		}
+
+		.nav__wrap {
+			height: 100%;
+			max-width: 1360px;
+			margin: auto;
+			padding: 0 clamp(1.25rem, 4vw, 3rem);
+			display: grid;
+			grid-template-columns: auto 1fr auto;
+			align-items: center;
+			gap: 1.5rem;
+		}
+
+		/* Logo */
+		.nav__logo {
+			display: flex;
+			align-items: center;
+			gap: .75rem;
+			flex-shrink: 0
+		}
+
+		.nav__logo-img {
+			height: clamp(46px, 5.5vw, 62px);
+			width: auto;
+			filter: drop-shadow(0 0 10px rgba(180, 200, 220, .25));
+			transition: filter var(--t), transform var(--t) var(--ease-out);
+		}
+
+		@media (max-width: 1100px) {
+			.nav__logo-img {
+				height: 44px;
+			}
+		}
+
+		.nav__logo:hover .nav__logo-img {
+			filter: drop-shadow(0 0 22px rgba(180, 200, 220, .55));
+			transform: scale(1.06);
+		}
+
+		.nav__logo-text {
+			display: flex;
+			flex-direction: column;
+			gap: .05rem
+		}
+
+		.nav__logo-name {
+			font-family: var(--font-rune);
+			font-size: 1rem;
+			letter-spacing: .22em;
+			text-transform: uppercase;
+			color: var(--gold);
+			line-height: 1
+		}
+
+		.nav__logo-tagline {
+			font-family: var(--font-prose);
+			font-size: 1rem;
+			color: var(--text-lo);
+			letter-spacing: .12em;
+			font-style: italic
+		}
+
+		/* Liens */
+		.nav__links {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: .15rem;
+			list-style: none
+		}
+
+		.nav__item {
+			position: relative
+		}
+
+		.nav__link {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: .4rem;
+			padding: .45rem .85rem;
+			font-family: var(--font-rune);
+			font-size: 1rem;
+			letter-spacing: .15em;
+			text-transform: uppercase;
+			color: var(--text-mid);
+			border-radius: 4px;
+			cursor: pointer;
+			transition: color var(--t), background var(--t);
+			white-space: nowrap;
+			position: relative;
+			user-select: none;
+		}
+
+		.nav__link .ni {
+			font-size: 1rem;
+			color: var(--gold-dim);
+			transition: color var(--t)
+		}
+
+		.nav__link:hover,
+		.nav__link.active {
+			color: var(--gold);
+			background: var(--gold-pale)
+		}
+
+		.nav__link:hover .ni,
+		.nav__link.active .ni {
+			color: var(--gold)
+		}
+
+		.nav__link.active::after {
+			content: '';
+			position: absolute;
+			bottom: -1px;
+			left: 50%;
+			transform: translateX(-50%);
+			width: 22px;
+			height: 2px;
+			background: var(--gold);
+			border-radius: 1px;
+		}
+
+		/* .nav__chevron {
+			font-size: 1rem;
+			transition: transform var(--t);
+			color: var(--gold-dim);
+			margin-left: .1rem
+		} */
+
+		.nav__item:hover
+		/* .nav__chevron, */
+		.nav__item:focus-within
+
+		/* .nav__chevron */
+			{
+			transform: rotate(180deg)
+		}
+
+		/* Dropdown */
+		.nav__drop {
+			position: absolute;
+			top: calc(100% + 10px);
+			left: 50%;
+			transform: translateX(-50%) translateY(-6px);
+			min-width: 210px;
+			background: rgba(3, 9, 19, .97);
+			border: 1px solid var(--border-lo);
+			border-top: 2px solid var(--gold-dim);
+			border-radius: 0 0 10px 10px;
+			box-shadow: 0 20px 60px rgba(0, 0, 0, .7);
+			backdrop-filter: blur(20px);
+			padding: .55rem 0;
+			opacity: 0;
+			visibility: hidden;
+			pointer-events: none;
+			transition: opacity var(--t), transform var(--t) var(--ease-out), visibility var(--t);
+			z-index: 10;
+		}
+
+		.nav__drop::before {
+			content: '';
+			position: absolute;
+			top: -7px;
+			left: 50%;
+			transform: translateX(-50%);
+			border: 6px solid transparent;
+			border-bottom-color: var(--gold-dim);
+			border-top: 0;
+		}
+
+		.nav__item:hover .nav__drop,
+		.nav__item:focus-within .nav__drop {
+			opacity: 1;
+			visibility: visible;
+			pointer-events: auto;
+			transform: translateX(-50%) translateY(0);
+		}
+
+		.nav__drop-item {
+			display: flex;
+			align-items: center;
+			gap: .7rem;
+			padding: .6rem 1.25rem;
+			font-family: var(--font-rune);
+			font-size: 1rem;
+			letter-spacing: .12em;
+			text-transform: uppercase;
+			color: var(--text-mid);
+			transition: color var(--t), background var(--t), padding-left var(--t);
+		}
+
+		.nav__drop-item .ni {
+			width: 18px;
+			text-align: center;
+			color: var(--gold-dim);
+			font-size: 1rem;
+			transition: color var(--t);
+			flex-shrink: 0
+		}
+
+		.nav__drop-item:hover {
+			color: var(--gold);
+			background: rgba(180, 200, 220, .06);
+			padding-left: 1.7rem
+		}
+
+		.nav__drop-item:hover .ni {
+			color: var(--gold)
+		}
+
+		.nav__drop-sep {
+			height: 1px;
+			background: var(--border-lo);
+			margin: .4rem .9rem
+		}
+
+		/* Droite */
+		.nav__right {
+			display: flex;
+			align-items: center;
+			gap: .65rem;
+			flex-shrink: 0
+		}
+
+		.nav__points {
+			display: flex;
+			align-items: center;
+			gap: .5rem;
+			padding: .32rem .85rem;
+			background: rgba(212, 170, 96, .05);
+			border: 1px solid var(--border-lo);
+			border-radius: 20px;
+			font-family: var(--font-rune);
+			font-size: 1rem;
+			letter-spacing: .1em;
+			color: var(--text-mid);
+			transition: border-color var(--t), background var(--t);
+		}
+
+		.nav__points:hover {
+			border-color: var(--border);
+			background: rgba(180, 200, 220, .09)
+		}
+
+		.nav__points .dp-icon,
+		.nav__points .vp-icon {
+			color: var(--gold);
+			font-size: 1rem
+		}
+
+		.nav__account-wrap {
+			position: relative
+		}
+
+		.nav__account {
+			display: flex;
+			align-items: center;
+			gap: .55rem;
+			padding: .45rem 1.05rem;
+			font-family: var(--font-rune);
+			font-size: 1rem;
+			letter-spacing: .12em;
+			text-transform: uppercase;
+			color: var(--gold-soft);
+			border: 1px solid var(--gold-dim);
+			border-radius: 5px;
+			background: transparent;
+			cursor: pointer;
+			transition: background var(--t), border-color var(--t), box-shadow var(--t);
+			white-space: nowrap;
+		}
+
+		.nav__account:hover {
+			background: var(--gold-pale);
+			border-color: var(--gold);
+			box-shadow: 0 0 14px rgba(180, 200, 220, .12)
+		}
+
+		.nav__account .cw-avatar {
+			width: 26px;
+			height: 26px;
+			border-radius: 50%;
+			border: 1px solid var(--gold-dim);
+			object-fit: cover
+		}
+
+		.nav__account .ni {
+			font-size: 1rem;
+			color: var(--gold-dim)
+		}
+
+		.nav__account-dd {
+			position: absolute;
+			top: calc(100% + 10px);
+			right: 0;
+			min-width: 200px;
+			background: rgba(3, 9, 19, .97);
+			border: 1px solid var(--border-lo);
+			border-top: 2px solid var(--gold-dim);
+			border-radius: 0 0 10px 10px;
+			box-shadow: 0 20px 60px rgba(0, 0, 0, .7);
+			backdrop-filter: blur(20px);
+			padding: .55rem 0;
+			opacity: 0;
+			visibility: hidden;
+			pointer-events: none;
+			transform: translateY(-6px);
+			transition: opacity var(--t), transform var(--t) var(--ease-out), visibility var(--t);
+			z-index: 10;
+		}
+
+		.nav__account-wrap:hover .nav__account-dd,
+		.nav__account-wrap:focus-within .nav__account-dd {
+			opacity: 1;
+			visibility: visible;
+			pointer-events: auto;
+			transform: translateY(0);
+		}
+
+		.nav__register {
+			display: inline-flex;
+			align-items: center;
+			gap: .45rem;
+			padding: .45rem 1.1rem;
+			font-family: var(--font-rune);
+			font-size: 1rem;
+			letter-spacing: .12em;
+			text-transform: uppercase;
+			background: var(--gold);
+			color: #07131f;
+			border: 1px solid var(--gold);
+			border-radius: 5px;
+			font-weight: 600;
+			transition: background var(--t), border-color var(--t), box-shadow var(--t);
+			white-space: nowrap;
+		}
+
+		.nav__register:hover {
+			background: var(--gold-glow);
+			border-color: var(--gold-soft);
+			box-shadow: 0 0 20px rgba(180, 200, 220, .22)
+		}
+
+		.nav__register .ni {
+			font-size: 1rem
+		}
+
+		/* Burger */
+		.nav__burger {
+			display: none;
+			flex-direction: column;
+			justify-content: center;
+			gap: 5px;
+			width: 38px;
+			height: 38px;
+			padding: .45rem;
+			background: rgba(180, 200, 220, .06);
+			border: 1px solid var(--border-lo);
+			border-radius: 5px;
+			cursor: pointer;
+			margin-left: auto;
+			transition: background var(--t), border-color var(--t);
+		}
+
+		.nav__burger:hover {
+			background: rgba(180, 200, 220, .12);
+			border-color: var(--border)
+		}
+
+		.nav__burger span {
+			display: block;
+			width: 100%;
+			height: 1.5px;
+			background: var(--gold-dim);
+			border-radius: 1px;
+			transition: transform var(--t) var(--ease-out), opacity var(--t), background var(--t)
+		}
+
+		.nav__burger.open span:nth-child(1) {
+			transform: translateY(6.5px) rotate(45deg)
+		}
+
+		.nav__burger.open span:nth-child(2) {
+			opacity: 0;
+			transform: scaleX(0)
+		}
+
+		.nav__burger.open span:nth-child(3) {
+			transform: translateY(-6.5px) rotate(-45deg)
+		}
+
+		.nav__burger.open span {
+			background: var(--gold)
+		}
+
+		/* Menu mobile */
+		.nav__mobile {
+			position: fixed;
+			inset-inline: 0;
+			top: var(--nav-h);
+			background: rgba(2, 6, 14, .98);
+			backdrop-filter: blur(20px);
+			border-bottom: 1px solid var(--border-lo);
+			padding: 1rem clamp(1.25rem, 4vw, 3rem) 1.5rem;
+			max-height: calc(100svh - var(--nav-h));
+			overflow-y: auto;
+			display: none;
+			opacity: 0;
+			transition: opacity .32s var(--ease-out);
+			z-index: 8999;
+		}
+
+		.nav__mobile.open {
+			display: block;
+			opacity: 1;
+		}
+
+		.nav__mobile-list {
+			display: flex;
+			flex-direction: column;
+			gap: .1rem
+		}
+
+		.nav__mobile-link {
+			display: flex;
+			align-items: center;
+			gap: .8rem;
+			padding: .75rem 1rem;
+			font-family: var(--font-rune);
+			font-size: 1rem;
+			letter-spacing: .15em;
+			text-transform: uppercase;
+			color: var(--text-mid);
+			border-radius: 5px;
+			transition: color var(--t), background var(--t), padding-left var(--t);
+		}
+
+		.nav__mobile-link .ni {
+			width: 18px;
+			text-align: center;
+			color: var(--gold-dim);
+			font-size: 1rem;
+			transition: color var(--t)
+		}
+
+		.nav__mobile-link:hover {
+			color: var(--gold);
+			background: var(--gold-pale);
+			padding-left: 1.4rem
+		}
+
+		.nav__mobile-link:hover .ni {
+			color: var(--gold)
+		}
+
+		.nav__mobile-sep {
+			height: 1px;
+			background: var(--border-lo);
+			margin: .55rem 0
+		}
+
+		/* Pas de décalage : le hero de home.php gère son propre espace */
+		.cw-hero {
+			padding-top: calc(var(--nav-h) + clamp(3.5rem, 9vh, 6rem)) !important
+		}
+
+		/* Toutes les autres pages reçoivent un padding minimal */
+		#cw-main {
+			padding-top: 0
+		}
+
+		/* ═══════════════════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════════════════ */
+		.site-footer {
+			background: var(--bg-deep);
+			border-top: 1px solid var(--border-lo);
+			position: relative;
+			overflow: hidden
+		}
+
+		.site-footer::before {
+			content: '';
+			position: absolute;
+			top: -120px;
+			left: 50%;
+			transform: translateX(-50%);
+			width: 600px;
+			height: 200px;
+			/* background: radial-gradient(ellipse at 50% 100%, rgba(180, 200, 220, .06) 0%, transparent 70%); */
+			pointer-events: none;
+		}
+
+		.site-footer__divider {
+			height: 1px;
+			position: relative;
+			background: linear-gradient(90deg, transparent 0%, var(--border-lo) 15%, var(--gold-dim) 50%, var(--border-lo) 85%, transparent 100%);
+		}
+
+		.site-footer__divider::after {
+			content: '✦';
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			font-size: 1rem;
+			color: var(--gold);
+			background: var(--bg-deep);
+			padding: 0 .5rem;
+			line-height: 1;
+		}
+
+		.site-footer__social {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 1rem;
+			padding: 2.2rem clamp(1.25rem, 4vw, 3rem);
+			border-bottom: 1px solid var(--border-lo);
+		}
+
+		.site-footer__social-label {
+			font-family: var(--font-rune);
+			font-size: 1rem;
+			letter-spacing: .25em;
+			text-transform: uppercase;
+			color: var(--text-gold)
+		}
+
+		.site-footer__social-links {
+			display: flex;
+			gap: .65rem
+		}
+
+		.site-footer__social-btn {
+			width: 38px;
+			height: 38px;
+			border-radius: 50%;
+			border: 1px solid var(--border-lo);
+			background: rgba(180, 200, 220, .04);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: var(--text-lo);
+			font-size: 1rem;
+			transition: background var(--t), border-color var(--t), color var(--t), transform var(--t) var(--ease-out);
+		}
+
+		.site-footer__social-btn:hover {
+			background: rgba(180, 200, 220, .12);
+			border-color: var(--gold);
+			color: var(--gold);
+			transform: translateY(-3px)
+		}
+
+		.site-footer__body {
+			max-width: 1360px;
+			margin: auto;
+			padding: 2.5rem clamp(1.25rem, 4vw, 3rem);
+			display: grid;
+			grid-template-columns: 160px 1fr 160px;
+			align-items: center;
+			gap: 2rem;
+		}
+
+		.site-footer__logo img {
+			height: 56px;
+			width: auto;
+			filter: drop-shadow(0 0 10px rgba(180, 200, 220, .18));
+			transition: filter var(--t)
+		}
+
+		.site-footer__logo:hover img {
+			filter: drop-shadow(0 0 20px rgba(180, 200, 220, .44))
+		}
+
+		.site-footer__links {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: center;
+			gap: .35rem 1.8rem;
+			list-style: none
+		}
+
+		.site-footer__link {
+			font-family: var(--font-rune);
+			font-size: 1rem;
+			letter-spacing: .15em;
+			text-transform: uppercase;
+			color: var(--text-lo);
+			transition: color var(--t);
+			position: relative;
+			padding-bottom: 2px;
+		}
+
+		.site-footer__link::after {
+			content: '';
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			height: 1px;
+			background: var(--gold);
+			transform: scaleX(0);
+			transform-origin: left;
+			transition: transform var(--t) var(--ease-out);
+		}
+
+		.site-footer__link:hover {
+			color: var(--gold)
+		}
+
+		.site-footer__link:hover::after {
+			transform: scaleX(1)
+		}
+
+		.site-footer__badge {
+			display: flex;
+			flex-direction: column;
+			align-items: flex-end;
+			gap: .4rem;
+			font-family: var(--font-rune);
+			font-size: 1rem;
+			letter-spacing: .1em;
+			text-transform: uppercase;
+			color: var(--text-lo)
+		}
+
+		.site-footer__badge img {
+			width: 38px;
+			opacity: .55;
+			filter: grayscale(.4);
+			transition: opacity var(--t), filter var(--t)
+		}
+
+		.site-footer__badge:hover img {
+			opacity: .9;
+			filter: none
+		}
+
+		.site-footer__bottom {
+			border-top: 1px solid rgba(180, 200, 220, .05);
+			max-width: 1360px;
+			margin: auto;
+			padding: 1.2rem clamp(1.25rem, 4vw, 3rem);
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: space-between;
+			align-items: center;
+			gap: .75rem;
+		}
+
+		.site-footer__copy {
+			font-family: var(--font-rune);
+			font-size: 1rem;
+			letter-spacing: .08em;
+			color: var(--text-lo)
+		}
+
+		.site-footer__copy strong {
+			color: var(--text-gold)
+		}
+
+		.site-footer__copy a {
+			color: var(--gold-dim);
+			transition: color var(--t)
+		}
+
+		.site-footer__copy a:hover {
+			color: var(--gold)
+		}
+
+		.site-footer__legal {
+			font-size: 1rem;
+			color: #334455;
+			max-width: 520px;
+			text-align: right;
+			line-height: 1.5
+		}
+
+		/* Responsive */
+		@media(max-width:1100px) {
+
+			.nav__links,
+			.nav__points,
+			.nav__account-wrap,
+			.nav__register {
+				display: none
+			}
+
+			.nav__burger {
+				display: flex
+			}
+
+			.nav__wrap {
+				grid-template-columns: auto auto
+			}
+
+			/* Sur mobile, masquer le texte logo mais garder l'image */
+			.nav__logo-text {
+				display: none
+			}
+		}
+
+		@media(max-width:640px) {
+			:root {
+				--nav-h: 62px
+			}
+
+			.site-footer__body {
+				grid-template-columns: 1fr;
+				justify-items: center;
+				text-align: center
+			}
+
+			.site-footer__badge {
+				align-items: center
+			}
+
+			.site-footer__bottom {
+				flex-direction: column;
+				text-align: center
+			}
+
+			.site-footer__legal {
+				text-align: center;
+				max-width: 100%
+			}
+		}
+
+		/* ── Bulle panier ── */
+		.nav__cart-badge {
+			position: absolute;
+			top: -8px;
+			right: -8px;
+			min-width: 22px;
+			height: 22px;
+			padding: 0 5px;
+			background: transparent;
+			border: 1.5px solid #c8a95a;
+			color: #c8a95a;
+			font-family: var(--font-rune);
+			font-size: 1rem;
+			font-weight: 700;
+			letter-spacing: 0;
+			border-radius: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			line-height: 1;
+			pointer-events: none;
+			animation: badge-pop .35s var(--ease-out), badge-float 3s ease-in-out infinite;
+		}
+		@keyframes badge-pop {
+			0%   { transform: translateY(0px) scale(0); opacity: 0; }
+			65%  { transform: translateY(-2px) scale(1.12); opacity: 1; }
+			100% { transform: translateY(0px) scale(1); opacity: 1; }
+		}
+		@keyframes badge-float {
+			0%, 100% {
+				transform: translateY(0px);
+				border-color: #c8a95a;
+				color: #c8a95a;
+				box-shadow: 0 0 5px rgba(200,169,90,.2), 0 0 0px rgba(200,169,90,0);
+				text-shadow: 0 0 5px rgba(200,169,90,.35);
+			}
+			40% {
+				transform: translateY(-3px);
+				border-color: #f0d878;
+				color: #f0d878;
+				box-shadow: 0 0 12px rgba(240,216,120,.55), 0 4px 14px rgba(200,169,90,.2);
+				text-shadow: 0 0 10px rgba(240,216,120,.8);
+			}
+			60% {
+				transform: translateY(-3px);
+				border-color: #f0d878;
+				color: #f0d878;
+				box-shadow: 0 0 12px rgba(240,216,120,.55), 0 4px 14px rgba(200,169,90,.2);
+				text-shadow: 0 0 10px rgba(240,216,120,.8);
+			}
+		}
+
+		/* Badge inline dans le dropdown compte */
+		.nav__drop-badge {
+			margin-left: auto;
+			min-width: 20px;
+			height: 20px;
+			padding: 0 6px;
+			background: linear-gradient(135deg, rgba(180,200,220,.18), rgba(180,200,220,.08));
+			border: 1px solid var(--border);
+			color: var(--gold);
+			font-family: var(--font-rune);
+			font-size: .7rem;
+			font-weight: 700;
+			letter-spacing: 0;
+			border-radius: 10px;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			line-height: 1;
+		}
+
+	</style>
+</head>
+
+<body>
+
+<?php
+/* ── Compteur panier depuis la session CI ──
+   La library Cart de CI4/CI3 stocke le panier sous 'cart_contents'.
+   On essaie aussi via $this->cart si disponible (autoloaded). */
+$__cartCount = 0;
+if (isset($this->cart)) {
+    $__cartCount = (int) $this->cart->total_items();
+} else {
+    $__cartContents = $this->session->userdata('cart_contents');
+    if (is_array($__cartContents)) {
+        foreach ($__cartContents as $__row) {
+            if (is_array($__row) && isset($__row['qty'])) {
+                $__cartCount += (int) $__row['qty'];
+            }
+        }
+    }
+}
+?>
+	<!-- NAVBAR -->
+	<nav class="nav" id="cwNav" aria-label="Navigation principale">
+		<div class="nav__gold-line"></div>
+		<div class="nav__wrap">
+
+			<a href="<?= base_url(); ?>" class="nav__logo">
+				<img src="<?= $template['location'] . 'assets/images/small-logo.png'; ?>" alt="<?= $this->config->item('website_name'); ?>" class="nav__logo-img">
+				<!-- <div class="nav__logo-text">
+					<span class="nav__logo-name"><?= $this->config->item('website_name'); ?></span>
+					<span class="nav__logo-tagline">Serveur privé</span>
+				</div> -->
+			</a>
+
+			<ul class="nav__links" role="list">
+				<li class="nav__item">
+					<a href="<?= base_url(); ?>" class="nav__link"><i class="fas fa-scroll ni"></i>Accueil</a>
+				</li>
+				<!-- <li class="nav__item">
+					<span class="nav__link" tabindex="0" role="button"><i class="fas fa-map-marked-alt ni"></i>Explorer<i class="fas fa-chevron-down nav__chevron"></i></span>
+				<div class="nav__drop">
+					<a href="<?= base_url('modifications'); ?>" class="nav__drop-item"><i class="fas fa-dragon ni"></i>Contenu custom</a>
+					<a href="<?= base_url('pvp'); ?>" class="nav__drop-item"><i class="fas fa-swords"></i>Arènes & PvP</a>
+				</div>
+				</li> -->
+				<li class="nav__item">
+					<span class="nav__link" tabindex="0" role="button"><i class="fas fa-feather-alt ni"></i>Infos<!-- <i class="fas fa-chevron-down nav__chevron"></i> --></span>
+					<div class="nav__drop">
+						<a href="<?= base_url('download'); ?>" class="nav__drop-item"><i class="fas fa-download ni"></i>Télécharger</a>
+						<a href="<?= base_url('modifications'); ?>" class="nav__drop-item"><i class="fas fa-dragon ni"></i>Contenu custom</a>
+						<a href="<?= base_url('pvp'); ?>" class="nav__drop-item"><i class="fab fa-rebel ni"></i>Arènes & PvP</a>
+						<!-- <a href="<?= base_url(); ?>" class="nav__drop-item"><i class="fas fa-newspaper ni"></i>Dernières news</a> -->
+						<a href="<?= base_url('changelog'); ?>" class="nav__drop-item"><i class="fab fa-medrt ni"></i>Changelog</a>
+						<!-- <a href="<?= base_url('forum'); ?>" class="nav__drop-item"><i class="fas fa-comments ni"></i>Forum</a> -->
+					</div>
+				</li>
+				<li class="nav__item">
+					<a href="<?= base_url('store'); ?>" class="nav__link"><i class="fas fa-gem ni"></i>Boutique</a>
+				</li>
+				<li class="nav__item">
+					<a href="https://celestia-wow.com/vote" class="nav__link"><i class="fas fa-star ni"></i>Voter</a>
+				</li>
+				<li class="nav__item">
+					<a href="<?= base_url('cart'); ?>" class="nav__link"><i class="fa fa-shopping-cart ni"></i>Panier<?php if ($__cartCount > 0): ?><span class="nav__cart-badge"><?= $__cartCount ?></span><?php endif; ?></a>
+				</li>
+				<li class="nav__item">
+					<a href="<?= base_url('donate'); ?>" class="nav__link"><i class="fas fa-heart ni"></i>Contribuer</a>
+				</li>
+			</ul>
+
+			<div class="nav__right">
+				<?php if ($this->wowauth->isLogged()): ?>
+					<div class="nav__points">
+						<i class="dp-icon"></i>
+						<span data-dp-display uk-tooltip="title:<?= $this->lang->line('panel_dp'); ?>;pos:bottom"><?= $this->wowgeneral->getCharDPTotal($this->session->userdata('wow_sess_id')); ?></span>						<span style="color:var(--border-lo)">·</span>
+						<i class="vp-icon"></i>
+						<span uk-tooltip="title:<?= $this->lang->line('panel_vp'); ?>;pos:bottom"><?= $this->wowgeneral->getCharVPTotal($this->session->userdata('wow_sess_id')); ?></span>
+					</div>
+					<div class="nav__account-wrap">
+						<button class="nav__account">
+							<?php if ($this->wowmodule->getUCPStatus() == '1' && $this->wowgeneral->getUserInfoGeneral($this->session->userdata('wow_sess_id'))->num_rows()): ?>
+								<img class="cw-avatar" src="<?= base_url('assets/images/profiles/' . $this->wowauth->getNameAvatar($this->wowauth->getImageProfile($this->session->userdata('wow_sess_id')))); ?>" alt="avatar">
+							<?php else: ?>
+								<i class="fas fa-user-circle ni"></i>
+							<?php endif; ?>
+							<span><?= $this->session->userdata('blizz_sess_username'); ?></span>
+							<i class="fas fa-chevron-down" style="font-size:1rem;color:var(--gold-dim)"></i>
+						</button>
+						<div class="nav__account-dd">
+							<?php if ($this->wowmodule->getUCPStatus() == '1'): ?>
+								<a href="<?= base_url('panel'); ?>" class="nav__drop-item"><i class="fas fa-cog ni"></i><?= $this->lang->line('button_user_panel'); ?></a>
+							<?php endif; ?>
+							<?php if ($this->wowauth->getRank($this->session->userdata('wow_sess_id')) >= config_item('mod_access_level')): ?>
+								<a href="<?= base_url('mod'); ?>" class="nav__drop-item"><i class="fas fa-shield-alt ni"></i><?= $this->lang->line('button_mod_panel'); ?></a>
+							<?php endif; ?>
+							<?php if ($this->wowmodule->getACPStatus() == '1' && $this->wowauth->getRank($this->session->userdata('wow_sess_id')) >= config_item('admin_access_level')): ?>
+								<a href="<?= base_url('admin'); ?>" class="nav__drop-item"><i class="fas fa-cogs ni"></i><?= $this->lang->line('button_admin_panel'); ?></a>
+							<?php endif; ?>
+							<div class="nav__drop-sep"></div>
+							<?php if ($__cartCount > 0): ?>
+								<a href="<?= base_url('cart'); ?>" class="nav__drop-item"><i class="fa fa-shopping-cart ni"></i><?= $this->lang->line('button_view_cart'); ?><span class="nav__drop-badge"><?= $__cartCount ?></span></a>
+							<?php else: ?>
+								<span class="nav__drop-item" style="opacity:.4;cursor:default;"><i class="fa fa-shopping-cart ni"></i><?= $this->lang->line('store_cart_no_items'); ?></span>
+							<?php endif; ?>
+							<div class="nav__drop-sep"></div>
+							<a href="<?= base_url('logout'); ?>" class="nav__drop-item" style="color:#c45"><i class="fas fa-sign-out-alt ni" style="color:#c45"></i><?= $this->lang->line('button_logout'); ?></a>
+						</div>
+					</div>
+				<?php else: ?>
+					<a href="<?= base_url('login'); ?>" class="nav__account"><i class="fas fa-sign-in-alt ni"></i>Connexion</a>
+					<?php if ($this->wowmodule->getRegisterStatus() == '1'): ?>
+						<a href="<?= base_url('register'); ?>" class="nav__register"><i class="fas fa-user-plus ni"></i>S'inscrire</a>
+					<?php endif; ?>
+				<?php endif; ?>
+				<button class="nav__burger" id="cwBurger" aria-label="Menu" aria-expanded="false">
+					<span></span><span></span><span></span>
+				</button>
+			</div>
+
+		</div>
+	</nav>
+
+	<!-- Menu mobile -->
+	<div class="nav__mobile" id="cwMobile" aria-hidden="true">
+		<nav class="nav__mobile-list">
+			<a href="<?= base_url(); ?>" class="nav__mobile-link"><i class="fas fa-scroll ni"></i>Accueil</a>
+			<a href="<?= base_url('modifications'); ?>" class="nav__mobile-link"><i class="fas fa-dragon ni"></i>Contenu custom</a>
+			<a href="<?= base_url('pvp'); ?>" class="nav__mobile-link"><i class="fas fa-swords ni"></i>PvP</a>
+			<div class="nav__mobile-sep"></div>
+			<a href="<?= base_url(); ?>" class="nav__mobile-link"><i class="fas fa-newspaper ni"></i>Actualités</a>
+			<a href="<?= base_url('changelog'); ?>" class="nav__mobile-link"><i class="fas fa-list-check ni"></i>Changelog</a>
+			<a href="<?= base_url('forum'); ?>" class="nav__mobile-link"><i class="fas fa-comments ni"></i>Forum</a>
+			<div class="nav__mobile-sep"></div>
+			<a href="<?= base_url('store'); ?>" class="nav__mobile-link"><i class="fas fa-gem ni"></i>Boutique</a>
+			<a href="https://celestia-wow.com/vote" class="nav__mobile-link"><i class="fas fa-star ni"></i>Voter</a>
+			<a href="<?= base_url('download'); ?>" class="nav__mobile-link"><i class="fas fa-download ni"></i>Télécharger</a>
+			<a href="<?= base_url('donate'); ?>" class="nav__mobile-link"><i class="fas fa-heart ni"></i>Contribuer</a>
+			<div class="nav__mobile-sep"></div>
+			<?php if ($this->wowauth->isLogged()): ?>
+				<a href="<?= base_url('panel'); ?>" class="nav__mobile-link"><i class="fas fa-gauge ni"></i>Mon compte</a>
+				<a href="<?= base_url('logout'); ?>" class="nav__mobile-link" style="color:#c45"><i class="fas fa-right-from-bracket ni" style="color:#c45"></i>Déconnexion</a>
+			<?php else: ?>
+				<a href="<?= base_url('login'); ?>" class="nav__mobile-link"><i class="fas fa-right-to-bracket ni"></i>Connexion</a>
+				<?php if ($this->wowmodule->getRegisterStatus() == '1'): ?>
+					<a href="<?= base_url('register'); ?>" class="nav__mobile-link" style="color:var(--gold)"><i class="fas fa-user-plus ni" style="color:var(--gold)"></i>S'inscrire</a>
+				<?php endif; ?>
+			<?php endif; ?>
+		</nav>
+	</div>
+
+
+	<!-- CONTENU -->
+	<main id="cw-main" role="main">
+		<?= $template['body']; ?>
+	</main>
+
+
+	<!-- FOOTER -->
+	<footer class="site-footer" role="contentinfo">
+		<div class="site-footer__divider"></div>
+
+		<div class="site-footer__social">
+			<span class="site-footer__social-label">Suivez <?= $this->config->item('website_name'); ?></span>
+			<div class="site-footer__social-links">
+				<!-- <a href="<?= $this->config->item('social_facebook'); ?>" target="_blank" class="site-footer__social-btn" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a> -->
+				<!-- <a href="<?= $this->config->item('social_twitter'); ?>" target="_blank" class="site-footer__social-btn" aria-label="Twitter"><i class="fab fa-x-twitter"></i></a> -->
+				<a href="<?= $this->config->item('social_youtube'); ?>" target="_blank" class="site-footer__social-btn" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+				<a href="https://discord.gg/JtEgbuy5NU" target="_blank" class="site-footer__social-btn" aria-label="Discord"><i class="fab fa-discord"></i></a>
+			</div>
+		</div>
+
+		<div class="site-footer__body">
+			<a href="<?= base_url(); ?>" class="site-footer__logo">
+				<img src="<?= $template['location'] . 'assets/images/logo.png'; ?>" alt="<?= $this->config->item('website_name'); ?>">
+				<div class="nav__logo-text site-footer__badge">
+					<!-- <span class="nav__logo-name"><?= $this->config->item('website_name'); ?></span> -->
+					<span class="nav__logo-tagline">Serveur privé</span>
+				</div>
+			</a>
+			<ul class="site-footer__links">
+				<li><a href="https://discord.gg/JtEgbuy5NU" class="site-footer__link">Discord</a></li>
+				<li><a href="https://celestia-wow.com/bugtracker" class="site-footer__link">Support</a></li>
+				<li><a href="https://celestia-wow.com/vote" class="site-footer__link">Vote</a></li>
+				<li><a href="<?= base_url('forum'); ?>" class="site-footer__link">Forum</a></li>
+				<li><a href="<?= base_url('store'); ?>" class="site-footer__link">Boutique</a></li>
+				<li><a href="<?= base_url('donate'); ?>" class="site-footer__link">Contribuer</a></li>
+			</ul>
+			<a href="https://azerothcore.org/" target="_blank" class="site-footer__badge">
+				<img src="https://www.chromiecraft.com/wp-content/uploads/2020/12/AzerothCore.png" alt="AzerothCore">
+				<span>Basé sur AzerothCore</span>
+			</a>
+		</div>
+
+		<div class="site-footer__bottom">
+			<p class="site-footer__copy">
+				&copy; <?= date('Y'); ?> <strong><?= $this->config->item('website_name'); ?></strong>.
+				<?= $this->lang->line('footer_rights'); ?><!--  —
+				Créé par <a href="https://wow-cms.com" target="_blank">BlizzCMS</a> /
+				Edité par <a href="#">NarkéClaude</a> -->
+			</p>
+			<p class="site-footer__legal">
+				World of Warcraft® et Blizzard Entertainment® sont des marques déposées de Blizzard Entertainment.
+				Ce site n'est pas associé ni approuvé par Blizzard Entertainment®.
+			</p>
+		</div>
+	</footer>
+
+
+	<!-- Scripts CMS -->
+	<script src="<?= $template['assets'] . 'core/js/navbar.js'; ?>"></script>
+	<script src="<?= $template['assets'] . 'core/js/runtime.15ccb5b3ab6d70be0680.js'; ?>"></script>
+	<script src="<?= $template['assets'] . 'core/js/vendor.f85485fed4e8af52dc96.js'; ?>"></script>
+	<script src="<?= $template['assets'] . 'core/js/3.3f71f790ca75774820bf.js'; ?>"></script>
+	<script src="<?= $template['assets'] . 'core/js/legacy-components.ee66e0dd5257fdd82677.js'; ?>"></script>
+
+	<script>
+		(function() {
+			var nav = document.getElementById('cwNav');
+			var burger = document.getElementById('cwBurger');
+			var mobile = document.getElementById('cwMobile');
+			var open = false;
+
+			/* Effet scroll */
+			function onScroll() {
+				nav.classList.toggle('is-scrolled', window.scrollY > 30)
+			}
+			window.addEventListener('scroll', onScroll, {
+				passive: true
+			});
+			onScroll();
+
+			/* Burger */
+			function toggle(force) {
+				open = force !== undefined ? force : !open;
+				burger.classList.toggle('open', open);
+				mobile.classList.toggle('open', open);
+				burger.setAttribute('aria-expanded', open);
+				mobile.setAttribute('aria-hidden', !open);
+				document.body.style.overflow = open ? 'hidden' : '';
+			}
+			burger.addEventListener('click', function() {
+				toggle()
+			});
+			mobile.querySelectorAll('.nav__mobile-link').forEach(function(a) {
+				a.addEventListener('click', function() {
+					toggle(false)
+				});
+			});
+			document.addEventListener('click', function(e) {
+				if (open && !mobile.contains(e.target) && !burger.contains(e.target)) toggle(false);
+			});
+			document.addEventListener('keydown', function(e) {
+				if (open && e.key === 'Escape') toggle(false);
+			});
+
+			/* Lien actif */
+			var path = window.location.pathname;
+			document.querySelectorAll('.nav__link, .nav__mobile-link').forEach(function(a) {
+				try {
+					var href = a.getAttribute('href');
+					if (href && href !== '#' && path === new URL(href, location.origin).pathname) a.classList.add('active');
+				} catch (e) {}
+			});
+		})();
+	</script>
+
+</body>
+
+</html>

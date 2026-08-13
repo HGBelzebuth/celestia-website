@@ -1,0 +1,224 @@
+/* ══════════════════════════════════════════════════════════
+   SETTINGS.CSS — Celestia-WoW 2026
+   Modernisation de la page des Paramètres Utilisateur
+   ══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Outfit:wght@300;400;600;700&display=swap');
+
+:root {
+    --store-ice: #00e1ff;
+    --store-ice-dim: #008ba3;
+    --store-glow: rgba(0, 225, 255, 0.25);
+    --store-bg: #02050a;
+    --store-border: rgba(255, 255, 255, 0.08);
+    --font-title: 'Cinzel', serif;
+    --font-body: 'Outfit', sans-serif;
+}
+
+/* ── Fond de page ── */
+.Pane-bg { filter: brightness(0.3) saturate(0.8) !important; transition: 0.3s; }
+.Pane-overlay {
+    background: linear-gradient(180deg, rgba(2,5,10,0.6) 0%, rgba(2,5,10,0.95) 100%) !important;
+}
+
+/* ── Titre principal de la page ── */
+.Pane-content h4.uk-h4 {
+    font-family: var(--font-title);
+    color: #fff;
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    text-shadow: 0 0 15px var(--store-glow);
+    margin-bottom: 24px;
+    text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════
+   MENU LATÉRAL (Sidebar partagée)
+═══════════════════════════════════════ */
+.myaccount-nav {
+    background: linear-gradient(145deg, rgba(15, 22, 36, 0.6) 0%, rgba(5, 10, 18, 0.8) 100%);
+    border: 1px solid var(--store-border);
+    border-radius: 8px;
+    padding: 16px 0;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    font-family: var(--font-body);
+}
+.myaccount-nav > li > a {
+    color: #94a3b8 !important;
+    padding: 10px 20px !important;
+    transition: all 0.2s ease;
+    display: flex; align-items: center; gap: 12px;
+    border-left: 3px solid transparent;
+    text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
+}
+.myaccount-nav > li > a:hover,
+.myaccount-nav > li > a:focus {
+    background: rgba(0, 225, 255, 0.05);
+    color: #fff !important;
+    border-left: 3px solid var(--store-ice-dim);
+    padding-left: 24px !important;
+    text-decoration: none;
+}
+.myaccount-nav > li > a i { width: 20px; text-align: center; color: rgba(255,255,255,0.3); transition: 0.2s; }
+.myaccount-nav > li > a:hover i { color: var(--store-ice); }
+
+/* Item actif */
+.myaccount-nav > li.uk-active > a {
+    background: rgba(0, 225, 255, 0.08);
+    color: var(--store-ice) !important;
+    border-left: 3px solid var(--store-ice);
+    padding-left: 24px !important;
+    text-shadow: 0 0 10px var(--store-glow);
+}
+.myaccount-nav > li.uk-active > a i { color: var(--store-ice); }
+
+/* Séparateur menu */
+.myaccount-nav .uk-nav-divider { border-top: 1px solid var(--store-border); margin: 8px 0; }
+
+/* ═══════════════════════════════════════
+   CARTES DE PARAMÈTRES (Bento)
+═══════════════════════════════════════ */
+.myaccount-card {
+    background: linear-gradient(145deg, rgba(15, 22, 36, 0.6) 0%, rgba(5, 10, 18, 0.8) 100%) !important;
+    border: 1px solid var(--store-border);
+    border-radius: 8px;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+    color: #e2e8f0;
+    margin-bottom: 24px !important;
+}
+
+/* Header des cartes */
+.myaccount-card .uk-card-header {
+    border-bottom: 1px solid var(--store-border) !important;
+    padding: 20px 24px !important;
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px 8px 0 0;
+}
+.myaccount-card .uk-h5 {
+    font-family: var(--font-title);
+    color: #fff !important;
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.myaccount-card .uk-h5 i { color: var(--store-ice); font-size: 1.3rem; }
+
+/* Corps des cartes */
+.myaccount-card .uk-card-body { padding: 24px !important; }
+
+/* ═══════════════════════════════════════
+   FORMULAIRES & INPUTS
+═══════════════════════════════════════ */
+.uk-form-label {
+    font-family: var(--font-title);
+    font-size: 0.95rem !important;
+    color: #94a3b8 !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* Champs de texte */
+.uk-input {
+    background: rgba(0, 0, 0, 0.5) !important;
+    border: 1px solid var(--store-border) !important;
+    border-radius: 6px !important;
+    color: #fff !important;
+    font-family: var(--font-body);
+    font-size: 1.05rem !important;
+    height: 48px !important;
+    transition: border-color 0.3s, box-shadow 0.3s !important;
+}
+.uk-input:focus {
+    border-color: var(--store-ice) !important;
+    box-shadow: 0 0 15px var(--store-glow) !important;
+    outline: none;
+}
+.uk-input:disabled, .uk-input.uk-disabled {
+    background: rgba(255,255,255,0.03) !important;
+    color: #64748b !important;
+    cursor: not-allowed;
+    border-style: dashed !important;
+}
+
+/* Icônes dans les inputs */
+.uk-form-icon { color: rgba(255,255,255,0.3) !important; transition: color 0.3s; }
+.uk-input:focus ~ .uk-form-icon,
+.uk-inline:focus-within .uk-form-icon {
+    color: var(--store-ice) !important;
+}
+
+/* Boutons de soumission */
+.uk-button-default {
+    background: linear-gradient(135deg, var(--store-ice), var(--store-ice-dim)) !important;
+    color: #01050a !important;
+    border: none !important;
+    border-radius: 6px !important;
+    font-family: var(--font-title);
+    font-weight: 700;
+    font-size: 1.05rem !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    height: 50px !important;
+    line-height: 50px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 0 15px var(--store-glow) !important;
+    margin-top: 10px;
+}
+.uk-button-default:hover {
+    background: linear-gradient(135deg, #fff, var(--store-ice)) !important;
+    color: #000 !important;
+    box-shadow: 0 0 25px rgba(0, 225, 255, 0.5) !important;
+    transform: translateY(-2px);
+}
+
+/* ═══════════════════════════════════════
+   SÉLECTION D'AVATAR
+═══════════════════════════════════════ */
+.myaccount-card img.uk-border-rounded {
+    border: 2px solid transparent;
+    transition: 0.2s ease;
+    background: rgba(0,0,0,0.5);
+    padding: 2px;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    cursor: pointer;
+}
+/* Survol de l'avatar */
+div:hover > img.uk-border-rounded {
+    border-color: var(--store-ice-dim);
+    transform: scale(1.05);
+}
+
+/* Style des boutons radio */
+.uk-radio {
+    background: rgba(0,0,0,0.5) !important;
+    border: 1px solid var(--store-border) !important;
+    transition: 0.2s !important;
+    width: 20px !important;
+    height: 20px !important;
+    margin-top: 12px !important;
+    cursor: pointer;
+}
+.uk-radio:checked {
+    background-color: var(--store-ice) !important;
+    border-color: var(--store-ice) !important;
+    box-shadow: 0 0 10px var(--store-glow) !important;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg viewBox='0 0 16 16' fill='black' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='8' cy='8' r='3'/%3e%3c/svg%3e") !important;
+}
+.uk-radio:focus { outline: none !important; }
+
+/* ── Responsive ── */
+@media (max-width: 959px) {
+    .Pane-content .uk-grid { margin-top: 20px; }
+    .myaccount-nav { margin-bottom: 30px; }
+    .Pane-content h4.uk-h4 { text-align: center; }
+}

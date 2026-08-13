@@ -1,0 +1,514 @@
+/* ══════════════════════════════════════════════════════════
+   ARMORY.CSS — Celestia-WoW 2026
+   Modernisation du profil Armurerie (Joueur & Équipement)
+   ══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Outfit:wght@300;400;600;700&display=swap');
+
+:root {
+    --store-ice: #00e1ff;
+    --store-ice-dim: #008ba3;
+    --store-glow: rgba(0, 225, 255, 0.25);
+    --store-bg: #02050a;
+    --store-border: rgba(255, 255, 255, 0.08);
+    --font-title: 'Cinzel', serif;
+    --font-body: 'Outfit', sans-serif;
+    
+    /* Couleurs de rareté WoW officielles */
+    --q0: #9d9d9d; /* Poor */
+    --q1: #ffffff; /* Common */
+    --q2: #1eff00; /* Uncommon */
+    --q3: #0070dd; /* Rare */
+    --q4: #a335ee; /* Epic */
+    --q5: #ff8000; /* Legendary */
+    --q6: #e6cc80; /* Artifact */
+    --q7: #00ccff; /* Heirloom */
+}
+
+/* ═══════════════════════════════════════
+   HERO (En-tête du profil)
+═══════════════════════════════════════ */
+.pv-hero {
+    position: relative;
+    background: linear-gradient(160deg, rgba(10,18,35,0.95) 0%, rgba(4,8,15,1) 100%);
+    border-bottom: 1px solid var(--store-border);
+    padding: 100px 40px 40px; /* Espace pour la navbar */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    font-family: var(--font-body);
+    overflow: hidden;
+}
+.pv-hero-overlay {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at top center, rgba(0, 225, 255, 0.05) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+/* Bouton Retour */
+.pv-back-btn {
+    position: absolute;
+    top: 100px; left: 30px;
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--store-ice);
+    text-decoration: none;
+    font-family: var(--font-title);
+    font-size: 0.95rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    padding: 8px 16px; border-radius: 4px;
+    border: 1px solid var(--store-ice-dim);
+    background: rgba(0, 225, 255, 0.05);
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+.pv-back-btn:hover {
+    background: rgba(0, 225, 255, 0.15);
+    border-color: var(--store-ice); color: #fff;
+    box-shadow: 0 0 15px var(--store-glow); text-decoration: none;
+    transform: translateX(-3px);
+}
+
+/* Infos Joueur */
+.pv-hero-body {
+    display: flex; align-items: center; justify-content: center; gap: 24px; z-index: 2; flex-wrap: wrap; text-align: center;
+}
+.pv-hero-avatar-img {
+    width: 80px; height: 80px; border-radius: 50%;
+    border: 2px solid var(--store-ice);
+    box-shadow: 0 0 20px var(--store-glow);
+    background: #000; padding: 4px;
+    object-fit: cover;
+}
+.pv-hero-name {
+    font-family: var(--font-title); font-size: 2.8rem; font-weight: 700;
+    color: #fff; margin: 0 0 8px; text-transform: uppercase; letter-spacing: 2px;
+    text-shadow: 0 0 15px var(--store-glow);
+}
+.pv-hero-meta {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    color: #94a3b8; font-size: 1.05rem; font-weight: 600;
+}
+.pv-meta-icon { width: 24px; height: 24px; border-radius: 4px; border: 1px solid var(--store-border); }
+.pv-sep { color: rgba(255,255,255,0.2); }
+.pv-hero-meta strong { color: var(--store-ice); }
+
+/* Statistiques (Bento style) */
+.pv-hero-stats {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; margin-top: 10px; z-index: 2;
+}
+.pv-stat {
+    background: rgba(255,255,255,0.03); border: 1px solid var(--store-border);
+    padding: 12px 20px; border-radius: 8px;
+    display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    transition: background 0.2s;
+}
+.pv-stat:hover { background: rgba(0, 225, 255, 0.03); border-color: var(--store-ice-dim); }
+.pv-stat i { font-size: 1.6rem; filter: drop-shadow(0 0 8px rgba(0,0,0,0.5)); }
+.pv-stat > div { display: flex; flex-direction: column; text-align: left; }
+.pv-stat-val { font-family: var(--font-title); font-size: 1.3rem; font-weight: 800; color: #fff; line-height: 1.2; }
+.pv-stat-lbl { font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;}
+
+/* ═══════════════════════════════════════
+   ZONE ÉQUIPEMENT (Background + Layout)
+═══════════════════════════════════════ */
+.pv-equip-wrap {
+    position: relative; background-size: cover; background-position: center top; padding: 60px 20px 80px; font-family: var(--font-body);
+}
+.pv-equip-wrap::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(2,5,10,0.95) 0%, rgba(2,5,10,0.7) 40%, rgba(2,5,10,0.98) 100%);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); /* Floute l'image de fond de la race */
+}
+.pv-equip-container { position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; }
+.pv-panel { display: flex; justify-content: space-between; align-items: stretch; flex-wrap: nowrap; position: relative; z-index: 1; }
+.pv-col { display: flex; flex-direction: column; gap: 4px; width: 280px; position: relative; z-index: 1; }
+
+/* ═══════════════════════════════════════
+   OBJETS ET ICÔNES
+═══════════════════════════════════════ */
+.pv-item { display: flex; align-items: center; gap: 14px; position: relative; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.18s; min-height: 64px; }
+.pv-item:hover { background: rgba(0, 225, 255, 0.04); border-radius: 6px; border-color: transparent; }
+.pv-item-left { justify-content: flex-end; text-align: right; }
+.pv-item-right { justify-content: flex-start; text-align: left; }
+
+/* Conteneur d'icône */
+.pv-item-icon-wrap, .pv-weapon-icon {
+    position: relative; width: 48px; height: 48px; flex-shrink: 0;
+}
+.pv-weapon-icon { width: 56px; height: 56px; }
+
+/* Masquer les anciens cadres pixellisés (frame) */
+.armory-slot-frame { display: none !important; }
+
+/* Nouvelles Icônes Modernes */
+.armory-slot-icon, .pv-weapon-img {
+    width: 100%; height: 100%; border-radius: 6px;
+    border: 1px solid var(--store-border);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+    background: rgba(0,0,0,0.5);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    object-fit: cover;
+}
+
+/* Tooltips Wowhead */
+.pv-item-link { display: block; width: 100%; height: 100%; position: relative; }
+.pv-tooltip-anchor { position: absolute; inset: 0; z-index: 10; display: block; cursor: pointer; }
+
+/* Hover sur les objets */
+.pv-item-link:hover .armory-slot-icon,
+.pv-item-link:hover .pv-weapon-img {
+    border-color: var(--store-ice);
+    box-shadow: 0 0 15px var(--store-glow);
+    transform: scale(1.08);
+}
+
+/* Noms des objets */
+.pv-item-name-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.pv-item-name, .pv-weapon-name {
+    font-size: 1.05rem; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: color 0.2s;
+}
+.pv-item:hover .pv-item-name { color: var(--store-ice); text-shadow: 0 0 10px var(--store-glow); }
+
+/* Emplacements Vides */
+.pv-item-empty .pv-item-name, .pv-item-empty .pv-weapon-name { color: rgba(255,255,255,0.3) !important; font-weight: 400; }
+.pv-item-empty .armory-slot-icon, .pv-item-empty .pv-weapon-img { opacity: 0.4; filter: grayscale(1); border-color: transparent; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); }
+.pv-item-empty:hover { background: transparent; }
+
+/* ═══════════════════════════════════════
+   CENTRE — PORTRAIT DU PERSONNAGE
+═══════════════════════════════════════ */
+.pv-center {
+    flex: 1; position: relative; min-height: 512px; z-index: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.pv-portrait {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 20px; padding: 24px; text-align: center;
+}
+.pv-portrait-icon-wrap {
+    position: relative;
+    display: inline-block;
+}
+.pv-portrait-race {
+    width: 130px; height: 130px; border-radius: 50%;
+    border: 2px solid var(--store-ice);
+    box-shadow: 0 0 28px var(--store-glow), 0 4px 20px rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.5);
+    object-fit: cover; padding: 3px;
+    display: block;
+}
+.pv-portrait-class {
+    width: 60px; height: 60px; border-radius: 50%;
+    border: 3px solid rgba(2,5,10,0.95);
+    box-shadow: 0 0 14px var(--store-glow), 0 3px 10px rgba(0,0,0,0.8);
+    background: rgba(2,5,10,0.9);
+    object-fit: cover; padding: 2px;
+    position: absolute;
+    bottom: -18px; right: -18px;
+}
+.pv-portrait-name {
+    font-family: var(--font-title); font-size: 5rem; font-weight: 700;
+    color: #fff; text-transform: uppercase; letter-spacing: 3px;
+    text-shadow: 0 0 24px var(--store-glow);
+    margin: 0; line-height: 1.1;
+}
+.pv-portrait-sub {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; color: #94a3b8; font-size: 3rem; font-weight: 600;
+}
+.pv-portrait-sub strong { color: var(--store-ice); }
+.pv-portrait-guild {
+    font-size: 2rem; font-family: var(--font-body); font-weight: 400;
+    color: #c8a84b; letter-spacing: 0.05em;
+}
+
+/* ═══════════════════════════════════════
+   STATS TOTALES ÉQUIPEMENT
+═══════════════════════════════════════ */
+.pv-total-stats {
+    display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px;
+    flex: 0 0 165px; align-self: stretch;
+    padding: 16px 10px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+.pv-total-left  { align-items: center; }
+.pv-total-right { align-items: center; }
+
+.pts-row {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    text-align: center;
+}
+
+.pts-label {
+    color: #4a5568; font-size: 1.25rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+.pts-value {
+    color: #1eff00; font-size: 1.5rem; font-weight: 700;
+    font-family: var(--font-title);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.pts-primary .pts-label { color: #64748b; }
+.pts-primary .pts-value { color: #e2e8f0; }
+
+/* Canvas WebGL injecté */
+.pv-model-3d { position: absolute; inset: 0; width: 100% !important; height: 100% !important; }
+.pv-model-3d canvas { width: 100% !important; height: 100% !important; display: block; outline: none; }
+
+/* Loader 3D */
+.pv-model-loader {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 14px;
+    background: rgba(2,5,10,0.55); color: var(--store-ice); font-size: 0.9rem;
+    letter-spacing: 0.1em; text-transform: uppercase; z-index: 10; pointer-events: none;
+    font-family: var(--font-title); font-weight: 700;
+}
+.pv-model-spinner {
+    width: 38px; height: 38px;
+    border: 3px solid rgba(0, 225, 255, 0.12);
+    border-top-color: var(--store-ice);
+    border-radius: 50%;
+    animation: pv-spin 0.85s linear infinite;
+    box-shadow: 0 0 15px var(--store-glow);
+}
+@keyframes pv-spin { to { transform: rotate(360deg); } }
+
+/* Contrôles 3D (Boutons sous le personnage) */
+.pv-model-controls {
+    position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 8px; z-index: 5;
+}
+.pv-ctrl-btn {
+    background: rgba(2,5,10,0.8); border: 1px solid var(--store-border);
+    border-radius: 4px; color: #94a3b8; font-size: 0.8rem; padding: 6px 14px;
+    cursor: pointer; transition: all 0.2s ease;
+    letter-spacing: 1px; text-transform: uppercase; font-family: var(--font-body); font-weight: 600;
+    backdrop-filter: blur(5px);
+}
+.pv-ctrl-btn:hover {
+    background: rgba(0, 225, 255, 0.1); border-color: var(--store-ice-dim); color: #fff;
+    box-shadow: 0 0 10px var(--store-glow);
+}
+
+/* ═══════════════════════════════════════
+   ARMES (Bottom)
+═══════════════════════════════════════ */
+.pv-weapons { display: flex; justify-content: center; flex-wrap: wrap; gap: 40px; padding: 20px; position: relative; z-index: 1; }
+.pv-weapon { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 160px; text-align: center; }
+
+/* ═══════════════════════════════════════
+   COULEURS DE RARETÉ OFFICIELLES
+═══════════════════════════════════════ */
+.q0 { color: var(--q0) !important; }
+.q1 { color: var(--q1) !important; }
+.q2 { color: var(--q2) !important; }
+.q3 { color: var(--q3) !important; }
+.q4 { color: var(--q4) !important; text-shadow: 0 0 10px rgba(163, 53, 238, 0.4) !important; }
+.q5 { color: var(--q5) !important; text-shadow: 0 0 10px rgba(255, 128, 0, 0.4) !important; }
+.q6 { color: var(--q6) !important; }
+.q7, .q8 { color: var(--q7) !important; }
+
+/* Bloquer injections Wowhead intempestives */
+.armory-slot a.q0 img:not(.armory-slot-icon),
+.armory-slot a.q1 img:not(.armory-slot-icon),
+.armory-slot a.q2 img:not(.armory-slot-icon),
+.armory-slot a.q3 img:not(.armory-slot-icon),
+.armory-slot a.q4 img:not(.armory-slot-icon),
+.armory-slot-link > a > img:not(.armory-slot-icon),
+.armory-slot div[data-wowhead] > img:not(.nwh) {
+    display: none !important;
+}
+
+/* ═══════════════════════════════════════
+   TOOLTIP ITEM CUSTOM
+═══════════════════════════════════════ */
+#ctt {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    background: linear-gradient(175deg, #1e1507 0%, #0d0a04 100%);
+    border: 1px solid #7e6b3a;
+    border-radius: 5px;
+    padding: 10px 13px 12px;
+    min-width: 210px;
+    max-width: 320px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    line-height: 1.55;
+    pointer-events: none;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.ctt-name   { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
+.ctt-ilvl   { color: #ffd100; font-size: 11px; margin-bottom: 3px; }
+.ctt-typeline {
+    display: flex; justify-content: space-between; gap: 8px;
+    color: #ffffff; font-size: 12px; margin-bottom: 2px;
+}
+.ctt-armor  { color: #ffffff; margin-bottom: 2px; }
+.ctt-dps    { color: #ffd100; font-size: 11px; margin-bottom: 2px; }
+.ctt-divider { border: none; border-top: 1px solid rgba(126,107,58,0.35); margin: 6px 0; }
+.ctt-stat         { color: #1eff00; }
+.ctt-stat-primary { color: #ffffff; }
+.ctt-spell       { color: #1eff00; margin-top: 4px; font-size: 12px; line-height: 1.45; }
+.ctt-spell-name  { color: #ffd100; font-weight: 600; }
+.ctt-trigger     { color: #ffd100; font-weight: 600; }
+.ctt-socket      { display: flex; align-items: center; gap: 6px; font-size: 12px; margin-top: 2px; }
+.ctt-sock-gem    { font-size: 13px; line-height: 1; }
+.ctt-sock-label  { color: #c0c0c0; }
+.ctt-sock-bonus         { color: #808080; font-size: 12px; margin-top: 3px; }
+.ctt-sock-bonus span    { color: #808080; }
+.ctt-sock-bonus-on      { color: #1eff00 !important; }
+.ctt-sock-bonus-on span { color: #1eff00 !important; }
+.ctt-sock-filled .ctt-sock-gem { color: #888 !important; }
+.ctt-sock-gem-name { color: #ffffff; font-size: 12px; }
+.ctt-enchant          { color: #b48aff; font-size: 12px; margin-top: 3px; }
+.ctt-sock-added-gem   { color: #b48aff !important; }
+.ctt-sock-added .ctt-sock-gem { color: #b48aff !important; }
+.ctt-set-name    { color: #ffd100; font-weight: 700; font-size: 13px; margin-top: 2px; }
+.ctt-set-bonus   { color: #808080; font-size: 12px; margin-top: 2px; line-height: 1.4; }
+.ctt-set-on      { color: #1eff00; }
+.ctt-set-thr     { color: #ffd100; }
+.ctt-req     { color: #ff3030; margin-top: 7px; font-size: 12px; }
+.ctt-item-id { color: #808080; font-size: 11px; margin-top: 2px; }
+
+/* ═══════════════════════════════════════
+   RÉPUTATIONS
+═══════════════════════════════════════ */
+.pv-reputation-wrap {
+    background: linear-gradient(180deg, rgba(2,5,10,0.98) 0%, rgba(4,8,15,1) 100%);
+    border-top: 1px solid var(--store-border);
+}
+.pv-reputation {
+    max-width: 1200px; margin: 0 auto; padding: 40px 20px 60px;
+    font-family: var(--font-body);
+}
+.pv-reputation-title {
+    font-family: var(--font-title); color: var(--store-ice);
+    text-transform: uppercase; letter-spacing: 3px; font-size: 1.1rem;
+    margin: 0 0 24px; display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.pv-reputation-title i { font-size: 1rem; opacity: 0.8; }
+.pv-rep-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 8px;
+}
+.pv-rep-item {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--store-border);
+    border-radius: 8px; padding: 12px 16px;
+    transition: background 0.2s, border-color 0.2s;
+}
+.pv-rep-item:hover { background: rgba(0,225,255,0.03); border-color: rgba(0,225,255,0.15); }
+.pv-rep-name { font-size: 1rem; font-weight: 600; color: #e2e8f0; line-height: 1.3; }
+.pv-rep-rank { font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
+.pv-rep-standing { font-family: var(--font-title); font-size: 0.85rem; font-weight: 700; white-space: nowrap; }
+.rep-exalted  { color: #ffd100; }
+.rep-revered  { color: #a335ee; }
+.rep-honored  { color: #0070dd; }
+.rep-friendly { color: #1eff00; }
+
+/* ═══════════════════════════════════════
+   ARBRE DE TALENTS
+═══════════════════════════════════════ */
+.pv-talents-wrap {
+    background: linear-gradient(180deg, rgba(2,5,10,0.98) 0%, rgba(4,8,15,1) 100%);
+    border-top: 1px solid var(--store-border);
+}
+.pv-talents {
+    max-width: 1200px; margin: 0 auto; padding: 40px 20px 60px;
+    font-family: var(--font-body);
+}
+.pv-talents-title {
+    font-family: var(--font-title); color: var(--store-ice);
+    text-transform: uppercase; letter-spacing: 3px; font-size: 1.1rem;
+    margin: 0 0 24px; display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.tt-spec-nav {
+    display: flex; justify-content: center; gap: 12px; margin-bottom: 28px;
+}
+.tt-spec-btn {
+    background: rgba(255,255,255,0.04); border: 1px solid var(--store-border);
+    color: #64748b; padding: 8px 22px; border-radius: 6px; cursor: pointer;
+    font-family: var(--font-body); font-size: 0.9rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s;
+}
+.tt-spec-btn.active, .tt-spec-btn:hover {
+    background: rgba(0,225,255,0.08); border-color: var(--store-ice-dim); color: var(--store-ice);
+}
+.tt-spec-hidden { display: none; }
+
+.tt-trees {
+    display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+}
+.tt-tree {
+    background: rgba(255,255,255,0.025); border: 1px solid var(--store-border);
+    border-radius: 10px; padding: 12px;
+    display: flex; flex-direction: column; gap: 10px;
+}
+.tt-tree-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.06);
+    gap: 16px;
+}
+.tt-tree-name {
+    font-family: var(--font-title); font-size: 0.85rem; font-weight: 700;
+    color: #e2e8f0; text-transform: uppercase; letter-spacing: 1.5px;
+}
+.tt-tree-pts {
+    font-family: var(--font-title); font-size: 0.95rem; font-weight: 800;
+    color: var(--store-ice); white-space: nowrap;
+}
+.tt-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 42px);
+    grid-template-rows: repeat(11, 42px);
+    gap: 3px;
+}
+.tt-cell {
+    position: relative; width: 42px; height: 42px;
+    border-radius: 4px; overflow: hidden;
+    border: 1px solid transparent;
+    transition: border-color 0.15s, transform 0.15s;
+}
+.tt-cell:hover { transform: scale(1.08); z-index: 2; }
+.tt-icon { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tt-cell:not(.tt-allocated) .tt-icon { filter: grayscale(1) brightness(0.28); }
+.tt-allocated {
+    border-color: rgba(0,225,255,0.35);
+    box-shadow: 0 0 6px rgba(0,225,255,0.2);
+}
+.tt-rank {
+    position: absolute; bottom: 1px; right: 2px;
+    font-size: 10px; font-weight: 800; color: #fff;
+    text-shadow: 1px 1px 2px #000, -1px -1px 2px #000;
+    line-height: 1; pointer-events: none;
+}
+.tt-rank-max { color: #ffd100; }
+
+/* ═══════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════ */
+@media (max-width: 959px) {
+    .pv-hero { padding-top: 120px; }
+    .pv-back-btn { top: 70px; left: 20px; }
+    .pv-panel { flex-direction: column; flex-wrap: wrap; gap: 40px; }
+    .pv-col { width: 100%; align-items: center; }
+    .pv-item-left, .pv-item-right { flex-direction: column; text-align: center; justify-content: center; gap: 10px; width: 100px; display: inline-flex; border: none; }
+    .pv-item-name-wrap { display: none; /* Masque les noms sur mobile pour aérer */ }
+    .pv-col { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+    .pv-center { min-height: 400px; width: 100%; order: -1; margin-bottom: 20px; }
+    .pv-total-stats { flex: 0 0 100%; flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 18px; padding: 12px; }
+    .pv-total-left, .pv-total-right { align-items: center; border: none; background: transparent; }
+    .pv-hero-body { flex-direction: column; }
+    .pv-model-controls { position: relative; bottom: auto; transform: none; left: auto; margin-top: 10px; }
+}

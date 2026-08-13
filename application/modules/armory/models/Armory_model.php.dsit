@@ -1,0 +1,157 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+class armory_model extends CI_Model
+{
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
+    /* ════════════════════════════════════════════════════
+       JOUEUR
+    ════════════════════════════════════════════════════ */
+
+    public function getPlayerInfo($MultiRealm, $id)
+    {
+        return $MultiRealm->select('*')->where('guid', $id)->get('characters');
+    }
+
+    /**
+     * Récupère TOUT l'équipement d'un joueur en UNE seule requête.
+     * Avant : 19 requêtes séparées — Après : 1 requête.
+     *
+     * @return array [slot => itemEntry]
+     */
+    public function getAllEquipment($MultiRealm, $id): array
+    {
+        $rows = $MultiRealm
+            ->select('a.slot, b.itemEntry')
+            ->from('character_inventory a')
+            ->join('item_instance b', 'a.item = b.guid', 'left')
+            ->where('a.guid', $id)
+            ->where('a.bag', 0)
+            ->where_in('a.slot', [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,19])
+            ->get()
+            ->result();
+
+        $map = [];
+        foreach ($rows as $row) {
+            if ($row->itemEntry) {
+                $map[(int) $row->slot] = (int) $row->itemEntry;
+            }
+        }
+        return $map;
+    }
+
+    /**
+     * Récupère les noms d'icônes pour une liste d'itemEntry
+     * via la jointure item_template → itemdisplayinfo_dbc
+     * Retourne [itemEntry => iconName]
+     */
+    public function getItemIcons(array $itemIds, int $realmid = 1): array
+    {
+        if (empty($itemIds)) return [];
+
+        $in = implode(',', array_map('intval', $itemIds));
+
+        $sql = "
+            SELECT it.entry, LOWER(d.InventoryIcon_1) AS icon
+            FROM R{$realmid}_World.item_template it
+            JOIN R1_World.itemdisplayinfo_dbc d ON it.displayid = d.ID
+            WHERE it.entry IN ({$in})
+              AND d.InventoryIcon_1 IS NOT NULL
+              AND d.InventoryIcon_1 != ''
+        ";
+
+        $rows = $this->db->query($sql)->result();
+        $map  = [];
+        foreach ($rows as $row) {
+            $map[(int) $row->entry] = $row->icon;
+        }
+        return $map;
+    }
+
+    /**
+     * Récupère icônes ET noms (frFR avec fallback EN) en une seule requête.
+     * Retourne [itemEntry => ['icon' => '...', 'name' => '...']]
+     */
+    public function getItemData(array $itemIds, int $realmid = 1): array
+    {
+        if (empty($itemIds)) return [];
+
+        $in = implode(',', array_map('intval', $itemIds));
+
+        $sql = "
+            SELECT
+                it.entry,
+                it.Quality,
+                LOWER(d.InventoryIcon_1) AS icon,
+                COALESCE(NULLIF(loc.Name, ''), it.name) AS name
+            FROM R{$realmid}_World.item_template it
+            LEFT JOIN R1_World.itemdisplayinfo_dbc d ON it.displayid = d.ID
+            LEFT JOIN R{$realmid}_World.item_template_locale loc
+                ON loc.ID = it.entry AND loc.locale = 'frFR'
+            WHERE it.entry IN ({$in})
+        ";
+
+        $rows = $this->db->query($sql)->result();
+        $map  = [];
+        foreach ($rows as $row) {
+            $map[(int) $row->entry] = [
+                'icon'    => $row->icon ?? null,
+                'name'    => $row->name ?? null,
+                'quality' => (int) ($row->Quality ?? 1),
+            ];
+        }
+        return $map;
+    }
+
+    public function getLogros($MultiRealm, $id)
+    {
+        return $MultiRealm->select('guid')->where('guid', $id)->get('character_achievement')->num_rows();
+    }
+
+    /* ════════════════════════════════════════════════════
+       RECHERCHE
+    ════════════════════════════════════════════════════ */
+
+    public function searchchar($MultiRealm, $search)
+    {
+        return $MultiRealm
+            ->select('guid, name, race, class, level')
+            ->like('LOWER(name)', strtolower($search))
+            ->order_by('level', 'DESC')
+            ->limit(50)
+            ->get('characters');
+    }
+
+    public function searchguild($MultiRealm, $search)
+    {
+        return $MultiRealm
+            ->select('guildid, name, motd')
+            ->like('LOWER(name)', strtolower($search))
+            ->limit(50)
+            ->get('guild');
+    }
+
+    /* ════════════════════════════════════════════════════
+       GUILDE
+    ════════════════════════════════════════════════════ */
+
+    public function getGuildInfo($MultiRealm, $guildid)
+    {
+        return $MultiRealm->select('*')->where('guildid', $guildid)->get('guild');
+    }
+
+    public function getGuildMembers($MultiRealm, $guildid)
+    {
+        return $MultiRealm
+            ->select('a.guid, a.name, a.race, a.class, a.level, b.guildid')
+            ->from('characters a')
+            ->join('guild_member b', 'a.guid = b.guid', 'left')
+            ->where('b.guildid', $guildid)
+            ->order_by('a.level', 'DESC')
+            ->get();
+    }
+}

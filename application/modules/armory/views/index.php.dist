@@ -1,0 +1,187 @@
+<link rel="stylesheet" href="<?= base_url('application/modules/armory/assets/css/armory.css'); ?>">
+<script>const wowhead_tooltips = { "colorlinks": true, "iconizelinks": false, "renamelinks": false };</script>
+<script src="https://fr.wowhead.com/widgets/power.js"></script>
+
+<?php foreach ($realms as $charsMultiRealm):
+    $MultiRealm = $this->wowrealm->getRealmConnectionData($charsMultiRealm->id);
+    $playerResult = $this->armory_model->getPlayerInfo($MultiRealm, $id)->result();
+    if (empty($playerResult)) continue;
+    $info     = $playerResult[0];
+    $items    = $this->armory_model->getAllEquipment($MultiRealm, $id);
+    $itemData = $this->armory_model->getItemData(array_values($items), $charsMultiRealm->id);
+
+    $slotIcons = [
+        0=>'head.gif', 1=>'neck.gif', 2=>'shoulders.gif', 3=>'chest.gif',
+        4=>'chest.gif', 5=>'waist.gif', 6=>'legs.gif', 7=>'feet.gif',
+        8=>'wrists.gif', 9=>'hands.gif', 10=>'finger.gif', 11=>'finger.gif',
+        12=>'trinket.gif', 13=>'trinket.gif', 14=>'neck.gif',
+        15=>'mainhand.gif', 16=>'offhand.gif', 17=>'ranged.gif', 18=>'tabard.gif',
+    ];
+    $slotLabels = [
+        0=>'Tête', 1=>'Cou', 2=>'Épaules', 3=>'Chemise', 4=>'Torse',
+        5=>'Ceinture', 6=>'Jambes', 7=>'Pieds', 8=>'Poignets', 9=>'Mains',
+        10=>'Anneau 1', 11=>'Anneau 2', 12=>'Bijou 1', 13=>'Bijou 2',
+        14=>'Cape', 15=>'Main droite', 16=>'Main gauche', 17=>'Distance', 18=>'Tabard',
+    ];
+    $slotsLeft   = [0, 1, 2, 14, 4, 3, 18, 8];
+    $slotsRight  = [9, 5, 6, 7, 10, 11, 12, 13];
+    $slotsBottom = [15, 16, 17];
+    $frameUrl    = base_url('application/modules/armory/assets/images/default/item_frame.png');
+    $defaultDir  = base_url('application/modules/armory/assets/images/default/');
+    $zoneBg      = base_url('application/modules/armory/assets/images/' . $info->race . '.png');
+    $classIcon   = base_url('assets/images/class/' . $this->wowgeneral->getClassIcon($info->class));
+    $raceIcon    = base_url('assets/images/races/' . $this->wowgeneral->getRaceIcon($info->race));
+?>
+
+<!-- HERO -->
+<div class="pv-hero">
+    <div class="pv-hero-overlay"></div>
+    <a href="<?= base_url('armory'); ?>" class="pv-back-btn">
+        <i class="fas fa-arrow-left"></i> Recherche
+    </a>
+    <div class="pv-hero-body">
+        <div class="pv-hero-avatar">
+            <img src="<?= $classIcon; ?>" alt="" class="pv-hero-avatar-img">
+        </div>
+        <div class="pv-hero-info">
+            <h1 class="pv-hero-name"><?= htmlspecialchars($info->name); ?></h1>
+            <div class="pv-hero-meta">
+                <img src="<?= $raceIcon; ?>" alt="" class="pv-meta-icon">
+                <span><?= $this->wowgeneral->getRaceName($info->race); ?></span>
+                <span class="pv-sep">·</span>
+                <img src="<?= $classIcon; ?>" alt="" class="pv-meta-icon">
+                <span><?= $this->wowgeneral->getClassName($info->class); ?></span>
+                <span class="pv-sep">·</span>
+                <span>Niveau <strong><?= $info->level; ?></strong></span>
+            </div>
+        </div>
+    </div>
+    <div class="pv-hero-stats">
+        <div class="pv-stat">
+            <i class="fas fa-heart" style="color:#e05555"></i>
+            <div><span class="pv-stat-val"><?= number_format($info->health, 0, ',', ' '); ?></span><span class="pv-stat-lbl">Santé</span></div>
+        </div>
+        <div class="pv-stat">
+            <i class="fas fa-shield-halved" style="color:#5588e0"></i>
+            <div><span class="pv-stat-val"><?= number_format($info->totalHonorPoints, 0, ',', ' '); ?></span><span class="pv-stat-lbl">Honneur</span></div>
+        </div>
+        <div class="pv-stat">
+            <i class="fas fa-khanda" style="color:#e0a855"></i>
+            <div><span class="pv-stat-val"><?= number_format($info->arenaPoints, 0, ',', ' '); ?></span><span class="pv-stat-lbl">Arène</span></div>
+        </div>
+        <div class="pv-stat">
+            <i class="fas fa-trophy" style="color:#a855e0"></i>
+            <div><span class="pv-stat-val"><?= $this->armory_model->getLogros($MultiRealm, $id); ?></span><span class="pv-stat-lbl">Succès</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- ÉQUIPEMENT -->
+<div class="pv-equip-wrap" style="background-image:url('<?= $zoneBg; ?>')">
+    <div class="pv-equip-container">
+        <div class="pv-panel">
+
+            <!-- Colonne gauche — items alignés à droite -->
+            <div class="pv-col pv-col-left">
+                <?php foreach ($slotsLeft as $slot):
+                    $ie      = $items[$slot] ?? null;
+                    $data    = $ie ? ($itemData[$ie] ?? []) : [];
+                    $icon    = $data['icon'] ?? null;
+                    $name    = $data['name'] ?? $slotLabels[$slot];
+                    $quality = $data['quality'] ?? 1;
+                    $qClass  = 'q' . $quality;
+                    $src     = $ie ? ($icon ? 'https://wow.zamimg.com/images/wow/icons/large/'.$icon.'.jpg' : $defaultDir.$slotIcons[$slot]) : $defaultDir.$slotIcons[$slot];
+                ?>
+                <div class="pv-item pv-item-left <?= $ie ? '' : 'pv-item-empty'; ?>">
+                    <div class="pv-item-name-wrap">
+                        <span class="pv-item-name <?= $ie ? $qClass : ''; ?>"><?= $ie ? htmlspecialchars($name) : $slotLabels[$slot]; ?></span>
+                    </div>
+                    <div class="pv-item-icon-wrap">
+                        <?php if ($ie): ?>
+                            <a href="https://fr.wowhead.com/wotlk/item=<?= $ie; ?>" class="pv-item-link"><span class="pv-tooltip-anchor" rel="item=<?= $ie; ?>"></span>
+                                <img src="<?= $frameUrl; ?>" class="armory-slot-frame" alt="">
+                                <img src="<?= $src; ?>" class="armory-slot-icon" alt="<?= $slotLabels[$slot]; ?>">
+                            </a>
+                        <?php else: ?>
+                            <img src="<?= $frameUrl; ?>" class="armory-slot-frame armory-slot-empty" alt="">
+                            <img src="<?= $src; ?>" class="armory-slot-icon armory-slot-icon-empty" alt="<?= $slotLabels[$slot]; ?>">
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+
+            <!-- Centre BG -->
+            <div class="pv-center">
+                <div class="pv-center-bg" style="background-image:url('<?= $zoneBg; ?>')"></div>
+                <div class="pv-center-vignette"></div>
+                <div class="pv-center-label">
+                    <?= $this->wowgeneral->getRaceName($info->race); ?>
+                    <span class="pv-sep">·</span>
+                    <?= $this->wowgeneral->getClassName($info->class); ?>
+                </div>
+            </div>
+
+            <!-- Colonne droite — items alignés à gauche -->
+            <div class="pv-col pv-col-right">
+                <?php foreach ($slotsRight as $slot):
+                    $ie      = $items[$slot] ?? null;
+                    $data    = $ie ? ($itemData[$ie] ?? []) : [];
+                    $icon    = $data['icon'] ?? null;
+                    $name    = $data['name'] ?? $slotLabels[$slot];
+                    $quality = $data['quality'] ?? 1;
+                    $qClass  = 'q' . $quality;
+                    $src     = $ie ? ($icon ? 'https://wow.zamimg.com/images/wow/icons/large/'.$icon.'.jpg' : $defaultDir.$slotIcons[$slot]) : $defaultDir.$slotIcons[$slot];
+                ?>
+                <div class="pv-item pv-item-right <?= $ie ? '' : 'pv-item-empty'; ?>">
+                    <div class="pv-item-icon-wrap">
+                        <?php if ($ie): ?>
+                            <a href="https://fr.wowhead.com/wotlk/item=<?= $ie; ?>" class="pv-item-link"><span class="pv-tooltip-anchor" rel="item=<?= $ie; ?>"></span>
+                                <img src="<?= $frameUrl; ?>" class="armory-slot-frame" alt="">
+                                <img src="<?= $src; ?>" class="armory-slot-icon" alt="<?= $slotLabels[$slot]; ?>">
+                            </a>
+                        <?php else: ?>
+                            <img src="<?= $frameUrl; ?>" class="armory-slot-frame armory-slot-empty" alt="">
+                            <img src="<?= $src; ?>" class="armory-slot-icon armory-slot-icon-empty" alt="<?= $slotLabels[$slot]; ?>">
+                        <?php endif; ?>
+                    </div>
+                    <div class="pv-item-name-wrap">
+                        <span class="pv-item-name <?= $ie ? $qClass : ''; ?>"><?= $ie ? htmlspecialchars($name) : $slotLabels[$slot]; ?></span>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+
+        </div><!-- /.pv-panel -->
+
+        <!-- Armes -->
+        <div class="pv-weapons">
+            <?php foreach ($slotsBottom as $slot):
+                $ie      = $items[$slot] ?? null;
+                $data    = $ie ? ($itemData[$ie] ?? []) : [];
+                $icon    = $data['icon'] ?? null;
+                $name    = $data['name'] ?? $slotLabels[$slot];
+                $quality = $data['quality'] ?? 1;
+                $qClass  = 'q' . $quality;
+                $src     = $ie ? ($icon ? 'https://wow.zamimg.com/images/wow/icons/large/'.$icon.'.jpg' : $defaultDir.$slotIcons[$slot]) : $defaultDir.$slotIcons[$slot];
+            ?>
+            <div class="pv-weapon <?= $ie ? '' : 'pv-item-empty'; ?>">
+                <div class="pv-weapon-icon">
+                    <?php if ($ie): ?>
+                        <a href="https://fr.wowhead.com/wotlk/item=<?= $ie; ?>" class="pv-item-link">
+                            <span class="pv-tooltip-anchor" rel="item=<?= $ie; ?>"></span>
+                            <img src="<?= $src; ?>" class="pv-weapon-img" alt="<?= $slotLabels[$slot]; ?>">
+                        </a>
+                    <?php else: ?>
+                        <img src="<?= $src; ?>" class="pv-weapon-img armory-slot-icon-empty" alt="<?= $slotLabels[$slot]; ?>">
+                    <?php endif; ?>
+                </div>
+                <span class="pv-weapon-name <?= $ie ? $qClass : ''; ?>"><?= $ie ? htmlspecialchars($name) : $slotLabels[$slot]; ?></span>
+            </div>
+            <?php endforeach; ?>
+        </div>
+
+    </div>
+</div>
+
+<?php endforeach; ?>
