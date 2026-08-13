@@ -683,7 +683,7 @@ function cwp_referral_row_data($tk, $webDB, $reward_sponsor_coupon, $coupon_dura
           <div style="color:var(--text-lo)">Filleul de <strong style="color:#00e1ff"><?= htmlspecialchars($my_sponsor_token->sponsor_username); ?></strong></div>
           <?php $rs_sb = $my_sponsor_token->referral_status ?? 'pending'; ?>
           <?php if ($rs_sb === 'rewarded'): ?>
-          <div style="margin-top:.35rem;color:#7dd89a;font-size:.78rem"><i class="fas fa-check-circle" style="margin-right:.25rem"></i>Coupon boutique obtenu !</div>
+          <div style="margin-top:.35rem;color:#7dd89a;font-size:.78rem"><i class="fas fa-circle-check" style="margin-right:.25rem"></i>Coupon boutique obtenu !</div>
           <?php elseif ($rs_sb === 'eligible'): ?>
           <div style="margin-top:.35rem;color:#c8a84b;font-size:.78rem"><i class="fas fa-clock" style="margin-right:.25rem"></i>Attribution en cours…</div>
           <?php else: ?>
@@ -702,7 +702,7 @@ function cwp_referral_row_data($tk, $webDB, $reward_sponsor_coupon, $coupon_dura
     <div class="cwp__card">
       <div class="cwp__card-hd">
         <div class="cwp__card-hd-l"><i class="fas fa-id-card"></i><h2><?= $this->lang->line('panel_account_details'); ?></h2></div>
-        <a href="<?= base_url('settings'); ?>" class="cwp__btn"><i class="fas fa-user-edit"></i><?= $this->lang->line('button_account_settings'); ?></a>
+        <a href="<?= base_url('settings'); ?>" class="cwp__btn"><i class="fas fa-user-pen"></i><?= $this->lang->line('button_account_settings'); ?></a>
       </div>
       <div class="cwp__card-bd">
         <table class="cwp__info">
@@ -716,7 +716,7 @@ function cwp_referral_row_data($tk, $webDB, $reward_sponsor_coupon, $coupon_dura
               <td class="cwp__info-val"><?= $this->wowauth->getEmailID($sess_id); ?></td>
             </tr>
             <tr>
-              <td class="cwp__info-lbl"><i class="fas fa-map-marker-alt"></i><?= $this->lang->line('panel_last_ip'); ?></td>
+              <td class="cwp__info-lbl"><i class="fas fa-location-dot"></i><?= $this->lang->line('panel_last_ip'); ?></td>
               <td class="cwp__info-val"><?= $this->user_model->getLastIp($sess_id); ?></td>
             </tr>
           </tbody>
@@ -729,10 +729,10 @@ function cwp_referral_row_data($tk, $webDB, $reward_sponsor_coupon, $coupon_dura
         <div class="cwp__card-hd-l"><i class="fas fa-helmet-battle"></i><h2><?= $this->lang->line('panel_chars_list'); ?></h2></div>
         <div class="cwp__card-hd-r">
           <button class="cwp__btn cwp__btn--danger" onclick="cwpOpen('cwpUnstuckOverlay')">
-            <i class="fas fa-life-ring"></i>Personnage bloqué
+            <i class="fas fa-person-falling-burst"></i>Personnage bloqué
           </button>
           <button class="cwp__btn cwp__btn--warning" onclick="cwpOpen('cwpTransferOverlay')">
-            <i class="fas fa-exchange-alt"></i>Transférer un personnage
+            <i class="fas fa-right-left"></i>Transférer un personnage
           </button>
         </div>
       </div>
@@ -771,7 +771,7 @@ function cwp_referral_row_data($tk, $webDB, $reward_sponsor_coupon, $coupon_dura
               <thead>
                 <tr>
                   <th><span class="th-icon"><i class="fas fa-user"></i></span>Nom</th>
-                  <th><span class="th-icon"><i class="fas fa-shield-alt"></i></span>Race / Classe</th>
+                  <th><span class="th-icon"><i class="fas fa-shield-halved"></i></span>Race / Classe</th>
                   <th><span class="th-icon"><i class="fas fa-arrow-up"></i></span>Niveau</th>
                   <th><span class="th-icon"><i class="fas fa-clock"></i></span>Temps de jeu</th>
                   <th><span class="th-icon"><i class="fas fa-coins"></i></span>Monnaie</th>
@@ -945,7 +945,7 @@ function cwp_referral_row_data($tk, $webDB, $reward_sponsor_coupon, $coupon_dura
           <div style="margin-bottom:.8rem">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem">
               <span style="font-size:.88rem;color:<?= $_cond_t ? '#7dd89a' : 'var(--text-mid)'; ?>">
-                <?php if ($_cond_t): ?><i class="fas fa-check-circle" style="margin-right:.4rem;color:#7dd89a"></i><?php else: ?><i class="fas fa-hourglass-half" style="margin-right:.4rem"></i><?php endif; ?>Temps de jeu total
+                <?php if ($_cond_t): ?><i class="fas fa-circle-check" style="margin-right:.4rem;color:#7dd89a"></i><?php else: ?><i class="fas fa-hourglass-half" style="margin-right:.4rem"></i><?php endif; ?>Temps de jeu total
               </span>
               <span style="font-size:.85rem;color:<?= $_cond_t ? '#7dd89a' : 'var(--text-lo)'; ?>"><?= $fil_min_glb; ?>&nbsp;min / 180&nbsp;min</span>
             </div>
@@ -958,7 +958,7 @@ function cwp_referral_row_data($tk, $webDB, $reward_sponsor_coupon, $coupon_dura
           <div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem">
               <span style="font-size:.88rem;color:<?= $_cond_l ? '#7dd89a' : 'var(--text-mid)'; ?>">
-                <?php if ($_cond_l): ?><i class="fas fa-check-circle" style="margin-right:.4rem;color:#7dd89a"></i><?php else: ?><i class="fas fa-user-shield" style="margin-right:.4rem"></i><?php endif; ?>Personnages niveau ≥ 20
+                <?php if ($_cond_l): ?><i class="fas fa-circle-check" style="margin-right:.4rem;color:#7dd89a"></i><?php else: ?><i class="fas fa-user-shield" style="margin-right:.4rem"></i><?php endif; ?>Personnages niveau ≥ 20
               </span>
               <span style="font-size:.85rem;color:<?= $_cond_l ? '#7dd89a' : 'var(--text-lo)'; ?>"><?= $fil_lvl20_glb; ?> / 2</span>
             </div>
@@ -984,7 +984,7 @@ function cwp_referral_row_data($tk, $webDB, $reward_sponsor_coupon, $coupon_dura
     <div class="cwp__card cwp__card--referral-hist" id="cwpReferralHistory">
       <div class="cwp__card-hd">
         <div class="cwp__card-hd-l">
-          <i class="fas fa-th-list" style="color:#00e1ff"></i>
+          <i class="fas fa-table-list" style="color:#00e1ff"></i>
           <h2 style="color:#fff">Historique de parrainage</h2>
         </div>
         <span class="cwp-dp-badge"><i class="fas fa-key"></i><?= count($my_tokens); ?> token(s)</span>
@@ -1000,8 +1000,8 @@ function cwp_referral_row_data($tk, $webDB, $reward_sponsor_coupon, $coupon_dura
                 <th><span class="th-icon"><i class="fas fa-hourglass-end"></i></span>Exp. token</th>
                 <th><span class="th-icon"><i class="fas fa-tag"></i></span>Coupon boutique</th>
                 <th><span class="th-icon"><i class="fas fa-horse"></i></span>Monture</th>
-                <th><span class="th-icon"><i class="fas fa-calendar-times"></i></span>Exp. coupon</th>
-                <th><span class="th-icon"><i class="fas fa-dot-circle"></i></span>Statut</th>
+                <th><span class="th-icon"><i class="fas fa-calendar-xmark"></i></span>Exp. coupon</th>
+                <th><span class="th-icon"><i class="fas fa-circle-dot"></i></span>Statut</th>
                 <th></th>
               </tr>
             </thead>
@@ -1132,7 +1132,7 @@ function cwp_referral_row_data($tk, $webDB, $reward_sponsor_coupon, $coupon_dura
                     <input type="hidden" name="delete_token" value="<?= htmlspecialchars($tk->token); ?>">
                     <input type="hidden" name="referral_nonce" value="<?= htmlspecialchars($referral_nonce_val); ?>">
                     <button type="submit" title="Supprimer" style="background:none;border:none;cursor:pointer;padding:4px 6px;color:rgba(255,80,80,.55);transition:color .15s" onmouseover="this.style.color='rgba(255,80,80,1)'" onmouseout="this.style.color='rgba(255,80,80,.55)'">
-                      <i class="fas fa-trash-alt"></i>
+                      <i class="fas fa-trash-can"></i>
                     </button>
                   </form>
                   <?php endif; ?>
@@ -1150,14 +1150,14 @@ function cwp_referral_row_data($tk, $webDB, $reward_sponsor_coupon, $coupon_dura
   <div class="cwp-modal cwp-modal--danger">
     <div class="cwp-modal__hd">
       <div class="cwp-modal__hd-l">
-        <i class="fas fa-life-ring" style="color:var(--danger-c)"></i>
+        <i class="fas fa-person-falling-burst" style="color:var(--danger-c)"></i>
         <h3>Personnage bloqué</h3>
       </div>
-      <button class="cwp-modal__close" onclick="cwpClose('cwpUnstuckOverlay')"><i class="fas fa-times"></i></button>
+      <button class="cwp-modal__close" onclick="cwpClose('cwpUnstuckOverlay')"><i class="fas fa-xmark"></i></button>
     </div>
     <div class="cwp-modal__bd">
       <div class="cwp-modal__alert cwp-modal__alert--warn">
-        <i class="fas fa-exclamation-triangle"></i>
+        <i class="fas fa-triangle-exclamation"></i>
         <p><strong>Important —</strong> Quittez le jeu avant de valider. Votre personnage sera téléporté au point de rassemblement de faction.</p>
       </div>
       <div class="cwp-modal__field">
@@ -1175,7 +1175,7 @@ function cwp_referral_row_data($tk, $webDB, $reward_sponsor_coupon, $coupon_dura
       </div>
     </div>
     <div class="cwp-modal__ft">
-      <button class="cwp-modal__cancel" onclick="cwpClose('cwpUnstuckOverlay')"><i class="fas fa-times"></i>Annuler</button>
+      <button class="cwp-modal__cancel" onclick="cwpClose('cwpUnstuckOverlay')"><i class="fas fa-xmark"></i>Annuler</button>
       <?php if (!empty($all_chars)): ?>
       <button class="cwp-modal__submit cwp-modal__submit--danger" onclick="cwpSubmitUnstuck()"><i class="fas fa-check"></i>Valider le débloquage</button>
       <?php endif; ?>
@@ -1192,21 +1192,21 @@ function cwp_referral_row_data($tk, $webDB, $reward_sponsor_coupon, $coupon_dura
   <div class="cwp-modal cwp-modal--warning">
     <div class="cwp-modal__hd">
       <div class="cwp-modal__hd-l">
-        <i class="fas fa-exchange-alt" style="color:var(--warning-c)"></i>
+        <i class="fas fa-right-left" style="color:var(--warning-c)"></i>
         <h3>Transférer un personnage</h3>
       </div>
-      <button class="cwp-modal__close" onclick="cwpClose('cwpTransferOverlay')"><i class="fas fa-times"></i></button>
+      <button class="cwp-modal__close" onclick="cwpClose('cwpTransferOverlay')"><i class="fas fa-xmark"></i></button>
     </div>
     <div class="cwp-modal__bd">
       <div class="cwp-modal__alert cwp-modal__alert--info">
-        <i class="fas fa-info-circle"></i>
+        <i class="fas fa-circle-info"></i>
         <p>Le transfert coûte <strong><?= $TRANSFER_COST; ?> DP</strong>.<br>
         Votre solde : <span class="cwp-dp-badge"><i class="fas fa-gem"></i><?= $dp_balance; ?> DP</span>
         <?php if ($dp_balance < $TRANSFER_COST): ?><br><span style="color:#ff4d4d;font-size:1rem">⚠ Solde insuffisant.</span><?php endif; ?>
         </p>
       </div>
       <div class="cwp-modal__alert cwp-modal__alert--warn">
-        <i class="fas fa-exclamation-triangle"></i>
+        <i class="fas fa-triangle-exclamation"></i>
         <p><strong>Attention —</strong> Action <strong>irréversible</strong>. Le compte destinataire doit avoir moins de 10 personnages.</p>
       </div>
       <div class="cwp-modal__field">
@@ -1229,7 +1229,7 @@ function cwp_referral_row_data($tk, $webDB, $reward_sponsor_coupon, $coupon_dura
       </div>
     </div>
     <div class="cwp-modal__ft">
-      <button class="cwp-modal__cancel" onclick="cwpClose('cwpTransferOverlay')"><i class="fas fa-times"></i>Annuler</button>
+      <button class="cwp-modal__cancel" onclick="cwpClose('cwpTransferOverlay')"><i class="fas fa-xmark"></i>Annuler</button>
       <?php if (!empty($all_chars) && $dp_balance >= $TRANSFER_COST): ?>
       <button class="cwp-modal__submit cwp-modal__submit--warning" onclick="cwpSubmitTransfer()">
         <i class="fas fa-check"></i>Confirmer (<?= $TRANSFER_COST; ?> DP)
@@ -1262,7 +1262,7 @@ function cwp_referral_row_data($tk, $webDB, $reward_sponsor_coupon, $coupon_dura
           <p class="cwp-ref-hd-sub">Invitez vos amis &amp; gagnez des r&eacute;compenses exclusives</p>
         </div>
       </div>
-      <button class="cwp-modal__close" onclick="cwpClose('cwpReferralOverlay')"><i class="fas fa-times"></i></button>
+      <button class="cwp-modal__close" onclick="cwpClose('cwpReferralOverlay')"><i class="fas fa-xmark"></i></button>
     </div>
 
     <!-- Tabs -->
@@ -1305,7 +1305,7 @@ function cwp_referral_row_data($tk, $webDB, $reward_sponsor_coupon, $coupon_dura
       <?php endif; ?>
 
       <div class="cwp-ref-section">
-        <div class="cwp-ref-section-ttl"><i class="fas fa-tasks"></i>Comment &ccedil;a marche</div>
+        <div class="cwp-ref-section-ttl"><i class="fas fa-list-check"></i>Comment &ccedil;a marche</div>
         <div class="cwp-ref-steps">
           <div class="cwp-ref-step">
             <div class="cwp-ref-step-num">1</div>
@@ -1338,12 +1338,12 @@ function cwp_referral_row_data($tk, $webDB, $reward_sponsor_coupon, $coupon_dura
             <span><i class="fas fa-envelope"></i>&nbsp;Envoy&eacute; &agrave;&nbsp;<strong><?= htmlspecialchars($user_email); ?></strong></span>
             <span class="cwp-ref-gen-quota"><?= $tokens_today; ?>&nbsp;/&nbsp;<?= $ref_cfg_row->max_tokens_per_day ?? 5; ?>&nbsp;token(s) g&eacute;n&eacute;r&eacute;(s) aujourd&apos;hui</span>
             <?php else: ?>
-            <span class="cwp-ref-email-err"><i class="fas fa-exclamation-triangle"></i>&nbsp;E-mail invalide &mdash; mettez &agrave; jour vos param&egrave;tres.</span>
+            <span class="cwp-ref-email-err"><i class="fas fa-triangle-exclamation"></i>&nbsp;E-mail invalide &mdash; mettez &agrave; jour vos param&egrave;tres.</span>
             <?php endif; ?>
           </div>
           <?php if (!empty($user_email) && filter_var($user_email, FILTER_VALIDATE_EMAIL) && $tokens_today < ($ref_cfg_row->max_tokens_per_day ?? 5)): ?>
           <button class="cwp-ref-gen-btn cwp-ref-gen-btn--gold" onclick="cwpGenerateToken()">
-            <i class="fas fa-magic"></i>G&eacute;n&eacute;rer un token
+            <i class="fas fa-wand-magic-sparkles"></i>G&eacute;n&eacute;rer un token
           </button>
           <?php else: ?>
           <button class="cwp-ref-gen-btn" disabled style="opacity:.4;cursor:not-allowed">
@@ -1382,7 +1382,7 @@ function cwp_referral_row_data($tk, $webDB, $reward_sponsor_coupon, $coupon_dura
       <?php endif; ?>
 
       <div class="cwp-ref-section">
-        <div class="cwp-ref-section-ttl cwp-ref-section-ttl--emerald"><i class="fas fa-tasks"></i>Comment en b&eacute;n&eacute;ficier</div>
+        <div class="cwp-ref-section-ttl cwp-ref-section-ttl--emerald"><i class="fas fa-list-check"></i>Comment en b&eacute;n&eacute;ficier</div>
         <div class="cwp-ref-steps cwp-ref-steps--emerald">
           <div class="cwp-ref-step">
             <div class="cwp-ref-step-num">1</div>
@@ -1450,7 +1450,7 @@ function cwp_referral_row_data($tk, $webDB, $reward_sponsor_coupon, $coupon_dura
         </div>
         <?php if (!empty($user_email) && filter_var($user_email, FILTER_VALIDATE_EMAIL) && $tokens_today < ($ref_cfg_row->max_tokens_per_day ?? 5)): ?>
         <button class="cwp-ref-gen-btn" onclick="cwpGenerateToken()">
-          <i class="fas fa-magic"></i>Nouveau token
+          <i class="fas fa-wand-magic-sparkles"></i>Nouveau token
         </button>
         <?php else: ?>
         <button class="cwp-ref-gen-btn" disabled style="opacity:.4;cursor:not-allowed"><i class="fas fa-ban"></i>Indisponible</button>
