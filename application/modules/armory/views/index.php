@@ -76,6 +76,9 @@
     $zoneBg      = base_url('application/modules/armory/assets/images/' . $info->race . '.png');
     $classIcon   = base_url('assets/images/class/' . $this->wowgeneral->getClassIcon($info->class));
     $raceIcon    = base_url('assets/images/races/' . $this->wowgeneral->getRaceIcon($info->race));
+    $classColors = [1=>'#C79C6E',2=>'#F58CBA',3=>'#ABD473',4=>'#FFF569',5=>'#FFFFFF',
+                    6=>'#C41F3B',7=>'#0070DE',8=>'#69CCF0',9=>'#9482C9',11=>'#FF7D0A'];
+    $classColor  = $classColors[(int)$info->class] ?? '#e2e8f0';
 ?>
 
 <!-- HERO -->
@@ -186,7 +189,7 @@
                         <img src="<?= $raceIcon; ?>" alt="" class="pv-portrait-race">
                         <img src="<?= $classIcon; ?>" alt="" class="pv-portrait-class">
                     </div>
-                    <h2 class="pv-portrait-name"><?= htmlspecialchars($info->name); ?></h2>
+                    <h2 class="pv-portrait-name" style="--class-color:<?= $classColor; ?>"><?= htmlspecialchars($info->name); ?></h2>
                     <div class="pv-portrait-sub">
                         <span>Niveau <strong><?= $info->level; ?></strong></span>
                         <span class="pv-portrait-guild"><?= htmlspecialchars($guildName ?? 'Mercenaire'); ?></span>

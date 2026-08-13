@@ -188,7 +188,7 @@
 }
 .pv-portrait {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 20px; padding: 24px; text-align: center;
+    gap: 20px; padding: 24px; text-align: center; width: 100%;
 }
 .pv-portrait-icon-wrap {
     position: relative;
@@ -212,10 +212,29 @@
     bottom: -18px; right: -18px;
 }
 .pv-portrait-name {
-    font-family: var(--font-title); font-size: 5rem; font-weight: 700;
-    color: #fff; text-transform: uppercase; letter-spacing: 3px;
-    text-shadow: 0 0 24px var(--store-glow);
+    font-family: var(--font-title); font-weight: 700;
+    font-size: clamp(1.6rem, 3.2vw, 3rem);
+    text-transform: uppercase; letter-spacing: 3px;
+    color: var(--class-color, #fff);
+    text-shadow:
+        0 0 12px var(--class-color, rgba(255,255,255,0.4)),
+        0 0 30px var(--class-color, rgba(255,255,255,0.15));
+    animation: portrait-name-glow 3s ease-in-out infinite;
     margin: 0; line-height: 1.1;
+    max-width: 100%; word-break: break-word;
+}
+@keyframes portrait-name-glow {
+    0%, 100% {
+        text-shadow:
+            0 0 10px var(--class-color, rgba(255,255,255,0.3)),
+            0 0 28px var(--class-color, rgba(255,255,255,0.15));
+    }
+    50% {
+        text-shadow:
+            0 0 18px var(--class-color, rgba(255,255,255,0.55)),
+            0 0 42px var(--class-color, rgba(255,255,255,0.3)),
+            0 0 68px var(--class-color, rgba(255,255,255,0.1));
+    }
 }
 .pv-portrait-sub {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
